@@ -1,0 +1,16 @@
+model
++- d:D:jar:1
++- c:C:jar:1
+|  +- d:D:jar:1 (compile)
++- b:B:jar:1
+|  +- c:C:jar:1 (provided)
+|  |  +- d:D:jar:1 (compile -> provided)
++- a:A:jar:1
+|  +- b:B:jar:1 (test)
+|  |  +- c:C:jar:1 (provided) (not selected)
+|  |  |  +- d:D:jar:1 (compile -> provided) (not selected)
++- root:ROOT:jar:1
+|  +- a:A:jar:1 (compile)
+|  |  +- b:B:jar:1 (test) (not selected)
+|  |  |  +- c:C:jar:1 (provided) (not selected)
+|  |  |  |  +- d:D:jar:1 (compile -> provided) (not selected)
