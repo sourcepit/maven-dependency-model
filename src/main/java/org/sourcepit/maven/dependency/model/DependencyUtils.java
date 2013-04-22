@@ -149,7 +149,7 @@ public final class DependencyUtils
       final Collection<Collection<String>> conflictKeyGroups = computeConflictKeyGroups(node);
 
       final Multimap<Collection<String>, DependencyNode> conflictNodes = LinkedHashMultimap.create();
-      node.accept(new AbstractDependencyVisitor()
+      node.accept(new AbstractDependencyVisitor(false)
       {
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
@@ -190,7 +190,7 @@ public final class DependencyUtils
    private static Collection<Collection<String>> computeConflictKeyGroups(DependencyNode node)
    {
       final Collection<Collection<String>> existingGroups = new ArrayList<Collection<String>>();
-      node.accept(new AbstractDependencyVisitor()
+      node.accept(new AbstractDependencyVisitor(false)
       {
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)

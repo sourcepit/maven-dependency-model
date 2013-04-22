@@ -15,9 +15,22 @@ public abstract class AbstractDependencyVisitor implements DependencyVisitor
 {
    protected Stack<DependencyNode> path = new Stack<DependencyNode>();
 
+   protected boolean filterInvisibleNodes;
+
+   public AbstractDependencyVisitor(boolean filterInvisibleNodes)
+   {
+      this.filterInvisibleNodes = filterInvisibleNodes;
+   }
+
    @Override
    public final boolean visitEnter(DependencyNode node)
    {
+      if (filterInvisibleNodes && !DependencyNode2Adapter.get(node).isVisible())
+      {
+         path.push(node);
+         return false;
+      }
+
       final boolean cycle = path.contains(node);
       if (cycle)
       {

@@ -31,6 +31,8 @@ public class DependencyNode2Adapter implements DependencyNode2
 
    private DependencyNode replacement;
 
+   private boolean visible = true;
+
    public DependencyNode2Adapter(DependencyNode target)
    {
       this.target = target;
@@ -157,7 +159,7 @@ public class DependencyNode2Adapter implements DependencyNode2
 
    public static DependencyNode2 adapt(DependencyNode root, final boolean reset)
    {
-      final AbstractDependencyVisitor initializor = new AbstractDependencyVisitor()
+      final AbstractDependencyVisitor initializor = new AbstractDependencyVisitor(false)
       {
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
@@ -199,5 +201,17 @@ public class DependencyNode2Adapter implements DependencyNode2
    public static DependencyNode2 get(DependencyNode node)
    {
       return (DependencyNode2) node.getData().get(DependencyNode2Adapter.class);
+   }
+
+   @Override
+   public void setVisible(boolean visible)
+   {
+      this.visible = visible;
+   }
+
+   @Override
+   public boolean isVisible()
+   {
+      return visible;
    }
 }

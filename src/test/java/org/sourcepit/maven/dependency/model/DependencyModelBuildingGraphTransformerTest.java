@@ -34,7 +34,7 @@ public class DependencyModelBuildingGraphTransformerTest extends EmbeddedMavenEn
 {
    @Rule
    public TestName name = new TestName();
-
+   
    @Test
    public void testSimple() throws Exception
    {
@@ -48,7 +48,7 @@ public class DependencyModelBuildingGraphTransformerTest extends EmbeddedMavenEn
    }
 
    @Test
-   public void testOptional() throws Exception
+   public void testOptional1() throws Exception
    {
       test();
    }
@@ -103,6 +103,12 @@ public class DependencyModelBuildingGraphTransformerTest extends EmbeddedMavenEn
 
    @Test
    public void testEffectiveScope3() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testEffectiveScope4() throws Exception
    {
       test();
    }

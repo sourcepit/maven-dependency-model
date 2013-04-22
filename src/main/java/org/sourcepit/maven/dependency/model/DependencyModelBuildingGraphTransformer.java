@@ -28,6 +28,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
    {
       private boolean foundDirectReference = false;
 
+      public DirectReferenceDetectingDependencyVisitor()
+      {
+         super(true);
+      }
+
       public boolean isFoundDirectReference()
       {
          return foundDirectReference;
@@ -67,7 +72,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final Set<DependencyNode> referencedNodes = new HashSet<DependencyNode>();
 
-   // TODO exclude scope test (requires dependency selector)
    public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
       Artifact root)
    {
@@ -78,7 +82,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       nodeChooser = new NearestDependencyNodeChooser();
 
       transformer = new ChainedDependencyGraphTransformer(new DependencyNode2AdapterTransformer(true),
-         new VersionConflictResolver(nodeChooser));
+         new VisibilityCalculator(), new VersionConflictResolver(nodeChooser));
    }
 
    @Override
@@ -135,6 +139,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          rootNode = transformer.transformGraph(rootNode, context);
       }
 
+      new VisibilityCalculator().transformGraph(rootNode, context);
+
       initScopeMask(rootNode);
 
       final boolean referenced = isReferenced(rootNode);
@@ -167,7 +173,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       }
    }
 
-   // TODO exclude scopes (test)
    private boolean isReferenced(DependencyNode node)
    {
       if (this.referencedNodes.contains(node))
@@ -177,7 +182,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
-      boolean referenced = adapter.getReplacement() == null && getRoot(node, adapter) != null;
+      boolean referenced = adapter.isVisible() && adapter.getReplacement() == null && getRoot(node, adapter) != null;
       if (!referenced)
       {
          final DirectReferenceDetectingDependencyVisitor refDetector = new DirectReferenceDetectingDependencyVisitor();
@@ -194,7 +199,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             Set<DependencyNode> parents = replacedAdapter.getParents();
             for (DependencyNode dependencyNode : parents)
             {
-               if (isReferenced(dependencyNode))
+               if (DependencyNode2Adapter.get(dependencyNode).isVisible() && isReferenced(dependencyNode))
                {
                   referenced = true;
                   break;
@@ -249,7 +254,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       {
          final DependencyNode effectiveParent = getEffectiveNode(parent);
 
-         if (!followReplacements && effectiveParent != parent)
+         if (!DependencyNode2Adapter.get(parent).isVisible() || !followReplacements && effectiveParent != parent)
          {
             continue;
          }
@@ -281,7 +286,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       final DependencyNode effectiveNode = getEffectiveNode(node);
 
-      final boolean selected = isSelected(node, effectiveNode, depth, optional);
+      final boolean selected = isSelected(node, effectiveNode, depth);
 
       final String scope = getEffectiveScope(node);
       parentScopes.push(scope);
@@ -297,11 +302,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       parentScopes.pop();
    }
 
-   private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, final int depth,
-      final boolean optional)
+   private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, final int depth)
    {
-      final String currentScope = getCurrentScope(node);
-
       boolean active = true;
       if (depth > 0)
       {
@@ -309,11 +311,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          {
             active = false;
          }
-         else if ("test".equals(currentScope) || "provided".equals(currentScope))
-         {
-            active = false;
-         }
-         else if (optional && !parentOptionals.peek().booleanValue())
+         else if (!DependencyNode2Adapter.get(node).isVisible())
          {
             active = false;
          }
@@ -390,7 +388,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       if (!parentScopes.isEmpty())
       {
          final String parentScope = parentScopes.peek();
-         scope = getEffectiveScope(parentScope, scope);
+         scope = DependencyUtils.getEffectiveScope(parentScope, scope, false);
       }
       return scope;
    }
@@ -403,11 +401,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          scope = node.getDependency().getScope();
       }
       return scope;
-   }
-
-   private static String getEffectiveScope(String parent, String current)
-   {
-      return DependencyUtils.getEffectiveScope(parent, current, false);
    }
 
    private static DependencyNode getEffectiveNode(DependencyNode node)
