@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genmodel:GenModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" copyrightText="Copyright (c) 2013 Sourcepit.org contributors and others. All rights reserved. This program and the accompanying&#xD;&#xA;materials are made available under the terms of the Eclipse Public License v1.0 which accompanies this distribution,&#xD;&#xA;and is available at http://www.eclipse.org/legal/epl-v10.html"
+    modelDirectory="/maven-dependency-model/gen/main/emf" modelPluginID="" modelName="DependencyModel"
+    updateClasspath="false" importerID="org.eclipse.emf.importer.ecore" complianceLevel="6.0"
+    copyrightFields="false" runtimeVersion="2.6" usedGenPackages="../../../../common-modeling/src/main/emf/CommonModeling.genmodel#//modeling ../../../../common-maven/src/main/emf/maven.genmodel#//maven">
+  <foreignModel>DependencyModel.ecore</foreignModel>
+  <genPackages prefix="DependencyModel" basePackage="org.sourcepit.maven.dependency"
+      disposableProviderFactory="true" ecorePackage="DependencyModel.ecore#/">
+    <genClasses ecoreClass="DependencyModel.ecore#//DependencyNode">
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyNode/artifact"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyNode/children"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute DependencyModel.ecore#//DependencyNode/selected"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyNode/declaration"/>
+      <genFeatures property="None" notify="false" createChild="false" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyNode/parent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute DependencyModel.ecore#//DependencyNode/inheritedScope"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute DependencyModel.ecore#//DependencyNode/managedVersionConstraint"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute DependencyModel.ecore#//DependencyNode/managedScope"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyNode/conflictNode"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute DependencyModel.ecore#//DependencyNode/version"/>
+      <genOperations ecoreOperation="DependencyModel.ecore#//DependencyNode/getGroupId"/>
+      <genOperations ecoreOperation="DependencyModel.ecore#//DependencyNode/getArtifactId"/>
+      <genOperations ecoreOperation="DependencyModel.ecore#//DependencyNode/getEffectiveScope"/>
+    </genClasses>
+    <genClasses ecoreClass="DependencyModel.ecore#//DependencyModel">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyModel/artifacts"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyModel/dependencyTrees"/>
+    </genClasses>
+    <genClasses ecoreClass="DependencyModel.ecore#//DependencyTree">
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyTree/targetArtifact"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference DependencyModel.ecore#//DependencyTree/dependencyNodes"/>
+    </genClasses>
+    <genClasses ecoreClass="DependencyModel.ecore#//DeclaredDependency"/>
+  </genPackages>
+</genmodel:GenModel>
