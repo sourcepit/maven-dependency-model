@@ -82,7 +82,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       nodeChooser = new NearestDependencyNodeChooser();
 
       transformer = new ChainedDependencyGraphTransformer(new DependencyNode2AdapterTransformer(true),
-         new VisibilityCalculator(), new VersionConflictResolver(nodeChooser));
+         new VersionConflictResolver(nodeChooser));
    }
 
    @Override
@@ -201,7 +201,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             {
                if (DependencyNode2Adapter.get(dependencyNode).isVisible() && isReferenced(dependencyNode))
                {
-                  referenced = true;
+                  // referenced = true;
                   break;
                }
             }
@@ -226,7 +226,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       for (DependencyNode parent : adapter.getParents())
       {
          final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-         if (parentAdapter.getReplacement() != null)
+         if (!parentAdapter.isVisible() || parentAdapter.getReplacement() != null)
          {
             continue;
          }
@@ -382,6 +382,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return optional;
    }
 
+   // TODO consider pre-managed scope
    private String getEffectiveScope(DependencyNode node)
    {
       String scope = getCurrentScope(node);

@@ -13,8 +13,10 @@ import javax.inject.Inject;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.ModelBase;
 import org.apache.maven.model.Relocation;
 import org.apache.maven.model.io.DefaultModelWriter;
 import org.apache.maven.plugin.LegacySupport;
@@ -74,6 +76,36 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
+   public void testDepMngt() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "A", "1");
+      addDependency(pom, "group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "root", "1");
+      addDependency(pom, "group", "A", null);
+
+      pom.setDependencyManagement(new DependencyManagement());
+      addDependency(pom.getDependencyManagement(), "group", "A", "[1,4)");
+      addDependency(pom.getDependencyManagement(), "group", "B", "[1,4)");
+      repositoryFacade.deploy(pom);
+
+      final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);
+
+      DependencyTreeBuilderRequest request = new DependencyTreeBuilderRequest();
+      request.setArtifact(projectArtifact);
+
+      DependencyNode graph = treeBuilder.build(request);
+
+      print(DependencyNode2Adapter.get(graph), 0);
+   }
+
+   @Test
    public void testReuse() throws Exception
    {
       Model pom;
@@ -92,6 +124,52 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       pom = newModel("group", "root", "1");
       addDependency(pom, "group", "A", "1");
       addDependency(pom, "group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);
+
+      DependencyTreeBuilderRequest request = new DependencyTreeBuilderRequest();
+      request.setArtifact(projectArtifact);
+
+      DependencyNode graph = treeBuilder.build(request);
+
+      print(DependencyNode2Adapter.get(graph), 0);
+   }
+
+   @Test
+   public void testTheE1Problem() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("group", "E", "2");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "D", "1");
+      addDependency(pom, "group", "E", "2");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "E", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "A", "2");
+      addDependency(pom, "group", "E", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "C", "1");
+      addDependency(pom, "group", "D", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "B", "1");
+      addDependency(pom, "group", "A", "2");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "A", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "root", "1");
+      addDependency(pom, "group", "A", "1");
+      addDependency(pom, "group", "B", "1");
+      addDependency(pom, "group", "C", "1");
       repositoryFacade.deploy(pom);
 
       final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);
@@ -171,19 +249,18 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    {
       Model pom;
 
-      pom = newModel("group", "A", "2");
+      pom = newModel("group", "C", "2");
       repositoryFacade.deploy(pom);
 
       pom = newModel("group", "C", "1");
-      // addDependency(pom, "group", "A", "2");
       repositoryFacade.deploy(pom);
 
       pom = newModel("group", "B", "1");
-      addDependency(pom, "group", "A", "2").setScope("test");
-      ;
+      addDependency(pom, "group", "C", "2");
       repositoryFacade.deploy(pom);
 
       pom = newModel("group", "A", "1");
+      addDependency(pom, "group", "C", "1");
       repositoryFacade.deploy(pom);
 
       pom = newModel("group", "root", "1");
@@ -338,7 +415,14 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       distributionManagement.setRelocation(relocation);
    }
 
-   private static Dependency addDependency(Model model, String groupId, String artifactId, String version)
+   private static Dependency addDependency(ModelBase model, String groupId, String artifactId, String version)
+   {
+      final Dependency dependency = newDependency(groupId, artifactId, version);
+      model.getDependencies().add(dependency);
+      return dependency;
+   }
+
+   private static Dependency addDependency(DependencyManagement model, String groupId, String artifactId, String version)
    {
       final Dependency dependency = newDependency(groupId, artifactId, version);
       model.getDependencies().add(dependency);

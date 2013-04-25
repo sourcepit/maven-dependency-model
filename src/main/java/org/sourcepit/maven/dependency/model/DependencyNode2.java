@@ -33,8 +33,8 @@ public interface DependencyNode2
    String getArtifactConflictKey();
 
    Collection<List<DependencyNode>> getConflictingNodeGroups();
-   
+
    void setVisible(boolean visible);
-   
+
    boolean isVisible();
 }

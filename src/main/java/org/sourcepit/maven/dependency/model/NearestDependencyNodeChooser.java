@@ -19,12 +19,13 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       int chosenDepth = Integer.MAX_VALUE;
       for (DependencyNode node : nodes)
       {
-         if (!DependencyNode2Adapter.get(node).isVisible())
+         final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+         if (getRoot(node, adapter) == null)
          {
             continue;
          }
-         
-         final int nodeDepth = DependencyNode2Adapter.get(node).getMinimalDepth();
+
+         final int nodeDepth = adapter.getMinimalDepth();
          if (chosenDepth > nodeDepth)
          {
             chosen = node;
@@ -34,4 +35,28 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       return chosen;
    }
 
+   private DependencyNode getRoot(DependencyNode node, DependencyNode2 adapter)
+   {
+      if (adapter.getParents().isEmpty())
+      {
+         return node;
+      }
+
+      for (DependencyNode parent : adapter.getParents())
+      {
+         final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
+         if (!parentAdapter.isVisible() || parentAdapter.getReplacement() != null)
+         {
+            continue;
+         }
+
+         final DependencyNode root = getRoot(parent, parentAdapter);
+         if (root != null)
+         {
+            return root;
+         }
+      }
+
+      return null;
+   }
 }

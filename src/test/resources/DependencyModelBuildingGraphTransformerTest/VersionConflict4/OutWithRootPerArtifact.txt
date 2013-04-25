@@ -18,4 +18,4 @@ model
 |  |  +- a:A:jar:2 -> a:A:jar:1 (compile) (not selected)
 |  +- c:C:jar:1 (compile)
 |  |  +- d:D:jar:1 (compile)
-|  |  |  +- e:E:jar:2 -> e:E:jar:1 (compile)
+|  |  |  +- e:E:jar:2 (compile)

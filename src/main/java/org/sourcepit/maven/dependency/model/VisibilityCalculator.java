@@ -26,7 +26,8 @@ public class VisibilityCalculator implements DependencyGraphTransformer
             boolean visible = true;
             if (depth > 1)
             {
-               visible = DependencyNode2Adapter.get(parent).isVisible();
+               DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
+               visible = parentAdapter.isVisible() && parentAdapter.getReplacement() == null;
                if (visible)
                {
                   final String scope = node.getDependency().getScope();

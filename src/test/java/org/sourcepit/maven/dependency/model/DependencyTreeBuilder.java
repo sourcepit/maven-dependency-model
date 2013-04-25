@@ -31,6 +31,7 @@ import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.collection.DependencySelector;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
+import org.sonatype.aether.util.filter.ScopeDependencyFilter;
 import org.sonatype.aether.util.graph.selector.AndDependencySelector;
 import org.sonatype.aether.util.graph.selector.ExclusionDependencySelector;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
@@ -74,24 +75,28 @@ public class DependencyTreeBuilder
 
       final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(
          buildContext.getRepositorySession())
-      {
-         @Override
-         public DependencySelector getDependencySelector()
-         {
-            return selector;
-         }
-
-         @Override
-         public DependencyGraphTransformer getDependencyGraphTransformer()
-         {
-            return transformer;
-         }
+      {/*
+        * @Override
+        * public DependencySelector getDependencySelector()
+        * {
+        * return selector;
+        * }
+        * 
+        * @Override
+        * public DependencyGraphTransformer getDependencyGraphTransformer()
+        * {
+        * return transformer;
+        * }
+        */
       };
 
       final DefaultDependencyResolutionRequest resolutionRequest = new DefaultDependencyResolutionRequest();
       resolutionRequest.setMavenProject(project);
       resolutionRequest.setRepositorySession(repositorySession);
-      resolutionRequest.setResolutionFilter(new ReplacedDependencyFilter());
+      // resolutionRequest.setResolutionFilter(new ReplacedDependencyFilter());
+
+      resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
+
       return resolutionRequest;
    }
 

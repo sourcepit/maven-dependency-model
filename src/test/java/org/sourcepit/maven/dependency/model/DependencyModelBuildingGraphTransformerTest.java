@@ -34,7 +34,7 @@ public class DependencyModelBuildingGraphTransformerTest extends EmbeddedMavenEn
 {
    @Rule
    public TestName name = new TestName();
-   
+
    @Test
    public void testSimple() throws Exception
    {
