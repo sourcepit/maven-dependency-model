@@ -182,7 +182,6 @@ public interface DependencyNode extends EObject
 
    /**
     * Returns the value of the '<em><b>Inherited Scope</b></em>' attribute.
-    * The literals are from the enumeration {@link org.sourcepit.common.maven.model.Scope}.
     * <!-- begin-user-doc -->
     * <p>
     * If the meaning of the '<em>Inherited Scope</em>' attribute isn't clear, there really should be more of a
@@ -191,10 +190,9 @@ public interface DependencyNode extends EObject
     * <!-- end-user-doc -->
     * 
     * @return the value of the '<em>Inherited Scope</em>' attribute.
-    * @see org.sourcepit.common.maven.model.Scope
     * @see #setInheritedScope(Scope)
     * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_InheritedScope()
-    * @model
+    * @model dataType="org.sourcepit.common.maven.model.NullableScope"
     * @generated
     */
    Scope getInheritedScope();
@@ -206,7 +204,6 @@ public interface DependencyNode extends EObject
     * <!-- end-user-doc -->
     * 
     * @param value the new value of the '<em>Inherited Scope</em>' attribute.
-    * @see org.sourcepit.common.maven.model.Scope
     * @see #getInheritedScope()
     * @generated
     */
@@ -214,6 +211,7 @@ public interface DependencyNode extends EObject
 
    /**
     * Returns the value of the '<em><b>Managed Version Constraint</b></em>' attribute.
+    * The default value is <code>"null"</code>.
     * <!-- begin-user-doc -->
     * <p>
     * If the meaning of the '<em>Managed Version Constraint</em>' attribute isn't clear, there really should be more of
@@ -224,7 +222,7 @@ public interface DependencyNode extends EObject
     * @return the value of the '<em>Managed Version Constraint</em>' attribute.
     * @see #setManagedVersionConstraint(String)
     * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_ManagedVersionConstraint()
-    * @model
+    * @model default="null"
     * @generated
     */
    String getManagedVersionConstraint();
@@ -243,7 +241,6 @@ public interface DependencyNode extends EObject
 
    /**
     * Returns the value of the '<em><b>Managed Scope</b></em>' attribute.
-    * The literals are from the enumeration {@link org.sourcepit.common.maven.model.Scope}.
     * <!-- begin-user-doc -->
     * <p>
     * If the meaning of the '<em>Managed Scope</em>' attribute isn't clear, there really should be more of a description
@@ -252,10 +249,9 @@ public interface DependencyNode extends EObject
     * <!-- end-user-doc -->
     * 
     * @return the value of the '<em>Managed Scope</em>' attribute.
-    * @see org.sourcepit.common.maven.model.Scope
     * @see #setManagedScope(Scope)
     * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_ManagedScope()
-    * @model
+    * @model dataType="org.sourcepit.common.maven.model.NullableScope"
     * @generated
     */
    Scope getManagedScope();
@@ -267,7 +263,6 @@ public interface DependencyNode extends EObject
     * <!-- end-user-doc -->
     * 
     * @param value the new value of the '<em>Managed Scope</em>' attribute.
-    * @see org.sourcepit.common.maven.model.Scope
     * @see #getManagedScope()
     * @generated
     */

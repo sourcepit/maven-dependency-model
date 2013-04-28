@@ -16,10 +16,10 @@
         lowerBound="1" eType="#//DeclaredDependency" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="parent" eType="#//DependencyNode"
         eOpposite="#//DependencyNode/children"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="inheritedScope" eType="ecore:EEnum ../../../../common-maven/src/main/emf/maven.ecore#//Scope"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="inheritedScope" eType="ecore:EDataType ../../../../common-maven/src/main/emf/maven.ecore#//NullableScope"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="managedVersionConstraint"
-        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="managedScope" eType="ecore:EEnum ../../../../common-maven/src/main/emf/maven.ecore#//Scope"/>
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString" defaultValueLiteral="null"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="managedScope" eType="ecore:EDataType ../../../../common-maven/src/main/emf/maven.ecore#//NullableScope"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="conflictNode" eType="#//DependencyNode"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" lowerBound="1"
         eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>

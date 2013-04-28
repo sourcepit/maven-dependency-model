@@ -442,14 +442,14 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEReference(getDependencyNode_Parent(), this.getDependencyNode(), this.getDependencyNode_Children(), "parent",
          null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE,
          !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-      initEAttribute(getDependencyNode_InheritedScope(), theMavenModelPackage.getScope(), "inheritedScope", null, 0, 1,
-         DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
-         !IS_DERIVED, IS_ORDERED);
+      initEAttribute(getDependencyNode_InheritedScope(), theMavenModelPackage.getNullableScope(), "inheritedScope",
+         null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID,
+         IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
       initEAttribute(getDependencyNode_ManagedVersionConstraint(), ecorePackage.getEString(),
-         "managedVersionConstraint", null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
+         "managedVersionConstraint", "null", 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
          !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-      initEAttribute(getDependencyNode_ManagedScope(), theMavenModelPackage.getScope(), "managedScope", null, 0, 1,
-         DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
+      initEAttribute(getDependencyNode_ManagedScope(), theMavenModelPackage.getNullableScope(), "managedScope", null,
+         0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
          !IS_DERIVED, IS_ORDERED);
       initEReference(getDependencyNode_ConflictNode(), this.getDependencyNode(), null, "conflictNode", null, 0, 1,
          DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES,

@@ -115,7 +115,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     * @ordered
     */
-   protected static final Scope INHERITED_SCOPE_EDEFAULT = Scope.COMPILE;
+   protected static final Scope INHERITED_SCOPE_EDEFAULT = null;
 
    /**
     * The cached value of the '{@link #getInheritedScope() <em>Inherited Scope</em>}' attribute.
@@ -137,7 +137,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     * @ordered
     */
-   protected static final String MANAGED_VERSION_CONSTRAINT_EDEFAULT = null;
+   protected static final String MANAGED_VERSION_CONSTRAINT_EDEFAULT = "null";
 
    /**
     * The cached value of the '{@link #getManagedVersionConstraint() <em>Managed Version Constraint</em>}' attribute.
@@ -159,7 +159,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     * @ordered
     */
-   protected static final Scope MANAGED_SCOPE_EDEFAULT = Scope.COMPILE;
+   protected static final Scope MANAGED_SCOPE_EDEFAULT = null;
 
    /**
     * The cached value of the '{@link #getManagedScope() <em>Managed Scope</em>}' attribute.
@@ -453,7 +453,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
    public void setInheritedScope(Scope newInheritedScope)
    {
       Scope oldInheritedScope = inheritedScope;
-      inheritedScope = newInheritedScope == null ? INHERITED_SCOPE_EDEFAULT : newInheritedScope;
+      inheritedScope = newInheritedScope;
       if (eNotificationRequired())
          eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__INHERITED_SCOPE,
             oldInheritedScope, inheritedScope));
@@ -506,7 +506,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
    public void setManagedScope(Scope newManagedScope)
    {
       Scope oldManagedScope = managedScope;
-      managedScope = newManagedScope == null ? MANAGED_SCOPE_EDEFAULT : newManagedScope;
+      managedScope = newManagedScope;
       if (eNotificationRequired())
          eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__MANAGED_SCOPE,
             oldManagedScope, managedScope));
@@ -839,13 +839,14 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return getParent() != null;
          case DependencyModelPackage.DEPENDENCY_NODE__INHERITED_SCOPE :
-            return inheritedScope != INHERITED_SCOPE_EDEFAULT;
+            return INHERITED_SCOPE_EDEFAULT == null ? inheritedScope != null : !INHERITED_SCOPE_EDEFAULT
+               .equals(inheritedScope);
          case DependencyModelPackage.DEPENDENCY_NODE__MANAGED_VERSION_CONSTRAINT :
             return MANAGED_VERSION_CONSTRAINT_EDEFAULT == null
                ? managedVersionConstraint != null
                : !MANAGED_VERSION_CONSTRAINT_EDEFAULT.equals(managedVersionConstraint);
          case DependencyModelPackage.DEPENDENCY_NODE__MANAGED_SCOPE :
-            return managedScope != MANAGED_SCOPE_EDEFAULT;
+            return MANAGED_SCOPE_EDEFAULT == null ? managedScope != null : !MANAGED_SCOPE_EDEFAULT.equals(managedScope);
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_NODE :
             return conflictNode != null;
          case DependencyModelPackage.DEPENDENCY_NODE__VERSION :
