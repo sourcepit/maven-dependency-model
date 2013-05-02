@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,9 +116,34 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       handler.endDependencyModel();
 
-      // TODO remove unreferenced nodes
+      pruneUnreferenced(graph);
 
       return graph;
+   }
+
+   private void pruneUnreferenced(DependencyNode graph)
+   {
+      graph.accept(new AbstractDependencyVisitor(false)
+      {
+         @Override
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
+         {
+            for (Iterator<DependencyNode> it = node.getChildren().iterator(); it.hasNext();)
+            {
+               final DependencyNode childNode = (DependencyNode) it.next();
+               if (!isReferenced(childNode))
+               {
+                  it.remove();
+               }
+            }
+            return super.onVisitEnter(parent, node);
+         }
+
+         private boolean isReferenced(DependencyNode childNode)
+         {
+            return ((Boolean) childNode.getData().get("referenced")).booleanValue();
+         }
+      });
    }
 
    private void traverseTrees(List<DependencyNode> nodes, DependencyGraphTransformationContext context)
@@ -223,6 +249,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          this.referencedNodes.add(node);
       }
 
+      node.setData("referenced", Boolean.valueOf(referenced));
+
       return referenced;
    }
 
@@ -297,7 +325,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       final DependencyNode effectiveNode = getEffectiveNode(node);
 
       final boolean selected = isSelected(node, effectiveNode, depth);
-      
+
       final String scope = getEffectiveScope(node);
       parentScopes.push(scope);
       parentOptionals.push(Boolean.valueOf(optional));
@@ -318,7 +346,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       {
          return false;
       }
-      
+
       boolean active = true;
       if (depth > 0)
       {
@@ -387,7 +415,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             }
          }
       }
-      
+
       if (active)
       {
          this.selected.add(effectiveNode);
