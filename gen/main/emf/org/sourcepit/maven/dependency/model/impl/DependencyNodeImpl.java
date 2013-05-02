@@ -19,8 +19,8 @@ import org.eclipse.emf.ecore.util.EObjectContainmentWithInverseEList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.sourcepit.common.maven.model.MavenArtifact;
+import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.Scope;
-import org.sourcepit.maven.dependency.model.DeclaredDependency;
 import org.sourcepit.maven.dependency.model.DependencyModelPackage;
 import org.sourcepit.maven.dependency.model.DependencyNode;
 
@@ -34,15 +34,17 @@ import org.sourcepit.maven.dependency.model.DependencyNode;
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getArtifact <em>Artifact</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getChildren <em>Children</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#isSelected <em>Selected</em>}</li>
- * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getDependencyDeclaration <em>Dependency
- * Declaration</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getParent <em>Parent</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getInheritedScope <em>Inherited Scope</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getManagedVersionConstraint <em>Managed
  * Version Constraint</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getManagedScope <em>Managed Scope</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getConflictNode <em>Conflict Node</em>}</li>
- * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getVersion <em>Version</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getDeclaredDependency <em>Declared Dependency
+ * </em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#isOptional <em>Optional</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getConflictVersionConstraint <em>Conflict
+ * Version Constraint</em>}</li>
  * </ul>
  * </p>
  * 
@@ -95,18 +97,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
    protected boolean selected = SELECTED_EDEFAULT;
 
    /**
-    * The cached value of the '{@link #getDependencyDeclaration() <em>Dependency Declaration</em>}' containment
-    * reference.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @see #getDependencyDeclaration()
-    * @generated
-    * @ordered
-    */
-   protected DeclaredDependency dependencyDeclaration;
-
-   /**
     * The default value of the '{@link #getInheritedScope() <em>Inherited Scope</em>}' attribute.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -137,7 +127,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     * @ordered
     */
-   protected static final String MANAGED_VERSION_CONSTRAINT_EDEFAULT = "null";
+   protected static final String MANAGED_VERSION_CONSTRAINT_EDEFAULT = null;
 
    /**
     * The cached value of the '{@link #getManagedVersionConstraint() <em>Managed Version Constraint</em>}' attribute.
@@ -184,26 +174,59 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
    protected DependencyNode conflictNode;
 
    /**
-    * The default value of the '{@link #getVersion() <em>Version</em>}' attribute.
+    * The cached value of the '{@link #getDeclaredDependency() <em>Declared Dependency</em>}' containment reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @see #getVersion()
+    * @see #getDeclaredDependency()
     * @generated
     * @ordered
     */
-   protected static final String VERSION_EDEFAULT = null;
+   protected MavenDependency declaredDependency;
 
    /**
-    * The cached value of the '{@link #getVersion() <em>Version</em>}' attribute.
+    * The default value of the '{@link #isOptional() <em>Optional</em>}' attribute.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @see #getVersion()
+    * @see #isOptional()
     * @generated
     * @ordered
     */
-   protected String version = VERSION_EDEFAULT;
+   protected static final boolean OPTIONAL_EDEFAULT = false;
+
+   /**
+    * The cached value of the '{@link #isOptional() <em>Optional</em>}' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @see #isOptional()
+    * @generated
+    * @ordered
+    */
+   protected boolean optional = OPTIONAL_EDEFAULT;
+
+   /**
+    * The default value of the '{@link #getConflictVersionConstraint() <em>Conflict Version Constraint</em>}' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @see #getConflictVersionConstraint()
+    * @generated
+    * @ordered
+    */
+   protected static final String CONFLICT_VERSION_CONSTRAINT_EDEFAULT = null;
+
+   /**
+    * The cached value of the '{@link #getConflictVersionConstraint() <em>Conflict Version Constraint</em>}' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @see #getConflictVersionConstraint()
+    * @generated
+    * @ordered
+    */
+   protected String conflictVersionConstraint = CONFLICT_VERSION_CONSTRAINT_EDEFAULT;
 
    /**
     * <!-- begin-user-doc -->
@@ -316,68 +339,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
       if (eNotificationRequired())
          eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__SELECTED,
             oldSelected, selected));
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
-   public DeclaredDependency getDependencyDeclaration()
-   {
-      return dependencyDeclaration;
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
-   public NotificationChain basicSetDependencyDeclaration(DeclaredDependency newDependencyDeclaration,
-      NotificationChain msgs)
-   {
-      DeclaredDependency oldDependencyDeclaration = dependencyDeclaration;
-      dependencyDeclaration = newDependencyDeclaration;
-      if (eNotificationRequired())
-      {
-         ENotificationImpl notification = new ENotificationImpl(this, Notification.SET,
-            DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION, oldDependencyDeclaration,
-            newDependencyDeclaration);
-         if (msgs == null)
-            msgs = notification;
-         else
-            msgs.add(notification);
-      }
-      return msgs;
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
-   public void setDependencyDeclaration(DeclaredDependency newDependencyDeclaration)
-   {
-      if (newDependencyDeclaration != dependencyDeclaration)
-      {
-         NotificationChain msgs = null;
-         if (dependencyDeclaration != null)
-            msgs = ((InternalEObject) dependencyDeclaration).eInverseRemove(this, EOPPOSITE_FEATURE_BASE
-               - DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION, null, msgs);
-         if (newDependencyDeclaration != null)
-            msgs = ((InternalEObject) newDependencyDeclaration).eInverseAdd(this, EOPPOSITE_FEATURE_BASE
-               - DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION, null, msgs);
-         msgs = basicSetDependencyDeclaration(newDependencyDeclaration, msgs);
-         if (msgs != null)
-            msgs.dispatch();
-      }
-      else if (eNotificationRequired())
-         eNotify(new ENotificationImpl(this, Notification.SET,
-            DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION, newDependencyDeclaration,
-            newDependencyDeclaration));
    }
 
    /**
@@ -566,9 +527,9 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getVersion()
+   public MavenDependency getDeclaredDependency()
    {
-      return version;
+      return declaredDependency;
    }
 
    /**
@@ -577,13 +538,99 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setVersion(String newVersion)
+   public NotificationChain basicSetDeclaredDependency(MavenDependency newDeclaredDependency, NotificationChain msgs)
    {
-      String oldVersion = version;
-      version = newVersion;
+      MavenDependency oldDeclaredDependency = declaredDependency;
+      declaredDependency = newDeclaredDependency;
       if (eNotificationRequired())
-         eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__VERSION,
-            oldVersion, version));
+      {
+         ENotificationImpl notification = new ENotificationImpl(this, Notification.SET,
+            DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY, oldDeclaredDependency, newDeclaredDependency);
+         if (msgs == null)
+            msgs = notification;
+         else
+            msgs.add(notification);
+      }
+      return msgs;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public void setDeclaredDependency(MavenDependency newDeclaredDependency)
+   {
+      if (newDeclaredDependency != declaredDependency)
+      {
+         NotificationChain msgs = null;
+         if (declaredDependency != null)
+            msgs = ((InternalEObject) declaredDependency).eInverseRemove(this, EOPPOSITE_FEATURE_BASE
+               - DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY, null, msgs);
+         if (newDeclaredDependency != null)
+            msgs = ((InternalEObject) newDeclaredDependency).eInverseAdd(this, EOPPOSITE_FEATURE_BASE
+               - DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY, null, msgs);
+         msgs = basicSetDeclaredDependency(newDeclaredDependency, msgs);
+         if (msgs != null)
+            msgs.dispatch();
+      }
+      else if (eNotificationRequired())
+         eNotify(new ENotificationImpl(this, Notification.SET,
+            DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY, newDeclaredDependency, newDeclaredDependency));
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public boolean isOptional()
+   {
+      return optional;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public void setOptional(boolean newOptional)
+   {
+      boolean oldOptional = optional;
+      optional = newOptional;
+      if (eNotificationRequired())
+         eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__OPTIONAL,
+            oldOptional, optional));
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public String getConflictVersionConstraint()
+   {
+      return conflictVersionConstraint;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public void setConflictVersionConstraint(String newConflictVersionConstraint)
+   {
+      String oldConflictVersionConstraint = conflictVersionConstraint;
+      conflictVersionConstraint = newConflictVersionConstraint;
+      if (eNotificationRequired())
+         eNotify(new ENotificationImpl(this, Notification.SET,
+            DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT, oldConflictVersionConstraint,
+            conflictVersionConstraint));
    }
 
    /**
@@ -631,6 +678,45 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
+   public String getEffectiveVersionConstraint()
+   {
+      // TODO: implement this method
+      // Ensure that you remove @generated or mark it @generated NOT
+      throw new UnsupportedOperationException();
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public String getClassifier()
+   {
+      // TODO: implement this method
+      // Ensure that you remove @generated or mark it @generated NOT
+      throw new UnsupportedOperationException();
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public String getType()
+   {
+      // TODO: implement this method
+      // Ensure that you remove @generated or mark it @generated NOT
+      throw new UnsupportedOperationException();
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
    @SuppressWarnings("unchecked")
    @Override
    public NotificationChain eInverseAdd(InternalEObject otherEnd, int featureID, NotificationChain msgs)
@@ -660,10 +746,10 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
       {
          case DependencyModelPackage.DEPENDENCY_NODE__CHILDREN :
             return ((InternalEList<?>) getChildren()).basicRemove(otherEnd, msgs);
-         case DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION :
-            return basicSetDependencyDeclaration(null, msgs);
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return basicSetParent(null, msgs);
+         case DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY :
+            return basicSetDeclaredDependency(null, msgs);
       }
       return super.eInverseRemove(otherEnd, featureID, msgs);
    }
@@ -705,8 +791,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             return getChildren();
          case DependencyModelPackage.DEPENDENCY_NODE__SELECTED :
             return isSelected();
-         case DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION :
-            return getDependencyDeclaration();
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return getParent();
          case DependencyModelPackage.DEPENDENCY_NODE__INHERITED_SCOPE :
@@ -719,8 +803,12 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             if (resolve)
                return getConflictNode();
             return basicGetConflictNode();
-         case DependencyModelPackage.DEPENDENCY_NODE__VERSION :
-            return getVersion();
+         case DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY :
+            return getDeclaredDependency();
+         case DependencyModelPackage.DEPENDENCY_NODE__OPTIONAL :
+            return isOptional();
+         case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
+            return getConflictVersionConstraint();
       }
       return super.eGet(featureID, resolve, coreType);
    }
@@ -747,9 +835,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__SELECTED :
             setSelected((Boolean) newValue);
             return;
-         case DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION :
-            setDependencyDeclaration((DeclaredDependency) newValue);
-            return;
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             setParent((DependencyNode) newValue);
             return;
@@ -765,8 +850,14 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_NODE :
             setConflictNode((DependencyNode) newValue);
             return;
-         case DependencyModelPackage.DEPENDENCY_NODE__VERSION :
-            setVersion((String) newValue);
+         case DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY :
+            setDeclaredDependency((MavenDependency) newValue);
+            return;
+         case DependencyModelPackage.DEPENDENCY_NODE__OPTIONAL :
+            setOptional((Boolean) newValue);
+            return;
+         case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
+            setConflictVersionConstraint((String) newValue);
             return;
       }
       super.eSet(featureID, newValue);
@@ -792,9 +883,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__SELECTED :
             setSelected(SELECTED_EDEFAULT);
             return;
-         case DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION :
-            setDependencyDeclaration((DeclaredDependency) null);
-            return;
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             setParent((DependencyNode) null);
             return;
@@ -810,8 +898,14 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_NODE :
             setConflictNode((DependencyNode) null);
             return;
-         case DependencyModelPackage.DEPENDENCY_NODE__VERSION :
-            setVersion(VERSION_EDEFAULT);
+         case DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY :
+            setDeclaredDependency((MavenDependency) null);
+            return;
+         case DependencyModelPackage.DEPENDENCY_NODE__OPTIONAL :
+            setOptional(OPTIONAL_EDEFAULT);
+            return;
+         case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
+            setConflictVersionConstraint(CONFLICT_VERSION_CONSTRAINT_EDEFAULT);
             return;
       }
       super.eUnset(featureID);
@@ -834,8 +928,6 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             return children != null && !children.isEmpty();
          case DependencyModelPackage.DEPENDENCY_NODE__SELECTED :
             return selected != SELECTED_EDEFAULT;
-         case DependencyModelPackage.DEPENDENCY_NODE__DEPENDENCY_DECLARATION :
-            return dependencyDeclaration != null;
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return getParent() != null;
          case DependencyModelPackage.DEPENDENCY_NODE__INHERITED_SCOPE :
@@ -849,8 +941,14 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             return MANAGED_SCOPE_EDEFAULT == null ? managedScope != null : !MANAGED_SCOPE_EDEFAULT.equals(managedScope);
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_NODE :
             return conflictNode != null;
-         case DependencyModelPackage.DEPENDENCY_NODE__VERSION :
-            return VERSION_EDEFAULT == null ? version != null : !VERSION_EDEFAULT.equals(version);
+         case DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY :
+            return declaredDependency != null;
+         case DependencyModelPackage.DEPENDENCY_NODE__OPTIONAL :
+            return optional != OPTIONAL_EDEFAULT;
+         case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
+            return CONFLICT_VERSION_CONSTRAINT_EDEFAULT == null
+               ? conflictVersionConstraint != null
+               : !CONFLICT_VERSION_CONSTRAINT_EDEFAULT.equals(conflictVersionConstraint);
       }
       return super.eIsSet(featureID);
    }
@@ -876,8 +974,10 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
       result.append(managedVersionConstraint);
       result.append(", managedScope: ");
       result.append(managedScope);
-      result.append(", version: ");
-      result.append(version);
+      result.append(", optional: ");
+      result.append(optional);
+      result.append(", conflictVersionConstraint: ");
+      result.append(conflictVersionConstraint);
       result.append(')');
       return result.toString();
    }

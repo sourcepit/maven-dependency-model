@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.model.VersionConflictKey;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -146,20 +147,20 @@ public final class DependencyUtils
 
    public static Collection<List<DependencyNode>> computeConflictingNodeGroups(DependencyNode node)
    {
-      final Collection<Collection<String>> conflictKeyGroups = computeConflictKeyGroups(node);
+      final Collection<Collection<VersionConflictKey>> conflictKeyGroups = computeConflictKeyGroups(node);
 
-      final Multimap<Collection<String>, DependencyNode> conflictNodes = LinkedHashMultimap.create();
+      final Multimap<Collection<VersionConflictKey>, DependencyNode> conflictNodes = LinkedHashMultimap.create();
       node.accept(new AbstractDependencyVisitor(false)
       {
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
             final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-            final String originGroupKey = adapter.getDependencyConflictKey();
+            final VersionConflictKey originGroupKey = adapter.getDependencyConflictKey();
             if (originGroupKey != null)
             {
                boolean put = false;
-               for (Collection<String> conflictGroup : conflictKeyGroups)
+               for (Collection<VersionConflictKey> conflictGroup : conflictKeyGroups)
                {
                   if (conflictGroup.contains(originGroupKey))
                   {
@@ -187,9 +188,9 @@ public final class DependencyUtils
       return conflictNodeGroups;
    }
 
-   private static Collection<Collection<String>> computeConflictKeyGroups(DependencyNode node)
+   private static Collection<Collection<VersionConflictKey>> computeConflictKeyGroups(DependencyNode node)
    {
-      final Collection<Collection<String>> existingGroups = new ArrayList<Collection<String>>();
+      final Collection<Collection<VersionConflictKey>> existingGroups = new ArrayList<Collection<VersionConflictKey>>();
       node.accept(new AbstractDependencyVisitor(false)
       {
          @Override
@@ -197,11 +198,11 @@ public final class DependencyUtils
          {
             final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
-            final Set<String> conflictKeys = adapter.getConflictKeys();
+            final Set<VersionConflictKey> conflictKeys = adapter.getConflictKeys();
 
-            for (Iterator<Collection<String>> it = existingGroups.iterator(); it.hasNext();)
+            for (Iterator<Collection<VersionConflictKey>> it = existingGroups.iterator(); it.hasNext();)
             {
-               final Collection<String> existing = it.next();
+               final Collection<VersionConflictKey> existing = it.next();
                if (containsAny(existing, conflictKeys))
                {
                   conflictKeys.addAll(existing);

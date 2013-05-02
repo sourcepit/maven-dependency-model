@@ -75,25 +75,25 @@ public class DependencyTreeBuilder
 
       final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(
          buildContext.getRepositorySession())
-      {/*
-        * @Override
-        * public DependencySelector getDependencySelector()
-        * {
-        * return selector;
-        * }
-        * 
-        * @Override
-        * public DependencyGraphTransformer getDependencyGraphTransformer()
-        * {
-        * return transformer;
-        * }
-        */
+      {
+         @Override
+         public DependencySelector getDependencySelector()
+         {
+            return selector;
+         }
+
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            return transformer;
+         }
+
       };
 
       final DefaultDependencyResolutionRequest resolutionRequest = new DefaultDependencyResolutionRequest();
       resolutionRequest.setMavenProject(project);
       resolutionRequest.setRepositorySession(repositorySession);
-      // resolutionRequest.setResolutionFilter(new ReplacedDependencyFilter());
+      resolutionRequest.setResolutionFilter(new ReplacedDependencyFilter());
 
       resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
 

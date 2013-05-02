@@ -10,10 +10,6 @@ import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.notify.impl.AdapterFactoryImpl;
 import org.eclipse.emf.ecore.EObject;
-import org.sourcepit.common.maven.model.Classified;
-import org.sourcepit.common.maven.model.DependencyDeclaration;
-import org.sourcepit.common.maven.model.Identifiable;
-import org.sourcepit.maven.dependency.model.DeclaredDependency;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelPackage;
 import org.sourcepit.maven.dependency.model.DependencyNode;
@@ -106,30 +102,6 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
       }
 
       @Override
-      public Adapter caseDeclaredDependency(DeclaredDependency object)
-      {
-         return createDeclaredDependencyAdapter();
-      }
-
-      @Override
-      public Adapter caseIdentifiable(Identifiable object)
-      {
-         return createIdentifiableAdapter();
-      }
-
-      @Override
-      public Adapter caseClassified(Classified object)
-      {
-         return createClassifiedAdapter();
-      }
-
-      @Override
-      public Adapter caseDependencyDeclaration(DependencyDeclaration object)
-      {
-         return createDependencyDeclarationAdapter();
-      }
-
-      @Override
       public Adapter defaultCase(EObject object)
       {
          return createEObjectAdapter();
@@ -199,74 +171,6 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @generated
     */
    public Adapter createDependencyTreeAdapter()
-   {
-      return null;
-   }
-
-   /**
-    * Creates a new adapter for an object of class '{@link org.sourcepit.maven.dependency.model.DeclaredDependency
-    * <em>Declared Dependency</em>}'.
-    * <!-- begin-user-doc -->
-    * This default implementation returns null so that we can easily ignore cases;
-    * it's useful to ignore a case when inheritance will catch all the cases anyway.
-    * <!-- end-user-doc -->
-    * 
-    * @return the new adapter.
-    * @see org.sourcepit.maven.dependency.model.DeclaredDependency
-    * @generated
-    */
-   public Adapter createDeclaredDependencyAdapter()
-   {
-      return null;
-   }
-
-   /**
-    * Creates a new adapter for an object of class '{@link org.sourcepit.common.maven.model.Identifiable
-    * <em>Identifiable</em>}'.
-    * <!-- begin-user-doc -->
-    * This default implementation returns null so that we can easily ignore cases;
-    * it's useful to ignore a case when inheritance will catch all the cases anyway.
-    * <!-- end-user-doc -->
-    * 
-    * @return the new adapter.
-    * @see org.sourcepit.common.maven.model.Identifiable
-    * @generated
-    */
-   public Adapter createIdentifiableAdapter()
-   {
-      return null;
-   }
-
-   /**
-    * Creates a new adapter for an object of class '{@link org.sourcepit.common.maven.model.Classified
-    * <em>Classified</em>}'.
-    * <!-- begin-user-doc -->
-    * This default implementation returns null so that we can easily ignore cases;
-    * it's useful to ignore a case when inheritance will catch all the cases anyway.
-    * <!-- end-user-doc -->
-    * 
-    * @return the new adapter.
-    * @see org.sourcepit.common.maven.model.Classified
-    * @generated
-    */
-   public Adapter createClassifiedAdapter()
-   {
-      return null;
-   }
-
-   /**
-    * Creates a new adapter for an object of class '{@link org.sourcepit.common.maven.model.DependencyDeclaration
-    * <em>Dependency Declaration</em>}'.
-    * <!-- begin-user-doc -->
-    * This default implementation returns null so that we can easily ignore cases;
-    * it's useful to ignore a case when inheritance will catch all the cases anyway.
-    * <!-- end-user-doc -->
-    * 
-    * @return the new adapter.
-    * @see org.sourcepit.common.maven.model.DependencyDeclaration
-    * @generated
-    */
-   public Adapter createDependencyDeclarationAdapter()
    {
       return null;
    }

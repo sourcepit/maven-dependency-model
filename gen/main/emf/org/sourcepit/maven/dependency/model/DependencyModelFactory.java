@@ -59,16 +59,6 @@ public interface DependencyModelFactory extends EFactory
    DependencyTree createDependencyTree();
 
    /**
-    * Returns a new object of class '<em>Declared Dependency</em>'.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @return a new object of class '<em>Declared Dependency</em>'.
-    * @generated
-    */
-   DeclaredDependency createDeclaredDependency();
-
-   /**
     * Returns the package supported by this factory.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->

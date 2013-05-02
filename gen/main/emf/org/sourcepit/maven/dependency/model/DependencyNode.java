@@ -9,6 +9,7 @@ package org.sourcepit.maven.dependency.model;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.sourcepit.common.maven.model.MavenArtifact;
+import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.Scope;
 
 /**
@@ -22,15 +23,16 @@ import org.sourcepit.common.maven.model.Scope;
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getArtifact <em>Artifact</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getChildren <em>Children</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#isSelected <em>Selected</em>}</li>
- * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getDependencyDeclaration <em>Dependency Declaration
- * </em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getParent <em>Parent</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getInheritedScope <em>Inherited Scope</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getManagedVersionConstraint <em>Managed Version
  * Constraint</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getManagedScope <em>Managed Scope</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getConflictNode <em>Conflict Node</em>}</li>
- * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getVersion <em>Version</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getDeclaredDependency <em>Declared Dependency</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#isOptional <em>Optional</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getConflictVersionConstraint <em>Conflict Version
+ * Constraint</em>}</li>
  * </ul>
  * </p>
  * 
@@ -120,35 +122,6 @@ public interface DependencyNode extends EObject
    void setSelected(boolean value);
 
    /**
-    * Returns the value of the '<em><b>Dependency Declaration</b></em>' containment reference.
-    * <!-- begin-user-doc -->
-    * <p>
-    * If the meaning of the '<em>Declaration</em>' containment reference isn't clear, there really should be more of a
-    * description here...
-    * </p>
-    * <!-- end-user-doc -->
-    * 
-    * @return the value of the '<em>Dependency Declaration</em>' containment reference.
-    * @see #setDependencyDeclaration(DeclaredDependency)
-    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_DependencyDeclaration()
-    * @model containment="true" required="true"
-    * @generated
-    */
-   DeclaredDependency getDependencyDeclaration();
-
-   /**
-    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#getDependencyDeclaration
-    * <em>Dependency Declaration</em>}' containment reference.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @param value the new value of the '<em>Dependency Declaration</em>' containment reference.
-    * @see #getDependencyDeclaration()
-    * @generated
-    */
-   void setDependencyDeclaration(DeclaredDependency value);
-
-   /**
     * Returns the value of the '<em><b>Parent</b></em>' container reference.
     * It is bidirectional and its opposite is '{@link org.sourcepit.maven.dependency.model.DependencyNode#getChildren
     * <em>Children</em>}'.
@@ -211,7 +184,6 @@ public interface DependencyNode extends EObject
 
    /**
     * Returns the value of the '<em><b>Managed Version Constraint</b></em>' attribute.
-    * The default value is <code>"null"</code>.
     * <!-- begin-user-doc -->
     * <p>
     * If the meaning of the '<em>Managed Version Constraint</em>' attribute isn't clear, there really should be more of
@@ -222,7 +194,7 @@ public interface DependencyNode extends EObject
     * @return the value of the '<em>Managed Version Constraint</em>' attribute.
     * @see #setManagedVersionConstraint(String)
     * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_ManagedVersionConstraint()
-    * @model default="null"
+    * @model
     * @generated
     */
    String getManagedVersionConstraint();
@@ -298,33 +270,91 @@ public interface DependencyNode extends EObject
    void setConflictNode(DependencyNode value);
 
    /**
-    * Returns the value of the '<em><b>Version</b></em>' attribute.
+    * Returns the value of the '<em><b>Declared Dependency</b></em>' containment reference.
     * <!-- begin-user-doc -->
     * <p>
-    * If the meaning of the '<em>Version</em>' attribute isn't clear, there really should be more of a description
+    * If the meaning of the '<em>Declared Dependency</em>' containment reference isn't clear, there really should be
+    * more of a description here...
+    * </p>
+    * <!-- end-user-doc -->
+    * 
+    * @return the value of the '<em>Declared Dependency</em>' containment reference.
+    * @see #setDeclaredDependency(MavenDependency)
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_DeclaredDependency()
+    * @model containment="true" required="true"
+    * @generated
+    */
+   MavenDependency getDeclaredDependency();
+
+   /**
+    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#getDeclaredDependency
+    * <em>Declared Dependency</em>}' containment reference.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @param value the new value of the '<em>Declared Dependency</em>' containment reference.
+    * @see #getDeclaredDependency()
+    * @generated
+    */
+   void setDeclaredDependency(MavenDependency value);
+
+   /**
+    * Returns the value of the '<em><b>Optional</b></em>' attribute.
+    * <!-- begin-user-doc -->
+    * <p>
+    * If the meaning of the '<em>Optional</em>' attribute isn't clear, there really should be more of a description
     * here...
     * </p>
     * <!-- end-user-doc -->
     * 
-    * @return the value of the '<em>Version</em>' attribute.
-    * @see #setVersion(String)
-    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_Version()
-    * @model required="true"
+    * @return the value of the '<em>Optional</em>' attribute.
+    * @see #setOptional(boolean)
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_Optional()
+    * @model
     * @generated
     */
-   String getVersion();
+   boolean isOptional();
 
    /**
-    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#getVersion <em>Version</em>}'
+    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#isOptional <em>Optional</em>}'
     * attribute.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @param value the new value of the '<em>Version</em>' attribute.
-    * @see #getVersion()
+    * @param value the new value of the '<em>Optional</em>' attribute.
+    * @see #isOptional()
     * @generated
     */
-   void setVersion(String value);
+   void setOptional(boolean value);
+
+   /**
+    * Returns the value of the '<em><b>Conflict Version Constraint</b></em>' attribute.
+    * <!-- begin-user-doc -->
+    * <p>
+    * If the meaning of the '<em>Conflict Version</em>' attribute isn't clear, there really should be more of a
+    * description here...
+    * </p>
+    * <!-- end-user-doc -->
+    * 
+    * @return the value of the '<em>Conflict Version Constraint</em>' attribute.
+    * @see #setConflictVersionConstraint(String)
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_ConflictVersionConstraint()
+    * @model
+    * @generated
+    */
+   String getConflictVersionConstraint();
+
+   /**
+    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#getConflictVersionConstraint
+    * <em>Conflict Version Constraint</em>}' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @param value the new value of the '<em>Conflict Version Constraint</em>' attribute.
+    * @see #getConflictVersionConstraint()
+    * @generated
+    */
+   void setConflictVersionConstraint(String value);
 
    /**
     * <!-- begin-user-doc -->
@@ -352,5 +382,32 @@ public interface DependencyNode extends EObject
     * @generated
     */
    Scope getEffectiveScope();
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model kind="operation" required="true"
+    * @generated
+    */
+   String getEffectiveVersionConstraint();
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model kind="operation"
+    * @generated
+    */
+   String getClassifier();
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model kind="operation" required="true"
+    * @generated
+    */
+   String getType();
 
 } // DependencyNode

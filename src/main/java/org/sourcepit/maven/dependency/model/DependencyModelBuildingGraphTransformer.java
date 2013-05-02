@@ -82,7 +82,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       nodeChooser = new NearestDependencyNodeChooser();
 
       transformer = new ChainedDependencyGraphTransformer(new DependencyNode2AdapterTransformer(true),
-         new VersionConflictResolver(nodeChooser));
+         new HideDuplicatedSiblings(), new ApplyScopeAndOptional(), new VersionConflictResolver(nodeChooser),
+         new HideReplacedNodes());
    }
 
    @Override
@@ -131,15 +132,24 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private DependencyNode currentRootNode;
 
+   private Set<DependencyNode> selected = new HashSet<DependencyNode>();
+
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
    {
+      selected.clear();
+
       if (computeTreePerArtifact)
       {
          rootNode = transformer.transformGraph(rootNode, context);
       }
-
-      new VisibilityCalculator().transformGraph(rootNode, context);
+      else
+      {
+         new ResetVisibility().transformGraph(rootNode, context);
+         new HideDuplicatedSiblings().transformGraph(rootNode, context);
+         new ApplyScopeAndOptional().transformGraph(rootNode, context);
+         new HideReplacedNodes().transformGraph(rootNode, context);
+      }
 
       initScopeMask(rootNode);
 
@@ -226,7 +236,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       for (DependencyNode parent : adapter.getParents())
       {
          final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-         if (!parentAdapter.isVisible() || parentAdapter.getReplacement() != null)
+         if (parentAdapter.getReplacement() != null)
          {
             continue;
          }
@@ -287,7 +297,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       final DependencyNode effectiveNode = getEffectiveNode(node);
 
       final boolean selected = isSelected(node, effectiveNode, depth);
-
+      
       final String scope = getEffectiveScope(node);
       parentScopes.push(scope);
       parentOptionals.push(Boolean.valueOf(optional));
@@ -304,6 +314,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, final int depth)
    {
+      if (selected.contains(effectiveNode))
+      {
+         return false;
+      }
+      
       boolean active = true;
       if (depth > 0)
       {
@@ -312,6 +327,10 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             active = false;
          }
          else if (!DependencyNode2Adapter.get(node).isVisible())
+         {
+            active = false;
+         }
+         else if (getCurrentOptional(node))
          {
             active = false;
          }
@@ -368,12 +387,17 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             }
          }
       }
+      
+      if (active)
+      {
+         this.selected.add(effectiveNode);
+      }
       return active;
    }
 
    private boolean isOptional(DependencyNode node)
    {
-      boolean optional = node.getDependency().isOptional();
+      boolean optional = getCurrentOptional(node);
       if (!parentOptionals.isEmpty())
       {
          final boolean parentOptional = parentOptionals.peek().booleanValue();
@@ -382,7 +406,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return optional;
    }
 
-   // TODO consider pre-managed scope
    private String getEffectiveScope(DependencyNode node)
    {
       String scope = getCurrentScope(node);
@@ -402,6 +425,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          scope = node.getDependency().getScope();
       }
       return scope;
+   }
+
+   private boolean getCurrentOptional(DependencyNode node)
+   {
+      return node.getDependency().isOptional();
    }
 
    private static DependencyNode getEffectiveNode(DependencyNode node)

@@ -11,7 +11,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.impl.EFactoryImpl;
 import org.eclipse.emf.ecore.plugin.EcorePlugin;
-import org.sourcepit.maven.dependency.model.DeclaredDependency;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelFactory;
 import org.sourcepit.maven.dependency.model.DependencyModelPackage;
@@ -81,8 +80,6 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
             return createDependencyModel();
          case DependencyModelPackage.DEPENDENCY_TREE :
             return createDependencyTree();
-         case DependencyModelPackage.DECLARED_DEPENDENCY :
-            return createDeclaredDependency();
          default :
             throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
       }
@@ -122,18 +119,6 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
    {
       DependencyTreeImpl dependencyTree = new DependencyTreeImpl();
       return dependencyTree;
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
-   public DeclaredDependency createDeclaredDependency()
-   {
-      DeclaredDependencyImpl declaredDependency = new DeclaredDependencyImpl();
-      return declaredDependency;
    }
 
    /**

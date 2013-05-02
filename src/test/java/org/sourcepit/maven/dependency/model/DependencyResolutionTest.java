@@ -215,6 +215,28 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
+   public void testLatest() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("group", "A", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "root", "1");
+      addDependency(pom, "group", "A", "LATEST");
+      repositoryFacade.deploy(pom);
+
+      final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);
+
+      DependencyTreeBuilderRequest request = new DependencyTreeBuilderRequest();
+      request.setArtifact(projectArtifact);
+
+      DependencyNode graph = treeBuilder.build(request);
+
+      print(DependencyNode2Adapter.get(graph), 0);
+   }
+
+   @Test
    public void testScopes() throws Exception
    {
       Model pom;
@@ -266,6 +288,40 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       pom = newModel("group", "root", "1");
       addDependency(pom, "group", "A", "1");
       addDependency(pom, "group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);
+
+      DependencyTreeBuilderRequest request = new DependencyTreeBuilderRequest();
+      request.setArtifact(projectArtifact);
+
+      DependencyNode graph = treeBuilder.build(request);
+
+      print(DependencyNode2Adapter.get(graph), 0);
+   }
+
+   @Test
+   public void testOptional() throws Exception
+   {
+      Model pom;
+
+//      pom = newModel("group", "B", "2");
+//      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "C", "1");
+      addDependency(pom, "group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "A", "1");
+      addDependency(pom, "group", "B", "1").setOptional(true);
+      addDependency(pom, "group", "C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("group", "root", "1");
+      addDependency(pom, "group", "A", "1");
       repositoryFacade.deploy(pom);
 
       final Artifact projectArtifact = getEmbeddedMaven().createProjectArtifact(pom);

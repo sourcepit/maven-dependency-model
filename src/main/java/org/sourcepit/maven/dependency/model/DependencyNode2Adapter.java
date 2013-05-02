@@ -17,6 +17,7 @@ import java.util.Set;
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
 public class DependencyNode2Adapter implements DependencyNode2
@@ -90,11 +91,11 @@ public class DependencyNode2Adapter implements DependencyNode2
    }
 
    @Override
-   public Set<String> getConflictKeys()
+   public Set<VersionConflictKey> getConflictKeys()
    {
-      final Set<String> conflictKeys = new HashSet<String>();
+      final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
 
-      final String targetGroupKey = getArtifactConflictKey();
+      final VersionConflictKey targetGroupKey = getArtifactConflictKey();
       if (targetGroupKey != null)
       {
          conflictKeys.add(targetGroupKey);
@@ -124,7 +125,7 @@ public class DependencyNode2Adapter implements DependencyNode2
    }
 
    @Override
-   public String getDependencyConflictKey()
+   public VersionConflictKey getDependencyConflictKey()
    {
       final List<Artifact> relocations = target.getRelocations();
       if (relocations != null && !relocations.isEmpty())
@@ -135,13 +136,13 @@ public class DependencyNode2Adapter implements DependencyNode2
    }
 
    @Override
-   public String getArtifactConflictKey()
+   public VersionConflictKey getArtifactConflictKey()
    {
       final Dependency dependency = target.getDependency();
       return dependency == null ? null : toVersionConflictKey(dependency.getArtifact());
    }
 
-   private static String toVersionConflictKey(final Artifact artifact)
+   private static VersionConflictKey toVersionConflictKey(final Artifact artifact)
    {
       return MavenModelUtils.toVersionConflictKey(artifact.getGroupId(), artifact.getArtifactId(),
          artifact.getExtension(), artifact.getClassifier());

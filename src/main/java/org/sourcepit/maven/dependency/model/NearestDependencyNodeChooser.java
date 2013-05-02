@@ -20,7 +20,7 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       for (DependencyNode node : nodes)
       {
          final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-         if (getRoot(node, adapter) == null)
+         if (!adapter.isVisible() || getRoot(node, adapter) == null)
          {
             continue;
          }
@@ -45,7 +45,7 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       for (DependencyNode parent : adapter.getParents())
       {
          final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-         if (!parentAdapter.isVisible() || parentAdapter.getReplacement() != null)
+         if (parentAdapter.getReplacement() != null)
          {
             continue;
          }

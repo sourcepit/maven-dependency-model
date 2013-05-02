@@ -10,7 +10,6 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
-import org.sourcepit.common.maven.model.MavenModelPackage;
 
 /**
  * <!-- begin-user-doc -->
@@ -109,16 +108,6 @@ public interface DependencyModelPackage extends EPackage
    int DEPENDENCY_NODE__SELECTED = 2;
 
    /**
-    * The feature id for the '<em><b>Dependency Declaration</b></em>' containment reference.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DEPENDENCY_NODE__DEPENDENCY_DECLARATION = 3;
-
-   /**
     * The feature id for the '<em><b>Parent</b></em>' container reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -126,7 +115,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__PARENT = 4;
+   int DEPENDENCY_NODE__PARENT = 3;
 
    /**
     * The feature id for the '<em><b>Inherited Scope</b></em>' attribute.
@@ -136,7 +125,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__INHERITED_SCOPE = 5;
+   int DEPENDENCY_NODE__INHERITED_SCOPE = 4;
 
    /**
     * The feature id for the '<em><b>Managed Version Constraint</b></em>' attribute.
@@ -146,7 +135,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__MANAGED_VERSION_CONSTRAINT = 6;
+   int DEPENDENCY_NODE__MANAGED_VERSION_CONSTRAINT = 5;
 
    /**
     * The feature id for the '<em><b>Managed Scope</b></em>' attribute.
@@ -156,7 +145,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__MANAGED_SCOPE = 7;
+   int DEPENDENCY_NODE__MANAGED_SCOPE = 6;
 
    /**
     * The feature id for the '<em><b>Conflict Node</b></em>' reference.
@@ -166,17 +155,37 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__CONFLICT_NODE = 8;
+   int DEPENDENCY_NODE__CONFLICT_NODE = 7;
 
    /**
-    * The feature id for the '<em><b>Version</b></em>' attribute.
+    * The feature id for the '<em><b>Declared Dependency</b></em>' containment reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE__VERSION = 9;
+   int DEPENDENCY_NODE__DECLARED_DEPENDENCY = 8;
+
+   /**
+    * The feature id for the '<em><b>Optional</b></em>' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    * @ordered
+    */
+   int DEPENDENCY_NODE__OPTIONAL = 9;
+
+   /**
+    * The feature id for the '<em><b>Conflict Version Constraint</b></em>' attribute.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    * @ordered
+    */
+   int DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT = 10;
 
    /**
     * The number of structural features of the '<em>Dependency Node</em>' class.
@@ -186,7 +195,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE_FEATURE_COUNT = 10;
+   int DEPENDENCY_NODE_FEATURE_COUNT = 11;
 
    /**
     * The meta object id for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl
@@ -272,98 +281,6 @@ public interface DependencyModelPackage extends EPackage
     */
    int DEPENDENCY_TREE_FEATURE_COUNT = 2;
 
-   /**
-    * The meta object id for the '{@link org.sourcepit.maven.dependency.model.impl.DeclaredDependencyImpl
-    * <em>Declared Dependency</em>}' class.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @see org.sourcepit.maven.dependency.model.impl.DeclaredDependencyImpl
-    * @see org.sourcepit.maven.dependency.model.impl.DependencyModelPackageImpl#getDeclaredDependency()
-    * @generated
-    */
-   int DECLARED_DEPENDENCY = 3;
-
-   /**
-    * The feature id for the '<em><b>Group Id</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__GROUP_ID = MavenModelPackage.DEPENDENCY_DECLARATION__GROUP_ID;
-
-   /**
-    * The feature id for the '<em><b>Artifact Id</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__ARTIFACT_ID = MavenModelPackage.DEPENDENCY_DECLARATION__ARTIFACT_ID;
-
-   /**
-    * The feature id for the '<em><b>Classifier</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__CLASSIFIER = MavenModelPackage.DEPENDENCY_DECLARATION__CLASSIFIER;
-
-   /**
-    * The feature id for the '<em><b>Type</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__TYPE = MavenModelPackage.DEPENDENCY_DECLARATION__TYPE;
-
-   /**
-    * The feature id for the '<em><b>Version Constraint</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__VERSION_CONSTRAINT = MavenModelPackage.DEPENDENCY_DECLARATION__VERSION_CONSTRAINT;
-
-   /**
-    * The feature id for the '<em><b>Scope</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__SCOPE = MavenModelPackage.DEPENDENCY_DECLARATION__SCOPE;
-
-   /**
-    * The feature id for the '<em><b>Optional</b></em>' attribute.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY__OPTIONAL = MavenModelPackage.DEPENDENCY_DECLARATION__OPTIONAL;
-
-   /**
-    * The number of structural features of the '<em>Declared Dependency</em>' class.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    * @ordered
-    */
-   int DECLARED_DEPENDENCY_FEATURE_COUNT = MavenModelPackage.DEPENDENCY_DECLARATION_FEATURE_COUNT + 0;
-
 
    /**
     * Returns the meta object for class '{@link org.sourcepit.maven.dependency.model.DependencyNode
@@ -415,20 +332,6 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     */
    EAttribute getDependencyNode_Selected();
-
-   /**
-    * Returns the meta object for the containment reference '
-    * {@link org.sourcepit.maven.dependency.model.DependencyNode#getDependencyDeclaration
-    * <em>Dependency Declaration</em>}'.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @return the meta object for the containment reference '<em>Dependency Declaration</em>'.
-    * @see org.sourcepit.maven.dependency.model.DependencyNode#getDependencyDeclaration()
-    * @see #getDependencyNode()
-    * @generated
-    */
-   EReference getDependencyNode_DependencyDeclaration();
 
    /**
     * Returns the meta object for the container reference '
@@ -497,17 +400,44 @@ public interface DependencyModelPackage extends EPackage
    EReference getDependencyNode_ConflictNode();
 
    /**
-    * Returns the meta object for the attribute '{@link org.sourcepit.maven.dependency.model.DependencyNode#getVersion
-    * <em>Version</em>}'.
+    * Returns the meta object for the containment reference '
+    * {@link org.sourcepit.maven.dependency.model.DependencyNode#getDeclaredDependency <em>Declared Dependency</em>}'.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @return the meta object for the attribute '<em>Version</em>'.
-    * @see org.sourcepit.maven.dependency.model.DependencyNode#getVersion()
+    * @return the meta object for the containment reference '<em>Declared Dependency</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyNode#getDeclaredDependency()
     * @see #getDependencyNode()
     * @generated
     */
-   EAttribute getDependencyNode_Version();
+   EReference getDependencyNode_DeclaredDependency();
+
+   /**
+    * Returns the meta object for the attribute '{@link org.sourcepit.maven.dependency.model.DependencyNode#isOptional
+    * <em>Optional</em>}'.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @return the meta object for the attribute '<em>Optional</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyNode#isOptional()
+    * @see #getDependencyNode()
+    * @generated
+    */
+   EAttribute getDependencyNode_Optional();
+
+   /**
+    * Returns the meta object for the attribute '
+    * {@link org.sourcepit.maven.dependency.model.DependencyNode#getConflictVersionConstraint
+    * <em>Conflict Version Constraint</em>}'.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @return the meta object for the attribute '<em>Conflict Version Constraint</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyNode#getConflictVersionConstraint()
+    * @see #getDependencyNode()
+    * @generated
+    */
+   EAttribute getDependencyNode_ConflictVersionConstraint();
 
    /**
     * Returns the meta object for class '{@link org.sourcepit.maven.dependency.model.DependencyModel
@@ -586,18 +516,6 @@ public interface DependencyModelPackage extends EPackage
    EReference getDependencyTree_DependencyNodes();
 
    /**
-    * Returns the meta object for class '{@link org.sourcepit.maven.dependency.model.DeclaredDependency
-    * <em>Declared Dependency</em>}'.
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @return the meta object for class '<em>Declared Dependency</em>'.
-    * @see org.sourcepit.maven.dependency.model.DeclaredDependency
-    * @generated
-    */
-   EClass getDeclaredDependency();
-
-   /**
     * Returns the factory that creates the instances of the model.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -662,15 +580,6 @@ public interface DependencyModelPackage extends EPackage
       EAttribute DEPENDENCY_NODE__SELECTED = eINSTANCE.getDependencyNode_Selected();
 
       /**
-       * The meta object literal for the '<em><b>Dependency Declaration</b></em>' containment reference feature.
-       * <!-- begin-user-doc -->
-       * <!-- end-user-doc -->
-       * 
-       * @generated
-       */
-      EReference DEPENDENCY_NODE__DEPENDENCY_DECLARATION = eINSTANCE.getDependencyNode_DependencyDeclaration();
-
-      /**
        * The meta object literal for the '<em><b>Parent</b></em>' container reference feature.
        * <!-- begin-user-doc -->
        * <!-- end-user-doc -->
@@ -716,13 +625,31 @@ public interface DependencyModelPackage extends EPackage
       EReference DEPENDENCY_NODE__CONFLICT_NODE = eINSTANCE.getDependencyNode_ConflictNode();
 
       /**
-       * The meta object literal for the '<em><b>Version</b></em>' attribute feature.
+       * The meta object literal for the '<em><b>Declared Dependency</b></em>' containment reference feature.
        * <!-- begin-user-doc -->
        * <!-- end-user-doc -->
        * 
        * @generated
        */
-      EAttribute DEPENDENCY_NODE__VERSION = eINSTANCE.getDependencyNode_Version();
+      EReference DEPENDENCY_NODE__DECLARED_DEPENDENCY = eINSTANCE.getDependencyNode_DeclaredDependency();
+
+      /**
+       * The meta object literal for the '<em><b>Optional</b></em>' attribute feature.
+       * <!-- begin-user-doc -->
+       * <!-- end-user-doc -->
+       * 
+       * @generated
+       */
+      EAttribute DEPENDENCY_NODE__OPTIONAL = eINSTANCE.getDependencyNode_Optional();
+
+      /**
+       * The meta object literal for the '<em><b>Conflict Version Constraint</b></em>' attribute feature.
+       * <!-- begin-user-doc -->
+       * <!-- end-user-doc -->
+       * 
+       * @generated
+       */
+      EAttribute DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT = eINSTANCE.getDependencyNode_ConflictVersionConstraint();
 
       /**
        * The meta object literal for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl
@@ -783,18 +710,6 @@ public interface DependencyModelPackage extends EPackage
        * @generated
        */
       EReference DEPENDENCY_TREE__DEPENDENCY_NODES = eINSTANCE.getDependencyTree_DependencyNodes();
-
-      /**
-       * The meta object literal for the '{@link org.sourcepit.maven.dependency.model.impl.DeclaredDependencyImpl
-       * <em>Declared Dependency</em>}' class.
-       * <!-- begin-user-doc -->
-       * <!-- end-user-doc -->
-       * 
-       * @see org.sourcepit.maven.dependency.model.impl.DeclaredDependencyImpl
-       * @see org.sourcepit.maven.dependency.model.impl.DependencyModelPackageImpl#getDeclaredDependency()
-       * @generated
-       */
-      EClass DECLARED_DEPENDENCY = eINSTANCE.getDeclaredDependency();
 
    }
 

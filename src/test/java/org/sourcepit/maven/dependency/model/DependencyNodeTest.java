@@ -6,9 +6,12 @@
 
 package org.sourcepit.maven.dependency.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.sourcepit.common.maven.model.MavenModelFactory;
 import org.sourcepit.common.maven.model.Scope;
 
 public class DependencyNodeTest
@@ -18,6 +21,8 @@ public class DependencyNodeTest
    public void testGetEffectiveScope()
    {
       DependencyModelFactory eFactory = DependencyModelFactory.eINSTANCE;
+      MavenModelFactory mavenModelFactory = MavenModelFactory.eINSTANCE;
+
       DependencyNode node = eFactory.createDependencyNode();
 
       try
@@ -29,25 +34,25 @@ public class DependencyNodeTest
       {
       }
 
-      node.setDependencyDeclaration(eFactory.createDeclaredDependency());
+      node.setDeclaredDependency(mavenModelFactory.createMavenDependency());
 
       assertNull(node.getManagedScope());
       assertNull(node.getInheritedScope());
-      assertSame(Scope.COMPILE, node.getDependencyDeclaration().getScope());
+      assertSame(Scope.COMPILE, node.getDeclaredDependency().getScope());
       assertSame(Scope.COMPILE, node.getEffectiveScope());
 
       node.setInheritedScope(Scope.RUNTIME);
 
       assertNull(node.getManagedScope());
       assertSame(Scope.RUNTIME, node.getInheritedScope());
-      assertSame(Scope.COMPILE, node.getDependencyDeclaration().getScope());
+      assertSame(Scope.COMPILE, node.getDeclaredDependency().getScope());
       assertSame(Scope.RUNTIME, node.getEffectiveScope());
 
       node.setManagedScope(Scope.TEST);
 
       assertSame(Scope.TEST, node.getManagedScope());
       assertSame(Scope.RUNTIME, node.getInheritedScope());
-      assertSame(Scope.COMPILE, node.getDependencyDeclaration().getScope());
+      assertSame(Scope.COMPILE, node.getDeclaredDependency().getScope());
       assertSame(Scope.TEST, node.getEffectiveScope());
    }
 

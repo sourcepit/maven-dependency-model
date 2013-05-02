@@ -10,10 +10,6 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.sourcepit.common.maven.model.Classified;
-import org.sourcepit.common.maven.model.DependencyDeclaration;
-import org.sourcepit.common.maven.model.Identifiable;
-import org.sourcepit.maven.dependency.model.DeclaredDependency;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelPackage;
 import org.sourcepit.maven.dependency.model.DependencyNode;
@@ -129,20 +125,6 @@ public class DependencyModelSwitch<T>
                result = defaultCase(theEObject);
             return result;
          }
-         case DependencyModelPackage.DECLARED_DEPENDENCY :
-         {
-            DeclaredDependency declaredDependency = (DeclaredDependency) theEObject;
-            T result = caseDeclaredDependency(declaredDependency);
-            if (result == null)
-               result = caseDependencyDeclaration(declaredDependency);
-            if (result == null)
-               result = caseIdentifiable(declaredDependency);
-            if (result == null)
-               result = caseClassified(declaredDependency);
-            if (result == null)
-               result = defaultCase(theEObject);
-            return result;
-         }
          default :
             return defaultCase(theEObject);
       }
@@ -195,74 +177,6 @@ public class DependencyModelSwitch<T>
     * @generated
     */
    public T caseDependencyTree(DependencyTree object)
-   {
-      return null;
-   }
-
-   /**
-    * Returns the result of interpreting the object as an instance of '<em>Declared Dependency</em>'.
-    * <!-- begin-user-doc -->
-    * This implementation returns null;
-    * returning a non-null result will terminate the switch.
-    * <!-- end-user-doc -->
-    * 
-    * @param object the target of the switch.
-    * @return the result of interpreting the object as an instance of '<em>Declared Dependency</em>'.
-    * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
-    * @generated
-    */
-   public T caseDeclaredDependency(DeclaredDependency object)
-   {
-      return null;
-   }
-
-   /**
-    * Returns the result of interpreting the object as an instance of '<em>Identifiable</em>'.
-    * <!-- begin-user-doc -->
-    * This implementation returns null;
-    * returning a non-null result will terminate the switch.
-    * <!-- end-user-doc -->
-    * 
-    * @param object the target of the switch.
-    * @return the result of interpreting the object as an instance of '<em>Identifiable</em>'.
-    * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
-    * @generated
-    */
-   public T caseIdentifiable(Identifiable object)
-   {
-      return null;
-   }
-
-   /**
-    * Returns the result of interpreting the object as an instance of '<em>Classified</em>'.
-    * <!-- begin-user-doc -->
-    * This implementation returns null;
-    * returning a non-null result will terminate the switch.
-    * <!-- end-user-doc -->
-    * 
-    * @param object the target of the switch.
-    * @return the result of interpreting the object as an instance of '<em>Classified</em>'.
-    * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
-    * @generated
-    */
-   public T caseClassified(Classified object)
-   {
-      return null;
-   }
-
-   /**
-    * Returns the result of interpreting the object as an instance of '<em>Dependency Declaration</em>'.
-    * <!-- begin-user-doc -->
-    * This implementation returns null;
-    * returning a non-null result will terminate the switch.
-    * <!-- end-user-doc -->
-    * 
-    * @param object the target of the switch.
-    * @return the result of interpreting the object as an instance of '<em>Dependency Declaration</em>'.
-    * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
-    * @generated
-    */
-   public T caseDependencyDeclaration(DependencyDeclaration object)
    {
       return null;
    }

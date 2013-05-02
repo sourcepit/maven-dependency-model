@@ -11,7 +11,7 @@ import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.graph.DependencyNode;
 
-public class VisibilityCalculator implements DependencyGraphTransformer
+public class HideReplacedNodes implements DependencyGraphTransformer
 {
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
@@ -23,19 +23,11 @@ public class VisibilityCalculator implements DependencyGraphTransformer
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
             final int depth = path.size();
-            boolean visible = true;
-            if (depth > 1)
+            boolean visible = DependencyNode2Adapter.get(node).isVisible();
+            if (visible && depth > 1)
             {
                DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
                visible = parentAdapter.isVisible() && parentAdapter.getReplacement() == null;
-               if (visible)
-               {
-                  final String scope = node.getDependency().getScope();
-                  if (node.getDependency().isOptional() || scope.equals("test") || scope.equals("provided"))
-                  {
-                     visible = false;
-                  }
-               }
             }
             DependencyNode2Adapter.get(node).setVisible(visible);
             return true;

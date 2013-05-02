@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.model.VersionConflictKey;
 
 public interface DependencyNode2
 {
@@ -26,11 +27,11 @@ public interface DependencyNode2
 
    void setReplacement(DependencyNode replacement);
 
-   Set<String> getConflictKeys();
+   Set<VersionConflictKey> getConflictKeys();
 
-   String getDependencyConflictKey();
+   VersionConflictKey getDependencyConflictKey();
 
-   String getArtifactConflictKey();
+   VersionConflictKey getArtifactConflictKey();
 
    Collection<List<DependencyNode>> getConflictingNodeGroups();
 

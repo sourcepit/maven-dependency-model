@@ -12,7 +12,6 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 import org.sourcepit.common.maven.model.MavenModelPackage;
-import org.sourcepit.maven.dependency.model.DeclaredDependency;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelFactory;
 import org.sourcepit.maven.dependency.model.DependencyModelPackage;
@@ -51,14 +50,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * @generated
     */
    private EClass dependencyTreeEClass = null;
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
-   private EClass declaredDependencyEClass = null;
 
    /**
     * Creates an instance of the model <b>Package</b>, registered with {@link org.eclipse.emf.ecore.EPackage.Registry
@@ -181,7 +172,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_DependencyDeclaration()
+   public EReference getDependencyNode_Parent()
    {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(3);
    }
@@ -192,20 +183,9 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_Parent()
-   {
-      return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(4);
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
    public EAttribute getDependencyNode_InheritedScope()
    {
-      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(5);
+      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(4);
    }
 
    /**
@@ -216,7 +196,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     */
    public EAttribute getDependencyNode_ManagedVersionConstraint()
    {
-      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(6);
+      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(5);
    }
 
    /**
@@ -227,7 +207,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     */
    public EAttribute getDependencyNode_ManagedScope()
    {
-      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(7);
+      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(6);
    }
 
    /**
@@ -238,6 +218,17 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     */
    public EReference getDependencyNode_ConflictNode()
    {
+      return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(7);
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public EReference getDependencyNode_DeclaredDependency()
+   {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(8);
    }
 
@@ -247,9 +238,20 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_Version()
+   public EAttribute getDependencyNode_Optional()
    {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(9);
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public EAttribute getDependencyNode_ConflictVersionConstraint()
+   {
+      return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(10);
    }
 
    /**
@@ -324,17 +326,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EClass getDeclaredDependency()
-   {
-      return declaredDependencyEClass;
-   }
-
-   /**
-    * <!-- begin-user-doc -->
-    * <!-- end-user-doc -->
-    * 
-    * @generated
-    */
    public DependencyModelFactory getDependencyModelFactory()
    {
       return (DependencyModelFactory) getEFactoryInstance();
@@ -367,13 +358,14 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       createEReference(dependencyNodeEClass, DEPENDENCY_NODE__ARTIFACT);
       createEReference(dependencyNodeEClass, DEPENDENCY_NODE__CHILDREN);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__SELECTED);
-      createEReference(dependencyNodeEClass, DEPENDENCY_NODE__DEPENDENCY_DECLARATION);
       createEReference(dependencyNodeEClass, DEPENDENCY_NODE__PARENT);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__INHERITED_SCOPE);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__MANAGED_VERSION_CONSTRAINT);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__MANAGED_SCOPE);
       createEReference(dependencyNodeEClass, DEPENDENCY_NODE__CONFLICT_NODE);
-      createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__VERSION);
+      createEReference(dependencyNodeEClass, DEPENDENCY_NODE__DECLARED_DEPENDENCY);
+      createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__OPTIONAL);
+      createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT);
 
       dependencyModelEClass = createEClass(DEPENDENCY_MODEL);
       createEReference(dependencyModelEClass, DEPENDENCY_MODEL__ARTIFACTS);
@@ -382,8 +374,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       dependencyTreeEClass = createEClass(DEPENDENCY_TREE);
       createEReference(dependencyTreeEClass, DEPENDENCY_TREE__TARGET_ARTIFACT);
       createEReference(dependencyTreeEClass, DEPENDENCY_TREE__DEPENDENCY_NODES);
-
-      declaredDependencyEClass = createEClass(DECLARED_DEPENDENCY);
    }
 
    /**
@@ -422,7 +412,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       // Set bounds for type parameters
 
       // Add supertypes to classes
-      declaredDependencyEClass.getESuperTypes().add(theMavenModelPackage.getDependencyDeclaration());
 
       // Initialize classes and features; add operations and parameters
       initEClass(dependencyNodeEClass, DependencyNode.class, "DependencyNode", !IS_ABSTRACT, !IS_INTERFACE,
@@ -436,9 +425,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEAttribute(getDependencyNode_Selected(), ecorePackage.getEBoolean(), "selected", "true", 0, 1,
          DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
          !IS_DERIVED, IS_ORDERED);
-      initEReference(getDependencyNode_DependencyDeclaration(), this.getDeclaredDependency(), null,
-         "dependencyDeclaration", null, 1, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
-         IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
       initEReference(getDependencyNode_Parent(), this.getDependencyNode(), this.getDependencyNode_Children(), "parent",
          null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE,
          !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
@@ -446,7 +432,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
          null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID,
          IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
       initEAttribute(getDependencyNode_ManagedVersionConstraint(), ecorePackage.getEString(),
-         "managedVersionConstraint", "null", 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
+         "managedVersionConstraint", null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
          !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
       initEAttribute(getDependencyNode_ManagedScope(), theMavenModelPackage.getNullableScope(), "managedScope", null,
          0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
@@ -454,9 +440,15 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEReference(getDependencyNode_ConflictNode(), this.getDependencyNode(), null, "conflictNode", null, 0, 1,
          DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES,
          !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-      initEAttribute(getDependencyNode_Version(), ecorePackage.getEString(), "version", null, 1, 1,
+      initEReference(getDependencyNode_DeclaredDependency(), theMavenModelPackage.getMavenDependency(), null,
+         "declaredDependency", null, 1, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
+         IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+      initEAttribute(getDependencyNode_Optional(), ecorePackage.getEBoolean(), "optional", null, 0, 1,
          DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
          !IS_DERIVED, IS_ORDERED);
+      initEAttribute(getDependencyNode_ConflictVersionConstraint(), ecorePackage.getEString(),
+         "conflictVersionConstraint", null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
+         !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
       addEOperation(dependencyNodeEClass, ecorePackage.getEString(), "getGroupId", 1, 1, IS_UNIQUE, IS_ORDERED);
 
@@ -464,6 +456,13 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
 
       addEOperation(dependencyNodeEClass, theMavenModelPackage.getScope(), "getEffectiveScope", 1, 1, IS_UNIQUE,
          IS_ORDERED);
+
+      addEOperation(dependencyNodeEClass, ecorePackage.getEString(), "getEffectiveVersionConstraint", 1, 1, IS_UNIQUE,
+         IS_ORDERED);
+
+      addEOperation(dependencyNodeEClass, ecorePackage.getEString(), "getClassifier", 0, 1, IS_UNIQUE, IS_ORDERED);
+
+      addEOperation(dependencyNodeEClass, ecorePackage.getEString(), "getType", 1, 1, IS_UNIQUE, IS_ORDERED);
 
       initEClass(dependencyModelEClass, DependencyModel.class, "DependencyModel", !IS_ABSTRACT, !IS_INTERFACE,
          IS_GENERATED_INSTANCE_CLASS);
@@ -482,9 +481,6 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEReference(getDependencyTree_DependencyNodes(), this.getDependencyNode(), null, "dependencyNodes", null, 0,
          -1, DependencyTree.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES,
          !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-
-      initEClass(declaredDependencyEClass, DeclaredDependency.class, "DeclaredDependency", !IS_ABSTRACT, !IS_INTERFACE,
-         IS_GENERATED_INSTANCE_CLASS);
 
       // Create resource
       createResource(eNS_URI);
