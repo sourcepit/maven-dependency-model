@@ -4,11 +4,12 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import javax.validation.constraints.NotNull;
 
 import org.sourcepit.common.maven.model.Scope;
+import org.sourcepit.maven.dependency.model.DependencyNode;
 
 public final class DependencyNodeOperations
 {

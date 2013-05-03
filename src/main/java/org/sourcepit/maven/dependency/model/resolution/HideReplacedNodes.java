@@ -4,14 +4,14 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.graph.DependencyNode;
 
-public class ApplyScopeAndOptional implements DependencyGraphTransformer
+public class HideReplacedNodes implements DependencyGraphTransformer
 {
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
@@ -27,15 +27,7 @@ public class ApplyScopeAndOptional implements DependencyGraphTransformer
             if (visible && depth > 1)
             {
                DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-               visible = parentAdapter.isVisible();
-               if (visible)
-               {
-                  final String scope = node.getDependency().getScope();
-                  if (node.getDependency().isOptional() || scope.equals("test") || scope.equals("provided"))
-                  {
-                     visible = false;
-                  }
-               }
+               visible = parentAdapter.isVisible() && parentAdapter.getReplacement() == null;
             }
             DependencyNode2Adapter.get(node).setVisible(visible);
             return true;

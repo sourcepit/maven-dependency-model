@@ -1,5 +1,5 @@
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 /*******************************************************************************
  * Copyright (c) 2010-2011 Sonatype, Inc.

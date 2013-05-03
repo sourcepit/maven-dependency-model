@@ -4,12 +4,13 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.sourcepit.maven.dependency.model.resolution.DependencyUtils;
 
 public class DependencyUtilsTest
 {

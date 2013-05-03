@@ -4,29 +4,28 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.graph.DependencyNode;
 
-public class ResetVisibility implements DependencyGraphTransformer
+public class DependencyNode2AdapterTransformer implements DependencyGraphTransformer
 {
+   private final boolean reset;
+
+   public DependencyNode2AdapterTransformer(boolean reset)
+   {
+      this.reset = reset;
+   }
+
    @Override
-   public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
+   public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
       throws RepositoryException
    {
-      graph.accept(new AbstractDependencyVisitor(false)
-      {
-         @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
-            DependencyNode2Adapter.get(node).setVisible(true);
-            return true;
-         }
-      });
-      return graph;
+      DependencyNode2Adapter.adapt(node, reset);
+      return node;
    }
 
 }

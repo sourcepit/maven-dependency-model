@@ -13,6 +13,8 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.sourcepit.common.maven.model.MavenModelFactory;
 import org.sourcepit.common.maven.model.Scope;
+import org.sourcepit.maven.dependency.model.DependencyModelFactory;
+import org.sourcepit.maven.dependency.model.DependencyNode;
 
 public class DependencyNodeTest
 {

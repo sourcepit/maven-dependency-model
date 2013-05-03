@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import static org.apache.commons.io.IOUtils.copy;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +28,8 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;
+import org.sourcepit.maven.dependency.model.resolution.DependencyModelBuildingGraphTransformer;
+import org.sourcepit.maven.dependency.model.resolution.DependencyModelHandler;
 
 public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest
 {

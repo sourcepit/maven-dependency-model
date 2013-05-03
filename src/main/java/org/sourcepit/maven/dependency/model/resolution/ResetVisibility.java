@@ -4,14 +4,14 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.graph.DependencyNode;
 
-public class HideReplacedNodes implements DependencyGraphTransformer
+public class ResetVisibility implements DependencyGraphTransformer
 {
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
@@ -22,14 +22,7 @@ public class HideReplacedNodes implements DependencyGraphTransformer
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
-            final int depth = path.size();
-            boolean visible = DependencyNode2Adapter.get(node).isVisible();
-            if (visible && depth > 1)
-            {
-               DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-               visible = parentAdapter.isVisible() && parentAdapter.getReplacement() == null;
-            }
-            DependencyNode2Adapter.get(node).setVisible(visible);
+            DependencyNode2Adapter.get(node).setVisible(true);
             return true;
          }
       });

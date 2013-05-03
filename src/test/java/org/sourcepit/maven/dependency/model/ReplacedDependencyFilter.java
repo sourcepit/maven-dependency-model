@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.sonatype.aether.graph.DependencyFilter;
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.maven.dependency.model.resolution.DependencyNode2;
+import org.sourcepit.maven.dependency.model.resolution.DependencyNode2Adapter;
 
 public class ReplacedDependencyFilter implements DependencyFilter
 {

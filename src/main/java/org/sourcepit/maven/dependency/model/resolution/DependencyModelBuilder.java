@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.resolution;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -26,6 +26,9 @@ import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
+import org.sourcepit.maven.dependency.model.DependencyModel;
+import org.sourcepit.maven.dependency.model.DependencyModelFactory;
+import org.sourcepit.maven.dependency.model.DependencyTree;
 
 public class DependencyModelBuilder implements DependencyModelHandler
 {
