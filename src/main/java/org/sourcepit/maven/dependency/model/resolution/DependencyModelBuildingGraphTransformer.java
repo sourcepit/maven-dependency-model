@@ -22,6 +22,8 @@ import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.sourcepit.common.maven.model.ArtifactKey;
+import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
 public class DependencyModelBuildingGraphTransformer implements DependencyGraphTransformer
 {
@@ -64,8 +66,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final DependencyModelHandler handler;
 
-   private final Artifact root;
-
    private final Stack<String> parentScopes = new Stack<String>();
    private final Stack<Boolean> parentOptionals = new Stack<Boolean>();
 
@@ -73,12 +73,10 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final Set<DependencyNode> referencedNodes = new HashSet<DependencyNode>();
 
-   public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
-      Artifact root)
+   public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact)
    {
       this.handler = handler;
       this.computeTreePerArtifact = computeTreePerArtifact;
-      this.root = root;
 
       nodeChooser = new NearestDependencyNodeChooser();
 
@@ -109,11 +107,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       }
       traverseTrees(roots, context);
 
-      if (root != null)
-      {
-         traverceTree(graph, root, computeTreePerArtifact, context);
-      }
-
       handler.endDependencyModel();
 
       pruneUnreferenced(graph);
@@ -141,18 +134,38 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          private boolean isReferenced(DependencyNode childNode)
          {
-            return ((Boolean) childNode.getData().get("referenced")).booleanValue();
+            Object object = childNode.getData().get("referenced");
+            return object == null || ((Boolean) object).booleanValue();
          }
       });
    }
+
+   private Stack<DependencyNode> nodeStack = new Stack<DependencyNode>();
 
    private void traverseTrees(List<DependencyNode> nodes, DependencyGraphTransformationContext context)
       throws RepositoryException
    {
       for (DependencyNode node : nodes)
       {
+         if (nodeStack.contains(node))
+         {
+            final StringBuilder sb = new StringBuilder();
+            for (DependencyNode n : nodeStack)
+            {
+               sb.append(n);
+               sb.append(" -> ");
+            }
+            sb.append(node);
+
+            throw new IllegalStateException("Cyclic dependencies " + sb);
+         }
+
+         nodeStack.push(node);
+
          traverseTrees(node.getChildren(), context);
          traverceTree(node, node.getDependency().getArtifact(), computeTreePerArtifact, context);
+
+         nodeStack.pop();
       }
    }
 
@@ -160,34 +173,39 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private Set<DependencyNode> selected = new HashSet<DependencyNode>();
 
+   private Set<ArtifactKey> visited = new HashSet<ArtifactKey>();
+
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
    {
-      selected.clear();
-
-      if (computeTreePerArtifact)
+      if (visited.add(MavenModelUtils.toArtifactKey(rootArtifact)))
       {
-         rootNode = transformer.transformGraph(rootNode, context);
+         selected.clear();
+
+         if (computeTreePerArtifact)
+         {
+            rootNode = transformer.transformGraph(rootNode, context);
+         }
+         else
+         {
+            new ResetVisibility().transformGraph(rootNode, context);
+            new HideDuplicatedSiblings().transformGraph(rootNode, context);
+            new ApplyScopeAndOptional().transformGraph(rootNode, context);
+            new HideReplacedNodes().transformGraph(rootNode, context);
+         }
+
+         initScopeMask(rootNode);
+
+         final boolean referenced = isReferenced(rootNode);
+
+         currentRootNode = rootNode;
+
+         handler.startDependencyTree(rootArtifact, referenced);
+         traverseNodesRecursive(rootNode.getChildren());
+         handler.endDependencyTree(rootArtifact);
+
+         currentRootNode = null;
       }
-      else
-      {
-         new ResetVisibility().transformGraph(rootNode, context);
-         new HideDuplicatedSiblings().transformGraph(rootNode, context);
-         new ApplyScopeAndOptional().transformGraph(rootNode, context);
-         new HideReplacedNodes().transformGraph(rootNode, context);
-      }
-
-      initScopeMask(rootNode);
-
-      final boolean referenced = isReferenced(rootNode);
-
-      currentRootNode = rootNode;
-
-      handler.startDependencyTree(rootArtifact, referenced);
-      traverseNodesRecursive(rootNode.getChildren());
-      handler.endDependencyTree(rootArtifact);
-
-      currentRootNode = null;
    }
 
    private void initScopeMask(DependencyNode root)
@@ -306,11 +324,22 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return false;
    }
 
+   Stack<DependencyNode> stack2 = new Stack<DependencyNode>();
+
    private void traverseNodesRecursive(List<DependencyNode> children)
    {
       for (DependencyNode child : children)
       {
+         // if (stack2.contains(child))
+         // {
+         // continue;
+         // }
+         //
+         // stack2.push(child);
+
          traverseNodeRecursive(child);
+
+         // stack2.pop();
       }
    }
 

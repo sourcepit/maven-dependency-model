@@ -25,11 +25,11 @@ import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
+import org.sonatype.aether.util.graph.DefaultDependencyNode;
+import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;
-import org.sourcepit.maven.dependency.model.resolution.DependencyModelBuildingGraphTransformer;
-import org.sourcepit.maven.dependency.model.resolution.DependencyModelHandler;
 
 public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest
 {
@@ -65,7 +65,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    {
       test();
    }
-   
+
    @Test
    public void testVersionConflict1() throws Exception
    {
@@ -178,10 +178,21 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       PrintStream printStream = new PrintStream(bytes);
       DependencyModelHandler printer = newPrinter(printStream);
 
-      DependencyModelBuildingGraphTransformer strategy = new DependencyModelBuildingGraphTransformer(printer,
-         computeTreePerArtifact, root);
 
-      strategy.transformGraph(graph, null);
+      ReplaceRootNode transformer1 = null;
+      if (root != null)
+      {
+         DefaultDependencyNode rootNode = new DefaultDependencyNode();
+         rootNode.setDependency(new org.sonatype.aether.graph.Dependency(root, "compile"));
+         rootNode.setRequestContext("project");
+
+         transformer1 = new ReplaceRootNode(rootNode);
+      }
+
+      DependencyModelBuildingGraphTransformer transformer2 = new DependencyModelBuildingGraphTransformer(printer,
+         computeTreePerArtifact);
+
+      ChainedDependencyGraphTransformer.newInstance(transformer1, transformer2).transformGraph(graph, null);
 
       return new String(bytes.toByteArray());
    }
