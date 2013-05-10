@@ -120,6 +120,24 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       test();
    }
 
+   @Test
+   public void testEffectiveScope5() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testEffectiveScope6() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testEffectiveScope7() throws Exception
+   {
+      test();
+   }
+
    private void test() throws Exception
    {
       DependencyNode graph;
@@ -130,24 +148,47 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 
       final String prefix = getClass().getSimpleName() + "/" + getTestName();
 
+      final String prefixCompile = prefix + "/compile";
+
       graph = parseDependencyGraph(input);
-      actual = transformGraph(null, graph, false);
-      expected = getStringContent(prefix + "/Out.txt");
+      actual = transformGraph(null, graph, false, false);
+      expected = getStringContent(prefixCompile + "/Out.txt");
       assertEquals(expected, actual);
 
       graph = parseDependencyGraph(input);
-      actual = transformGraph(null, graph, true);
-      expected = getStringContent(prefix + "/OutPerArtifact.txt");
+      actual = transformGraph(null, graph, true, false);
+      expected = getStringContent(prefixCompile + "/OutPerArtifact.txt");
       assertEquals(expected, actual);
 
       graph = parseDependencyGraph(input);
-      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, false);
-      expected = getStringContent(prefix + "/OutWithRoot.txt");
+      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, false, false);
+      expected = getStringContent(prefixCompile + "/OutWithRoot.txt");
       assertEquals(expected, actual);
 
       graph = parseDependencyGraph(input);
-      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, true);
-      expected = getStringContent(prefix + "/OutWithRootPerArtifact.txt");
+      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, true, false);
+      expected = getStringContent(prefixCompile + "/OutWithRootPerArtifact.txt");
+      assertEquals(expected, actual);
+
+      final String prefixTest = prefix + "/test";
+      graph = parseDependencyGraph(input);
+      actual = transformGraph(null, graph, false, true);
+      expected = getStringContent(prefixTest + "/Out.txt");
+      assertEquals(expected, actual);
+
+      graph = parseDependencyGraph(input);
+      actual = transformGraph(null, graph, true, true);
+      expected = getStringContent(prefixTest + "/OutPerArtifact.txt");
+      assertEquals(expected, actual);
+
+      graph = parseDependencyGraph(input);
+      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, false, true);
+      expected = getStringContent(prefixTest + "/OutWithRoot.txt");
+      assertEquals(expected, actual);
+
+      graph = parseDependencyGraph(input);
+      actual = transformGraph(new DefaultArtifact("root", "ROOT", "jar", "1"), graph, true, true);
+      expected = getStringContent(prefixTest + "/OutWithRootPerArtifact.txt");
       assertEquals(expected, actual);
    }
 
@@ -171,7 +212,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       return read(fromStream, buffIn(cpIn(getClassLoader(), resource)));
    }
 
-   private String transformGraph(Artifact root, DependencyNode graph, boolean computeTreePerArtifact)
+   private String transformGraph(Artifact root, DependencyNode graph, boolean computeTreePerArtifact, boolean scopeTest)
       throws RepositoryException
    {
       ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -190,7 +231,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       }
 
       DependencyModelBuildingGraphTransformer transformer2 = new DependencyModelBuildingGraphTransformer(printer,
-         computeTreePerArtifact);
+         computeTreePerArtifact, scopeTest);
 
       ChainedDependencyGraphTransformer.newInstance(transformer1, transformer2).transformGraph(graph, null);
 

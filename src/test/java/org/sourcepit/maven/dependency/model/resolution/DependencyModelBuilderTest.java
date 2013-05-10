@@ -108,7 +108,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       assertTrue(declaredDependency.isOptional());
       assertEquals("66", declaredDependency.getVersionConstraint());
       assertEquals(Scope.TEST, declaredDependency.getScope());
-      
+
       node.setPremanagedScope("compile");
       node.setPremanagedVersion("1");
 
@@ -340,6 +340,10 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
 
    private String toString(MavenArtifact artifact)
    {
+      if (artifact == null)
+      {
+         return "null";
+      }
       return artifact.getArtifactKey().toString();
    }
 }

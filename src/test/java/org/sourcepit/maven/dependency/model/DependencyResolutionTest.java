@@ -185,7 +185,6 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
 
-   @Test
    public void testCycle() throws Exception
    {
       Model pom;
@@ -213,7 +212,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
 
       DependencyNode graph = treeBuilder.build(request);
 
-      // print(DependencyNode2AdapterFactory.get(graph), 0);
+      print(DependencyNode2Adapter.get(graph), 0);
    }
 
    @Test
@@ -307,8 +306,8 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    {
       Model pom;
 
-//      pom = newModel("group", "B", "2");
-//      repositoryFacade.deploy(pom);
+      // pom = newModel("group", "B", "2");
+      // repositoryFacade.deploy(pom);
 
       pom = newModel("group", "C", "1");
       addDependency(pom, "group", "B", "1");

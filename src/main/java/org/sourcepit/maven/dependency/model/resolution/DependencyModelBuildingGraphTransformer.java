@@ -60,6 +60,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final boolean computeTreePerArtifact;
 
+   private final boolean scopeTest;
+
    private final DependencyGraphTransformer transformer;
 
    private final NearestDependencyNodeChooser nodeChooser;
@@ -73,10 +75,14 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final Set<DependencyNode> referencedNodes = new HashSet<DependencyNode>();
 
-   public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact)
+   private final Set<ArtifactKey> referencedAritfact = new HashSet<ArtifactKey>();
+
+   public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
+      boolean scopeTest)
    {
       this.handler = handler;
       this.computeTreePerArtifact = computeTreePerArtifact;
+      this.scopeTest = scopeTest;
 
       nodeChooser = new NearestDependencyNodeChooser();
 
@@ -129,6 +135,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                   it.remove();
                }
             }
+
             return super.onVisitEnter(parent, node);
          }
 
@@ -178,7 +185,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
    {
-      if (visited.add(MavenModelUtils.toArtifactKey(rootArtifact)))
+      final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(rootArtifact);
+      if (visited.add(artifactKey))
       {
          selected.clear();
 
@@ -196,7 +204,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          initScopeMask(rootNode);
 
-         final boolean referenced = isReferenced(rootNode);
+         boolean referenced = isReferencedNode(rootNode);
+         if (!referenced)
+         {
+            referenced = referencedAritfact.contains(artifactKey);
+         }
 
          currentRootNode = rootNode;
 
@@ -227,7 +239,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       }
    }
 
-   private boolean isReferenced(DependencyNode node)
+   private boolean isReferencedNode(DependencyNode node)
    {
       if (this.referencedNodes.contains(node))
       {
@@ -236,7 +248,35 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
-      boolean referenced = adapter.isVisible() && adapter.getReplacement() == null && getRoot(node, adapter) != null;
+      boolean referenced = adapter.isVisible() && getRoot(node, adapter) != null;
+
+
+      // && (scopeTest || !"test".equals(node.getDependency().getScope()));
+
+      if (referenced && !scopeTest)
+      {
+         for (DependencyNode dependencyNode : nodeStack)
+         {
+            if ("test".equals(dependencyNode.getDependency().getScope()))
+            {
+               referenced = false;
+               break;
+            }
+         }
+      }
+
+
+      if (referenced && adapter.getReplacement() != null)
+      {
+         ArtifactKey artifactKey1 = MavenModelUtils.toArtifactKey(node.getDependency().getArtifact());
+         final DependencyNode replacement = getEffectiveNode(node);
+         ArtifactKey artifactKey2 = MavenModelUtils.toArtifactKey(replacement.getDependency().getArtifact());
+         if (!artifactKey1.equals(artifactKey2))
+         {
+            referenced = false;
+         }
+      }
+
       if (!referenced)
       {
          final DirectReferenceDetectingDependencyVisitor refDetector = new DirectReferenceDetectingDependencyVisitor();
@@ -253,7 +293,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             Set<DependencyNode> parents = replacedAdapter.getParents();
             for (DependencyNode dependencyNode : parents)
             {
-               if (DependencyNode2Adapter.get(dependencyNode).isVisible() && isReferenced(dependencyNode))
+               if (DependencyNode2Adapter.get(dependencyNode).isVisible() && isReferencedNode(dependencyNode))
                {
                   // referenced = true;
                   break;
@@ -324,22 +364,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return false;
    }
 
-   Stack<DependencyNode> stack2 = new Stack<DependencyNode>();
-
    private void traverseNodesRecursive(List<DependencyNode> children)
    {
       for (DependencyNode child : children)
       {
-         // if (stack2.contains(child))
-         // {
-         // continue;
-         // }
-         //
-         // stack2.push(child);
-
          traverseNodeRecursive(child);
-
-         // stack2.pop();
       }
    }
 
@@ -353,9 +382,10 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       final DependencyNode effectiveNode = getEffectiveNode(node);
 
-      final boolean selected = isSelected(node, effectiveNode, depth);
-
       final String scope = getEffectiveScope(node);
+
+      final boolean selected = isSelected(node, effectiveNode, scope, depth);
+
       parentScopes.push(scope);
       parentOptionals.push(Boolean.valueOf(optional));
       parentSelected.push(Boolean.valueOf(selected));
@@ -369,7 +399,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       parentScopes.pop();
    }
 
-   private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, final int depth)
+   private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, String effectiveScope,
+      final int depth)
    {
       if (selected.contains(effectiveNode))
       {
@@ -391,6 +422,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          {
             active = false;
          }
+      }
+
+      if (active && !scopeTest && "test".equals(effectiveScope))
+      {
+         active = false;
       }
 
       if (active && effectiveNode != node)
@@ -448,6 +484,14 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       if (active)
       {
          this.selected.add(effectiveNode);
+
+         if (active)
+         {
+            Artifact referencedArtifact = effectiveNode.getDependency().getArtifact();
+            referencedAritfact.add(MavenModelUtils.toArtifactKey(referencedArtifact));
+         }
+
+
       }
       return active;
    }

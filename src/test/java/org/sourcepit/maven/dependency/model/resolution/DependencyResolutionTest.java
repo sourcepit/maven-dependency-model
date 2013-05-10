@@ -7,7 +7,9 @@
 package org.sourcepit.maven.dependency.model.resolution;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -61,12 +63,15 @@ import org.sonatype.aether.util.graph.selector.StaticDependencySelector;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
+import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.lang.Exceptions;
 import org.sourcepit.maven.dependency.model.DependencyModel;
+import org.sourcepit.maven.dependency.model.DependencyNode;
+import org.sourcepit.maven.dependency.model.DependencyTree;
 
 public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
 {
@@ -234,6 +239,126 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       assertEquals(2, model.getDependencyTrees().size());
    }
 
+   @Test
+   public void testScopeTest() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      addDependency(pom, "C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "1");
+      addDependency(pom, "C", "1").setScope("test");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = resolve(artifact);
+
+      EList<MavenArtifact> artifacts = model.getArtifacts();
+      assertEquals(3, artifacts.size());
+
+      MavenArtifact artifactC = artifacts.get(0);
+      assertEquals("C", artifactC.getArtifactId());
+      MavenArtifact artifactB = artifacts.get(1);
+      assertEquals("B", artifactB.getArtifactId());
+      MavenArtifact artifactA = artifacts.get(2);
+      assertEquals("A", artifactA.getArtifactId());
+
+      assertEquals(3, model.getDependencyTrees().size());
+
+      DependencyTree tree;
+
+      tree = model.getDependencyTrees().get(0);
+      assertSame(artifactC, tree.getTargetArtifact());
+      assertEquals(0, tree.getDependencyNodes().size());
+
+      tree = model.getDependencyTrees().get(1);
+      assertSame(artifactB, tree.getTargetArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+
+      DependencyNode node;
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactC, node.getArtifact());
+      assertSame(Scope.COMPILE, node.getEffectiveScope());
+      assertTrue(node.isSelected());
+
+      tree = model.getDependencyTrees().get(2);
+      assertSame(artifactA, tree.getTargetArtifact());
+      assertEquals(2, tree.getDependencyNodes().size());
+      
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertSame(Scope.COMPILE, node.getEffectiveScope());
+      assertTrue(node.isSelected());
+      
+      node = tree.getDependencyNodes().get(1);
+      assertSame(artifactC, node.getArtifact());
+      assertSame(Scope.TEST, node.getEffectiveScope());
+      assertFalse(node.isSelected());
+   }
+   
+   @Test
+   public void testScopeTest2() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      addDependency(pom, "C", "1").setScope("test");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "1");
+      addDependency(pom, "C", "1").setScope("test");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = resolve(artifact);
+
+      EList<MavenArtifact> artifacts = model.getArtifacts();
+      assertEquals(2, artifacts.size());
+      assertEquals(2, model.getDependencyTrees().size());
+
+      MavenArtifact artifactB = artifacts.get(0);
+      assertEquals("B", artifactB.getArtifactId());
+      MavenArtifact artifactA = artifacts.get(1);
+      assertEquals("A", artifactA.getArtifactId());
+
+      DependencyTree tree;
+      tree = model.getDependencyTrees().get(0);
+      assertSame(artifactB, tree.getTargetArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+      
+      DependencyNode node;
+      node = tree.getDependencyNodes().get(0);
+      assertSame(null, node.getArtifact());
+      assertSame(Scope.TEST, node.getEffectiveScope());
+      assertFalse(node.isSelected());
+
+      tree = model.getDependencyTrees().get(1);
+      assertSame(artifactA, tree.getTargetArtifact());
+      assertEquals(2, tree.getDependencyNodes().size());
+      
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertSame(Scope.COMPILE, node.getEffectiveScope());
+      assertTrue(node.isSelected());
+      
+      node = tree.getDependencyNodes().get(1);
+      assertSame(null, node.getArtifact());
+      assertSame(Scope.TEST, node.getEffectiveScope());
+      assertFalse(node.isSelected());
+   }
+
    public DependencyModel resolve(@NotNull Collection<Dependency> dependencies) throws ProjectBuildingException,
       DependencyResolutionException
    {
@@ -319,11 +444,11 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
          rootNode.setRequestContext("project");
 
          transformer = new ChainedDependencyGraphTransformer(new ReplaceRootNode(rootNode),
-            new DependencyModelBuildingGraphTransformer(modelBuilder, true));
+            new DependencyModelBuildingGraphTransformer(modelBuilder, true, false));
       }
       else
       {
-         transformer = new DependencyModelBuildingGraphTransformer(modelBuilder, true);
+         transformer = new DependencyModelBuildingGraphTransformer(modelBuilder, true, false);
       }
 
       final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(

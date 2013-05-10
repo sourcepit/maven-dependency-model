@@ -1,0 +1,8 @@
+model
++- artifacts
+|  \- a:A:jar:1
++- dependencyTrees
+   \- a:A:jar:1
+      \- b:B:jar:1:test -> null (not selected)
+         \- c:C:jar:1:provided -> null (not selected)
+            \- d:D:jar:1:provided (was d:D:jar:1:compile) -> null (not selected)

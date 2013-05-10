@@ -1,0 +1,4 @@
+model
++- b:B:jar:1 (not referenced)
++- a:A:jar:1
+|  +- b:B:jar:1 (test) (not selected)

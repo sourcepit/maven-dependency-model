@@ -1,0 +1,6 @@
+model
++- b:B:jar:1 (not referenced)
++- b:B:jar:2
++- a:A:jar:1
+|  +- b:B:jar:1 -> b:B:jar:2 (compile) (not selected)
+|  +- b:B:jar:2 (compile)

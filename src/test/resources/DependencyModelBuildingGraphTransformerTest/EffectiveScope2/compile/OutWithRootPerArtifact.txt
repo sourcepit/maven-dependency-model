@@ -1,0 +1,12 @@
+model
++- c:C:jar:1 (not referenced)
++- a:A:jar:1
+|  +- c:C:jar:1 (test) (not selected)
++- c:C:jar:2
++- b:B:jar:1
+|  +- c:C:jar:2 (compile)
++- root:ROOT:jar:1
+|  +- a:A:jar:1 (compile)
+|  |  +- c:C:jar:1 -> c:C:jar:2 (test -> compile) (not selected)
+|  +- b:B:jar:1 (compile)
+|  |  +- c:C:jar:2 (compile)
