@@ -1,0 +1,5 @@
+model
++- b:B:jar:2
++- b:B:jar:1
++- a:A:jar:1
+|  +- b:B:jar:1 (compile)

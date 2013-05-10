@@ -20,6 +20,7 @@ import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
+import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.model.ArtifactKey;
@@ -27,37 +28,6 @@ import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
 public class DependencyModelBuildingGraphTransformer implements DependencyGraphTransformer
 {
-   private final class DirectReferenceDetectingDependencyVisitor extends AbstractDependencyVisitor
-   {
-      private boolean foundDirectReference = false;
-
-      public DirectReferenceDetectingDependencyVisitor()
-      {
-         super(true);
-      }
-
-      public boolean isFoundDirectReference()
-      {
-         return foundDirectReference;
-      }
-
-      @Override
-      protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-      {
-         if (referencedNodes.contains(node))
-         {
-            foundDirectReference = true;
-         }
-         return !foundDirectReference;
-      }
-
-      @Override
-      protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
-      {
-         return !foundDirectReference;
-      }
-   }
-
    private final boolean computeTreePerArtifact;
 
    private final boolean scopeTest;
@@ -73,9 +43,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final Map<DependencyNode, String> scopeMask = new HashMap<DependencyNode, String>();
 
-   private final Set<DependencyNode> referencedNodes = new HashSet<DependencyNode>();
-
-   private final Set<ArtifactKey> referencedAritfact = new HashSet<ArtifactKey>();
+   private Set<ArtifactKey> referencedAritfacts;
 
    public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
       boolean scopeTest)
@@ -102,6 +70,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          graph = transformer.transformGraph(graph, context);
       }
 
+      referencedAritfacts = computeReferencedArtifacts(graph);
+
       final List<DependencyNode> roots;
       if (graph.getDependency() == null)
       {
@@ -120,12 +90,93 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return graph;
    }
 
+   private Set<ArtifactKey> computeReferencedArtifacts(DependencyNode graph)
+   {
+      final Set<ArtifactKey> referencedArtifacts = new HashSet<ArtifactKey>();
+
+      graph.accept(new AbstractDependencyVisitor(false)
+      {
+         Stack<String> currentScope = new Stack<String>();
+
+         Stack<Boolean> currentReplaced = new Stack<Boolean>();
+
+         @Override
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
+         {
+            String scope = getNodeScope(node);
+            if (!currentScope.isEmpty())
+            {
+               scope = "test".equals(currentScope.peek()) ? "test" : scope;
+            }
+            currentScope.push(scope);
+
+            DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+
+            boolean replaced = adapter != null && adapter.getReplacement() != null;
+            if (replaced)
+            {
+               DependencyNode effectiveNode = getEffectiveNode(node);
+               if (scopeTest || !"test".equals(scope))
+               {
+                  referencedArtifacts.add(MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact()));
+               }
+            }
+
+            if (!currentReplaced.isEmpty())
+            {
+               replaced = currentReplaced.peek().booleanValue() || replaced;
+            }
+            currentReplaced.push(Boolean.valueOf(replaced));
+
+            if (!replaced && (scopeTest || !"test".equals(scope)))
+            {
+               Dependency dependency = node.getDependency();
+               if (dependency != null)
+               {
+                  referencedArtifacts.add(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
+               }
+            }
+
+            return super.onVisitEnter(parent, node);
+         }
+
+
+         @Override
+         protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
+         {
+            super.onVisitLeave(parent, node);
+            currentScope.pop();
+            currentReplaced.pop();
+            return true;
+         }
+
+         private String getNodeScope(DependencyNode node)
+         {
+            final Dependency dependency = node.getDependency();
+            return dependency == null ? "compile" : dependency.getScope();
+         }
+      });
+
+      return referencedArtifacts;
+   }
+
    private void pruneUnreferenced(DependencyNode graph)
    {
       graph.accept(new AbstractDependencyVisitor(false)
       {
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
+         {
+            DependencyNode effectiveNode = getEffectiveNode(node);
+            if (effectiveNode != node)
+            {
+               node.setArtifact(effectiveNode.getDependency().getArtifact());
+            }
+            return super.onVisitEnter(parent, node);
+         }
+
+         @Override
+         protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
          {
             for (Iterator<DependencyNode> it = node.getChildren().iterator(); it.hasNext();)
             {
@@ -135,14 +186,17 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                   it.remove();
                }
             }
-
-            return super.onVisitEnter(parent, node);
+            return super.onVisitLeave(parent, node);
          }
 
-         private boolean isReferenced(DependencyNode childNode)
+         private boolean isReferenced(DependencyNode node)
          {
-            Object object = childNode.getData().get("referenced");
-            return object == null || ((Boolean) object).booleanValue();
+            Dependency dependency = node.getDependency();
+            if (dependency != null)
+            {
+               return referencedAritfacts.contains(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
+            }
+            return true;
          }
       });
    }
@@ -204,11 +258,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          initScopeMask(rootNode);
 
-         boolean referenced = isReferencedNode(rootNode);
-         if (!referenced)
-         {
-            referenced = referencedAritfact.contains(artifactKey);
-         }
+         boolean referenced = referencedAritfacts.contains(artifactKey);
 
          currentRootNode = rootNode;
 
@@ -237,104 +287,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             scopeMask.put(node, chosen.getDependency().getScope());
          }
       }
-   }
-
-   private boolean isReferencedNode(DependencyNode node)
-   {
-      if (this.referencedNodes.contains(node))
-      {
-         return true;
-      }
-
-      final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-
-      boolean referenced = adapter.isVisible() && getRoot(node, adapter) != null;
-
-
-      // && (scopeTest || !"test".equals(node.getDependency().getScope()));
-
-      if (referenced && !scopeTest)
-      {
-         for (DependencyNode dependencyNode : nodeStack)
-         {
-            if ("test".equals(dependencyNode.getDependency().getScope()))
-            {
-               referenced = false;
-               break;
-            }
-         }
-      }
-
-
-      if (referenced && adapter.getReplacement() != null)
-      {
-         ArtifactKey artifactKey1 = MavenModelUtils.toArtifactKey(node.getDependency().getArtifact());
-         final DependencyNode replacement = getEffectiveNode(node);
-         ArtifactKey artifactKey2 = MavenModelUtils.toArtifactKey(replacement.getDependency().getArtifact());
-         if (!artifactKey1.equals(artifactKey2))
-         {
-            referenced = false;
-         }
-      }
-
-      if (!referenced)
-      {
-         final DirectReferenceDetectingDependencyVisitor refDetector = new DirectReferenceDetectingDependencyVisitor();
-         node.accept(refDetector);
-         referenced = refDetector.isFoundDirectReference();
-      }
-
-      if (!referenced)
-      {
-         for (DependencyNode replaced : adapter.getReplaced())
-         {
-            DependencyNode2 replacedAdapter = DependencyNode2Adapter.get(replaced);
-
-            Set<DependencyNode> parents = replacedAdapter.getParents();
-            for (DependencyNode dependencyNode : parents)
-            {
-               if (DependencyNode2Adapter.get(dependencyNode).isVisible() && isReferencedNode(dependencyNode))
-               {
-                  // referenced = true;
-                  break;
-               }
-            }
-         }
-      }
-
-      if (referenced)
-      {
-         this.referencedNodes.add(node);
-      }
-
-      node.setData("referenced", Boolean.valueOf(referenced));
-
-      return referenced;
-   }
-
-   private DependencyNode getRoot(DependencyNode node, DependencyNode2 adapter)
-   {
-      if (adapter.getParents().isEmpty())
-      {
-         return node;
-      }
-
-      for (DependencyNode parent : adapter.getParents())
-      {
-         final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-         if (parentAdapter.getReplacement() != null)
-         {
-            continue;
-         }
-
-         final DependencyNode root = getRoot(parent, parentAdapter);
-         if (root != null)
-         {
-            return root;
-         }
-      }
-
-      return null;
    }
 
    private static boolean isRootOf(DependencyNode root, DependencyNode node, boolean followReplacements)
@@ -484,14 +436,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       if (active)
       {
          this.selected.add(effectiveNode);
-
-         if (active)
-         {
-            Artifact referencedArtifact = effectiveNode.getDependency().getArtifact();
-            referencedAritfact.add(MavenModelUtils.toArtifactKey(referencedArtifact));
-         }
-
-
       }
       return active;
    }
@@ -535,7 +479,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private static DependencyNode getEffectiveNode(DependencyNode node)
    {
-      final DependencyNode replacement = DependencyNode2Adapter.get(node).getReplacement();
+      final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+      final DependencyNode replacement = adapter == null ? null : adapter.getReplacement();
       if (replacement == null)
       {
          return node;

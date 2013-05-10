@@ -22,12 +22,15 @@ public abstract class AbstractDependencyVisitor implements DependencyVisitor
       this.filterInvisibleNodes = filterInvisibleNodes;
    }
 
+   private boolean skipLeave;
+   
    @Override
    public final boolean visitEnter(DependencyNode node)
    {
       if (filterInvisibleNodes && !DependencyNode2Adapter.get(node).isVisible())
       {
          path.push(node);
+         skipLeave = true;
          return false;
       }
 
@@ -35,6 +38,7 @@ public abstract class AbstractDependencyVisitor implements DependencyVisitor
       if (cycle)
       {
          path.push(node);
+         skipLeave = true;
          return false;
       }
       else
@@ -59,6 +63,11 @@ public abstract class AbstractDependencyVisitor implements DependencyVisitor
    public final boolean visitLeave(DependencyNode node)
    {
       path.pop();
+      if (skipLeave)
+      {
+         skipLeave=false;
+         return true;
+      }
       return onVisitLeave(getParent(), node);
    }
 
