@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.impl;
 
 import java.util.Collection;
 
@@ -15,6 +15,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
+import org.sourcepit.maven.dependency.model.DependencyModel;
 
 
 public interface DependencyModelResolver

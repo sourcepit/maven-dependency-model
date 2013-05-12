@@ -54,8 +54,8 @@ import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.utils.lang.Exceptions;
 import org.sourcepit.maven.dependency.model.DependencyModel;
-import org.sourcepit.maven.dependency.model.DependencyModelResolver;
 import org.sourcepit.maven.dependency.model.aether.ReplaceRootNode;
+import org.sourcepit.maven.dependency.model.impl.DependencyModelResolver;
 
 @Named("aether")
 public class AetherDependencyModelResolver implements DependencyModelResolver

@@ -4,10 +4,11 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model;
+package org.sourcepit.maven.dependency.model.impl;
 
 import org.sourcepit.common.maven.model.Scope;
-import org.sourcepit.maven.dependency.model.DependencyNodeOperations;
+import org.sourcepit.maven.dependency.model.DependencyNode;
+import org.sourcepit.maven.dependency.model.impl.DependencyNodeOperations;
 
 
 public aspect DependencyNodeAspects
