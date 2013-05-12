@@ -30,8 +30,6 @@ import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransfor
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;
-import org.sourcepit.maven.dependency.model.aether.DependencyModelBuildingGraphTransformer;
-import org.sourcepit.maven.dependency.model.aether.DependencyModelHandler;
 
 public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest
 {
@@ -139,7 +137,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    {
       test();
    }
-   
+
    @Test
    public void testEffectiveScope8() throws Exception
    {

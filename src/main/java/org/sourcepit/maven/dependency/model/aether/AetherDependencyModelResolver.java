@@ -44,6 +44,7 @@ import org.eclipse.emf.common.util.EList;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.collection.DependencySelector;
+import org.sonatype.aether.impl.VersionResolver;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
 import org.sonatype.aether.util.filter.ScopeDependencyFilter;
 import org.sonatype.aether.util.graph.DefaultDependencyNode;
@@ -148,12 +149,35 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       return resolve(project, true);
    }
 
+   @Inject
+   private VersionResolver versionResolver;
+
    private DependencyModel resolve(@NotNull MavenProject project, boolean resolveRoot)
       throws DependencyResolutionException
    {
       final DependencyModelBuilder modelBuilder = new DependencyModelBuilder();
 
-      final DependencyGraphTransformer transformer;
+      final RepositorySystemSession repositorySession = newRepositorySystemSession(project, resolveRoot, modelBuilder);
+
+      final DefaultDependencyResolutionRequest resolutionRequest = new DefaultDependencyResolutionRequest();
+      resolutionRequest.setMavenProject(project);
+      resolutionRequest.setRepositorySession(repositorySession);
+      resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
+
+      DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(resolutionRequest);
+
+      DependencyModel model = modelBuilder.getDependencyModel();
+
+      applyResolvedArtifacts(project, resolutionResult, model);
+
+      return model;
+   }
+
+   private RepositorySystemSession newRepositorySystemSession(MavenProject project, boolean resolveRoot,
+      final DependencyModelBuilder modelBuilder)
+   {
+      final List<DependencyGraphTransformer> transformers = new ArrayList<DependencyGraphTransformer>(3);
+
       if (resolveRoot)
       {
          DefaultDependencyNode rootNode = new DefaultDependencyNode();
@@ -162,13 +186,14 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          rootNode.setRepositories(project.getRemoteProjectRepositories());
          rootNode.setRequestContext("project");
 
-         transformer = new ChainedDependencyGraphTransformer(new ReplaceRootNode(rootNode),
-            new DependencyModelBuildingGraphTransformer(modelBuilder, true, false));
+         transformers.add(new ReplaceRootNode(rootNode));
       }
-      else
-      {
-         transformer = new DependencyModelBuildingGraphTransformer(modelBuilder, true, false);
-      }
+
+      transformers.add(new LatestAndReleseVersionResolverTransformer(versionResolver));
+      transformers.add(new DependencyModelBuildingGraphTransformer(modelBuilder, true, false));
+
+      final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
+         transformers.toArray(new DependencyGraphTransformer[transformers.size()]));
 
       final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(
          buildContext.getRepositorySession())
@@ -185,19 +210,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
             return transformer;
          }
       };
-
-      final DefaultDependencyResolutionRequest resolutionRequest = new DefaultDependencyResolutionRequest();
-      resolutionRequest.setMavenProject(project);
-      resolutionRequest.setRepositorySession(repositorySession);
-      resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
-
-      DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(resolutionRequest);
-
-      DependencyModel model = modelBuilder.getDependencyModel();
-
-      applyResolvedArtifacts(project, resolutionResult, model);
-
-      return model;
+      return repositorySession;
    }
 
    private void applyResolvedArtifacts(MavenProject project, DependencyResolutionResult resolutionResult,

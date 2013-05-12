@@ -128,6 +128,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       MavenArtifact b = model.getArtifacts().get(0);
       assertEquals("B", b.getArtifactId());
+      assertEquals("1.0.0-SNAPSHOT", b.getVersion());
       assertNotNull(b.getFile());
       assertEquals(true, b.getFile().exists());
    }
@@ -328,6 +329,72 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertSame(null, node.getArtifact());
       assertSame(Scope.TEST, node.getEffectiveScope());
       assertFalse(node.isSelected());
+   }
+
+   @Test
+   public void testLatest() throws Exception
+   {
+      Model pom;
+      
+      pom = newModel("B", "1");
+      pom.setPackaging("maven-plugin"); // Aether doesn't set latest for other packaging types on deploy
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "2-SNAPSHOT");
+      pom.setPackaging("maven-plugin"); // Aether doesn't set latest for other packaging types on deploy
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "LATEST");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact);
+      assertEquals(2, model.getArtifacts().size());
+      assertEquals(2, model.getDependencyTrees().size());
+
+      MavenArtifact b = model.getArtifacts().get(0);
+      assertEquals("B", b.getArtifactId());
+      assertEquals("2-SNAPSHOT", b.getVersion());
+      assertNotNull(b.getFile());
+      assertEquals(true, b.getFile().exists());
+
+      DependencyNode node = model.getDependencyTrees().get(1).getDependencyNodes().get(0);
+      assertEquals("LATEST", node.getEffectiveVersionConstraint());
+   }
+
+   @Test
+   public void testRelease() throws Exception
+   {
+      Model pom;
+      
+      pom = newModel("B", "2-SNAPSHOT");
+      pom.setPackaging("maven-plugin"); // Aether doesn't set latest for other packaging types on deploy
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "2");
+      pom.setPackaging("maven-plugin");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "RELEASE");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact);
+      assertEquals(2, model.getArtifacts().size());
+      assertEquals(2, model.getDependencyTrees().size());
+
+      MavenArtifact b = model.getArtifacts().get(0);
+      assertEquals("B", b.getArtifactId());
+      assertEquals("2", b.getVersion());
+      assertNotNull(b.getFile());
+      assertEquals(true, b.getFile().exists());
+
+      DependencyNode node = model.getDependencyTrees().get(1).getDependencyNodes().get(0);
+      assertEquals("RELEASE", node.getEffectiveVersionConstraint());
    }
 
    private static Model newModel(String artifactId, String version)
