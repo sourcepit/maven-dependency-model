@@ -36,9 +36,9 @@ import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.maven.dependency.model.DependencyModel;
+import org.sourcepit.maven.dependency.model.DependencyModelResolver;
 import org.sourcepit.maven.dependency.model.DependencyNode;
 import org.sourcepit.maven.dependency.model.DependencyTree;
-import org.sourcepit.maven.dependency.model.impl.DependencyModelResolver;
 
 public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentTest
 {

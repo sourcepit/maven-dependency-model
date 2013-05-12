@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model.impl;
+package org.sourcepit.maven.dependency.model;
 
 import java.util.Collection;
 
