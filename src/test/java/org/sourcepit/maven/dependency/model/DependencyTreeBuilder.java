@@ -36,9 +36,9 @@ import org.sonatype.aether.util.graph.selector.AndDependencySelector;
 import org.sonatype.aether.util.graph.selector.ExclusionDependencySelector;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sonatype.aether.util.graph.transformer.JavaEffectiveScopeCalculator;
-import org.sourcepit.maven.dependency.model.resolution.DependencyNode2AdapterTransformer;
-import org.sourcepit.maven.dependency.model.resolution.NearestDependencyNodeChooser;
-import org.sourcepit.maven.dependency.model.resolution.VersionConflictResolver;
+import org.sourcepit.maven.dependency.model.aether.DependencyNode2AdapterTransformer;
+import org.sourcepit.maven.dependency.model.aether.NearestDependencyNodeChooser;
+import org.sourcepit.maven.dependency.model.aether.VersionConflictResolver;
 
 @Named
 public class DependencyTreeBuilder

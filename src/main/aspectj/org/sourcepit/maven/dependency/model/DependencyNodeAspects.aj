@@ -7,7 +7,7 @@
 package org.sourcepit.maven.dependency.model;
 
 import org.sourcepit.common.maven.model.Scope;
-import org.sourcepit.maven.dependency.model.resolution.DependencyNodeOperations;
+import org.sourcepit.maven.dependency.model.DependencyNodeOperations;
 
 
 public aspect DependencyNodeAspects

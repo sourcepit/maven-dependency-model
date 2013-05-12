@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model.resolution;
+package org.sourcepit.maven.dependency.model.aether;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,6 +31,8 @@ import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyTree;
+import org.sourcepit.maven.dependency.model.aether.DependencyModelBuilder;
+import org.sourcepit.maven.dependency.model.aether.DependencyModelHandler;
 
 public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingTest
 {

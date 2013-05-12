@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model.resolution;
+package org.sourcepit.maven.dependency.model.aether;
 
 import java.io.PrintStream;
 
@@ -12,7 +12,7 @@ import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
-import org.sourcepit.maven.dependency.model.resolution.DependencyModelHandler;
+import org.sourcepit.maven.dependency.model.aether.DependencyModelHandler;
 
 public class DependencyModelBuildingGraphTransformerTest extends AbstractDependencyModelBuildingTest
 {

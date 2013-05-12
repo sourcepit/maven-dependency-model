@@ -27,8 +27,8 @@ import org.sonatype.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
-import org.sourcepit.maven.dependency.model.resolution.DependencyNode2;
-import org.sourcepit.maven.dependency.model.resolution.DependencyNode2Adapter;
+import org.sourcepit.maven.dependency.model.aether.DependencyNode2;
+import org.sourcepit.maven.dependency.model.aether.DependencyNode2Adapter;
 
 public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
 {

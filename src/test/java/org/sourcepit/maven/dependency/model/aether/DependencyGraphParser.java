@@ -1,5 +1,5 @@
 
-package org.sourcepit.maven.dependency.model.resolution;
+package org.sourcepit.maven.dependency.model.aether;
 
 /*******************************************************************************
  * Copyright (c) 2010-2011 Sonatype, Inc.

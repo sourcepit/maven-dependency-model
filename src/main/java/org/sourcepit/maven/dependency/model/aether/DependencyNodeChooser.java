@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.model.resolution;
+package org.sourcepit.maven.dependency.model.aether;
 
 import java.util.List;
 
