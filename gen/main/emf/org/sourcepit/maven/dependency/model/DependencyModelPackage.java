@@ -252,14 +252,14 @@ public interface DependencyModelPackage extends EPackage
    int DEPENDENCY_TREE = 2;
 
    /**
-    * The feature id for the '<em><b>Target Artifact</b></em>' reference.
+    * The feature id for the '<em><b>Artifact</b></em>' reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
     * @generated
     * @ordered
     */
-   int DEPENDENCY_TREE__TARGET_ARTIFACT = 0;
+   int DEPENDENCY_TREE__ARTIFACT = 0;
 
    /**
     * The feature id for the '<em><b>Dependency Nodes</b></em>' containment reference list.
@@ -490,17 +490,17 @@ public interface DependencyModelPackage extends EPackage
    EClass getDependencyTree();
 
    /**
-    * Returns the meta object for the reference '
-    * {@link org.sourcepit.maven.dependency.model.DependencyTree#getTargetArtifact <em>Target Artifact</em>}'.
+    * Returns the meta object for the reference '{@link org.sourcepit.maven.dependency.model.DependencyTree#getArtifact
+    * <em>Artifact</em>}'.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @return the meta object for the reference '<em>Target Artifact</em>'.
-    * @see org.sourcepit.maven.dependency.model.DependencyTree#getTargetArtifact()
+    * @return the meta object for the reference '<em>Artifact</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyTree#getArtifact()
     * @see #getDependencyTree()
     * @generated
     */
-   EReference getDependencyTree_TargetArtifact();
+   EReference getDependencyTree_Artifact();
 
    /**
     * Returns the meta object for the containment reference list '
@@ -694,13 +694,13 @@ public interface DependencyModelPackage extends EPackage
       EClass DEPENDENCY_TREE = eINSTANCE.getDependencyTree();
 
       /**
-       * The meta object literal for the '<em><b>Target Artifact</b></em>' reference feature.
+       * The meta object literal for the '<em><b>Artifact</b></em>' reference feature.
        * <!-- begin-user-doc -->
        * <!-- end-user-doc -->
        * 
        * @generated
        */
-      EReference DEPENDENCY_TREE__TARGET_ARTIFACT = eINSTANCE.getDependencyTree_TargetArtifact();
+      EReference DEPENDENCY_TREE__ARTIFACT = eINSTANCE.getDependencyTree_Artifact();
 
       /**
        * The meta object literal for the '<em><b>Dependency Nodes</b></em>' containment reference list feature.

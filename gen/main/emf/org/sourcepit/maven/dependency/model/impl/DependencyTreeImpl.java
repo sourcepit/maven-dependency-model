@@ -29,7 +29,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * <p>
  * The following features are implemented:
  * <ul>
- * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyTreeImpl#getTargetArtifact <em>Target Artifact</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyTreeImpl#getArtifact <em>Artifact</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyTreeImpl#getDependencyNodes <em>Dependency Nodes</em>}
  * </li>
  * </ul>
@@ -40,15 +40,15 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
 public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
 {
    /**
-    * The cached value of the '{@link #getTargetArtifact() <em>Target Artifact</em>}' reference.
+    * The cached value of the '{@link #getArtifact() <em>Artifact</em>}' reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @see #getTargetArtifact()
+    * @see #getArtifact()
     * @generated
     * @ordered
     */
-   protected MavenArtifact targetArtifact;
+   protected MavenArtifact artifact;
 
    /**
     * The cached value of the '{@link #getDependencyNodes() <em>Dependency Nodes</em>}' containment reference list.
@@ -90,20 +90,20 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
     * 
     * @generated
     */
-   public MavenArtifact getTargetArtifact()
+   public MavenArtifact getArtifact()
    {
-      if (targetArtifact != null && targetArtifact.eIsProxy())
+      if (artifact != null && artifact.eIsProxy())
       {
-         InternalEObject oldTargetArtifact = (InternalEObject) targetArtifact;
-         targetArtifact = (MavenArtifact) eResolveProxy(oldTargetArtifact);
-         if (targetArtifact != oldTargetArtifact)
+         InternalEObject oldArtifact = (InternalEObject) artifact;
+         artifact = (MavenArtifact) eResolveProxy(oldArtifact);
+         if (artifact != oldArtifact)
          {
             if (eNotificationRequired())
                eNotify(new ENotificationImpl(this, Notification.RESOLVE,
-                  DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT, oldTargetArtifact, targetArtifact));
+                  DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT, oldArtifact, artifact));
          }
       }
-      return targetArtifact;
+      return artifact;
    }
 
    /**
@@ -112,9 +112,9 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
     * 
     * @generated
     */
-   public MavenArtifact basicGetTargetArtifact()
+   public MavenArtifact basicGetArtifact()
    {
-      return targetArtifact;
+      return artifact;
    }
 
    /**
@@ -123,13 +123,13 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
     * 
     * @generated
     */
-   public void setTargetArtifact(MavenArtifact newTargetArtifact)
+   public void setArtifact(MavenArtifact newArtifact)
    {
-      MavenArtifact oldTargetArtifact = targetArtifact;
-      targetArtifact = newTargetArtifact;
+      MavenArtifact oldArtifact = artifact;
+      artifact = newArtifact;
       if (eNotificationRequired())
-         eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT,
-            oldTargetArtifact, targetArtifact));
+         eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT,
+            oldArtifact, artifact));
    }
 
    /**
@@ -176,10 +176,10 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
    {
       switch (featureID)
       {
-         case DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT :
+         case DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT :
             if (resolve)
-               return getTargetArtifact();
-            return basicGetTargetArtifact();
+               return getArtifact();
+            return basicGetArtifact();
          case DependencyModelPackage.DEPENDENCY_TREE__DEPENDENCY_NODES :
             return getDependencyNodes();
       }
@@ -198,8 +198,8 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
    {
       switch (featureID)
       {
-         case DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT :
-            setTargetArtifact((MavenArtifact) newValue);
+         case DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT :
+            setArtifact((MavenArtifact) newValue);
             return;
          case DependencyModelPackage.DEPENDENCY_TREE__DEPENDENCY_NODES :
             getDependencyNodes().clear();
@@ -220,8 +220,8 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
    {
       switch (featureID)
       {
-         case DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT :
-            setTargetArtifact((MavenArtifact) null);
+         case DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT :
+            setArtifact((MavenArtifact) null);
             return;
          case DependencyModelPackage.DEPENDENCY_TREE__DEPENDENCY_NODES :
             getDependencyNodes().clear();
@@ -241,8 +241,8 @@ public class DependencyTreeImpl extends EObjectImpl implements DependencyTree
    {
       switch (featureID)
       {
-         case DependencyModelPackage.DEPENDENCY_TREE__TARGET_ARTIFACT :
-            return targetArtifact != null;
+         case DependencyModelPackage.DEPENDENCY_TREE__ARTIFACT :
+            return artifact != null;
          case DependencyModelPackage.DEPENDENCY_TREE__DEPENDENCY_NODES :
             return dependencyNodes != null && !dependencyNodes.isEmpty();
       }

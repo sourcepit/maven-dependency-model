@@ -247,11 +247,11 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       DependencyTree tree;
 
       tree = model.getDependencyTrees().get(0);
-      assertSame(artifactC, tree.getTargetArtifact());
+      assertSame(artifactC, tree.getArtifact());
       assertEquals(0, tree.getDependencyNodes().size());
 
       tree = model.getDependencyTrees().get(1);
-      assertSame(artifactB, tree.getTargetArtifact());
+      assertSame(artifactB, tree.getArtifact());
       assertEquals(1, tree.getDependencyNodes().size());
 
       DependencyNode node;
@@ -261,7 +261,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertTrue(node.isSelected());
 
       tree = model.getDependencyTrees().get(2);
-      assertSame(artifactA, tree.getTargetArtifact());
+      assertSame(artifactA, tree.getArtifact());
       assertEquals(2, tree.getDependencyNodes().size());
 
       node = tree.getDependencyNodes().get(0);
@@ -307,7 +307,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       DependencyTree tree;
       tree = model.getDependencyTrees().get(0);
-      assertSame(artifactB, tree.getTargetArtifact());
+      assertSame(artifactB, tree.getArtifact());
       assertEquals(1, tree.getDependencyNodes().size());
 
       DependencyNode node;
@@ -317,7 +317,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertFalse(node.isSelected());
 
       tree = model.getDependencyTrees().get(1);
-      assertSame(artifactA, tree.getTargetArtifact());
+      assertSame(artifactA, tree.getArtifact());
       assertEquals(2, tree.getDependencyNodes().size());
 
       node = tree.getDependencyNodes().get(0);
@@ -360,7 +360,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       DependencyTree tree;
       tree = model.getDependencyTrees().get(0);
-      assertSame(artifactA, tree.getTargetArtifact());
+      assertSame(artifactA, tree.getArtifact());
       assertEquals(1, tree.getDependencyNodes().size());
       
       DependencyNode node;

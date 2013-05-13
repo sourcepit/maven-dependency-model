@@ -309,7 +309,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
 
    private String toString(DependencyTree tree)
    {
-      return toString(tree.getTargetArtifact());
+      return toString(tree.getArtifact());
    }
 
    private void print(PrintStream out, final EList<MavenArtifact> artifacts, final boolean hasDependencyTrees)

@@ -304,7 +304,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyTree_TargetArtifact()
+   public EReference getDependencyTree_Artifact()
    {
       return (EReference) dependencyTreeEClass.getEStructuralFeatures().get(0);
    }
@@ -372,7 +372,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       createEReference(dependencyModelEClass, DEPENDENCY_MODEL__DEPENDENCY_TREES);
 
       dependencyTreeEClass = createEClass(DEPENDENCY_TREE);
-      createEReference(dependencyTreeEClass, DEPENDENCY_TREE__TARGET_ARTIFACT);
+      createEReference(dependencyTreeEClass, DEPENDENCY_TREE__ARTIFACT);
       createEReference(dependencyTreeEClass, DEPENDENCY_TREE__DEPENDENCY_NODES);
    }
 
@@ -475,9 +475,9 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
 
       initEClass(dependencyTreeEClass, DependencyTree.class, "DependencyTree", !IS_ABSTRACT, !IS_INTERFACE,
          IS_GENERATED_INSTANCE_CLASS);
-      initEReference(getDependencyTree_TargetArtifact(), theMavenModelPackage.getMavenArtifact(), null,
-         "targetArtifact", null, 1, 1, DependencyTree.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE,
-         IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+      initEReference(getDependencyTree_Artifact(), theMavenModelPackage.getMavenArtifact(), null, "artifact", null, 1,
+         1, DependencyTree.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES,
+         !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
       initEReference(getDependencyTree_DependencyNodes(), this.getDependencyNode(), null, "dependencyNodes", null, 0,
          -1, DependencyTree.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES,
          !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);

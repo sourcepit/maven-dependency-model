@@ -18,7 +18,7 @@ import org.sourcepit.common.maven.model.MavenArtifact;
  * <p>
  * The following features are supported:
  * <ul>
- * <li>{@link org.sourcepit.maven.dependency.model.DependencyTree#getTargetArtifact <em>Target Artifact</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyTree#getArtifact <em>Artifact</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyTree#getDependencyNodes <em>Dependency Nodes</em>}</li>
  * </ul>
  * </p>
@@ -30,7 +30,7 @@ import org.sourcepit.common.maven.model.MavenArtifact;
 public interface DependencyTree extends EObject
 {
    /**
-    * Returns the value of the '<em><b>Target Artifact</b></em>' reference.
+    * Returns the value of the '<em><b>Artifact</b></em>' reference.
     * <!-- begin-user-doc -->
     * <p>
     * If the meaning of the '<em>Target Artifact</em>' reference isn't clear, there really should be more of a
@@ -38,25 +38,25 @@ public interface DependencyTree extends EObject
     * </p>
     * <!-- end-user-doc -->
     * 
-    * @return the value of the '<em>Target Artifact</em>' reference.
-    * @see #setTargetArtifact(MavenArtifact)
-    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyTree_TargetArtifact()
+    * @return the value of the '<em>Artifact</em>' reference.
+    * @see #setArtifact(MavenArtifact)
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyTree_Artifact()
     * @model required="true"
     * @generated
     */
-   MavenArtifact getTargetArtifact();
+   MavenArtifact getArtifact();
 
    /**
-    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyTree#getTargetArtifact
-    * <em>Target Artifact</em>}' reference.
+    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyTree#getArtifact <em>Artifact</em>}'
+    * reference.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
     * 
-    * @param value the new value of the '<em>Target Artifact</em>' reference.
-    * @see #getTargetArtifact()
+    * @param value the new value of the '<em>Artifact</em>' reference.
+    * @see #getArtifact()
     * @generated
     */
-   void setTargetArtifact(MavenArtifact value);
+   void setArtifact(MavenArtifact value);
 
    /**
     * Returns the value of the '<em><b>Dependency Nodes</b></em>' containment reference list.

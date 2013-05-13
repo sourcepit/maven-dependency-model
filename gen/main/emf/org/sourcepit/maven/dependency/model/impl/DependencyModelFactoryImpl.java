@@ -38,7 +38,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
       try
       {
          DependencyModelFactory theDependencyModelFactory = (DependencyModelFactory) EPackage.Registry.INSTANCE
-            .getEFactory("http://www.sourcepit.org/maven/dependency/model/0.1");
+            .getEFactory(DependencyModelPackage.eNS_URI);
          if (theDependencyModelFactory != null)
          {
             return theDependencyModelFactory;

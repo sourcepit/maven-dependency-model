@@ -59,7 +59,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
       {
          final MavenArtifact mavenArtifact = createArtifactUnique(artifact);
          final DependencyTree dependencyTree = dependencyModelFactory.createDependencyTree();
-         dependencyTree.setTargetArtifact(mavenArtifact);
+         dependencyTree.setArtifact(mavenArtifact);
          model.getDependencyTrees().add(dependencyTree);
          currentDependencyTree = dependencyTree;
       }

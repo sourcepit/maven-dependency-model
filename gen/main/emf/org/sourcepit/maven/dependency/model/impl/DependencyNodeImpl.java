@@ -351,7 +351,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
    {
       if (eContainerFeatureID() != DependencyModelPackage.DEPENDENCY_NODE__PARENT)
          return null;
-      return (DependencyNode) eContainer();
+      return (DependencyNode) eInternalContainer();
    }
 
    /**
