@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +49,6 @@ import org.sonatype.aether.impl.VersionResolver;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
 import org.sonatype.aether.util.filter.ScopeDependencyFilter;
 import org.sonatype.aether.util.graph.DefaultDependencyNode;
-import org.sonatype.aether.util.graph.selector.StaticDependencySelector;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
@@ -200,7 +200,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          @Override
          public DependencySelector getDependencySelector()
          {
-            return new StaticDependencySelector(true);
+            return new ScopeChildDependenciesErasure(Collections.singleton("test"));
          }
 
          @Override

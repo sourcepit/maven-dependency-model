@@ -330,6 +330,46 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertSame(Scope.TEST, node.getEffectiveScope());
       assertFalse(node.isSelected());
    }
+   
+   @Test
+   public void testScopeTest_EraseChildDepsOfTestDeps() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      addDependency(pom, "C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "1").setScope("test");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact);
+
+      EList<MavenArtifact> artifacts = model.getArtifacts();
+      assertEquals(1, artifacts.size());
+      assertEquals(1, model.getDependencyTrees().size());
+
+      MavenArtifact artifactA = artifacts.get(0);
+      assertEquals("A", artifactA.getArtifactId());
+
+      DependencyTree tree;
+      tree = model.getDependencyTrees().get(0);
+      assertSame(artifactA, tree.getTargetArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+      
+      DependencyNode node;
+      node = tree.getDependencyNodes().get(0);
+      assertSame(null, node.getArtifact());
+      assertSame(Scope.TEST, node.getEffectiveScope());
+      assertFalse(node.isSelected());
+      assertEquals(0, node.getChildren().size());
+   }
 
    @Test
    public void testLatest() throws Exception
@@ -397,6 +437,37 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertEquals("RELEASE", node.getEffectiveVersionConstraint());
    }
 
+   @Test
+   public void testVersionRange() throws Exception
+   {
+      Model pom;
+      
+      pom = newModel("B", "2");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "[1,2)");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact);
+      assertEquals(2, model.getArtifacts().size());
+      assertEquals(2, model.getDependencyTrees().size());
+
+      MavenArtifact b = model.getArtifacts().get(0);
+      assertEquals("B", b.getArtifactId());
+      assertEquals("1", b.getVersion());
+      assertNotNull(b.getFile());
+      assertEquals(true, b.getFile().exists());
+
+      DependencyNode node = model.getDependencyTrees().get(1).getDependencyNodes().get(0);
+      assertEquals("[1,2)", node.getEffectiveVersionConstraint());
+   }
+   
    private static Model newModel(String artifactId, String version)
    {
       final Model pom = new Model();
