@@ -11,8 +11,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
@@ -43,7 +45,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final Map<DependencyNode, String> scopeMask = new HashMap<DependencyNode, String>();
 
-   private Set<ArtifactKey> referencedAritfacts;
+   private Set<ArtifactKey> referencedArtifacts;
 
    public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
       boolean scopeTest)
@@ -70,7 +72,14 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          graph = transformer.transformGraph(graph, context);
       }
 
-      referencedAritfacts = computeReferencedArtifacts(graph);
+      final Map<ArtifactKey, Artifact> allArtifacts = new LinkedHashMap<ArtifactKey, Artifact>();
+      referencedArtifacts = new HashSet<ArtifactKey>();
+      computeReferencedArtifacts(graph, allArtifacts, referencedArtifacts);
+
+      for (Entry<ArtifactKey, Artifact> entry : allArtifacts.entrySet())
+      {
+         handler.artifact(entry.getValue(), referencedArtifacts.contains(entry.getKey()));
+      }
 
       final List<DependencyNode> roots;
       if (graph.getDependency() == null)
@@ -90,10 +99,9 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return graph;
    }
 
-   private Set<ArtifactKey> computeReferencedArtifacts(DependencyNode graph)
+   private void computeReferencedArtifacts(DependencyNode graph, final Map<ArtifactKey, Artifact> allArtifacts,
+      final Set<ArtifactKey> referencedArtifacts)
    {
-      final Set<ArtifactKey> referencedArtifacts = new HashSet<ArtifactKey>();
-
       graph.accept(new AbstractDependencyVisitor(false)
       {
          Stack<String> currentScope = new Stack<String>();
@@ -103,22 +111,20 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
-            String scope = getNodeScope(node);
-            if (!currentScope.isEmpty())
-            {
-               scope = "test".equals(currentScope.peek()) ? "test" : scope;
-            }
-            currentScope.push(scope);
+            final String scope = getEffectivScope(node);
 
-            DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+            final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
             boolean replaced = adapter != null && adapter.getReplacement() != null;
             if (replaced)
             {
-               DependencyNode effectiveNode = getEffectiveNode(node);
+               final DependencyNode effectiveNode = getEffectiveNode(node);
                if (scopeTest || !"test".equals(scope))
                {
-                  referencedArtifacts.add(MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact()));
+                  final Artifact artifact = effectiveNode.getDependency().getArtifact();
+                  final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+                  allArtifacts.put(artifactKey, artifact);
+                  referencedArtifacts.add(artifactKey);
                }
             }
 
@@ -128,16 +134,32 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             }
             currentReplaced.push(Boolean.valueOf(replaced));
 
-            if (!replaced && (scopeTest || !"test".equals(scope)))
+            Dependency dependency = node.getDependency();
+            if (dependency != null)
             {
-               Dependency dependency = node.getDependency();
-               if (dependency != null)
+               final Artifact artifact = dependency.getArtifact();
+               final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+               allArtifacts.put(artifactKey, artifact);
+
+               if (!replaced && (scopeTest || !"test".equals(scope)))
                {
-                  referencedArtifacts.add(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
+                  referencedArtifacts.add(artifactKey);
                }
             }
 
             return super.onVisitEnter(parent, node);
+         }
+
+
+         private String getEffectivScope(DependencyNode node)
+         {
+            String scope = getNodeScope(node);
+            if (!currentScope.isEmpty())
+            {
+               scope = "test".equals(currentScope.peek()) ? "test" : scope;
+            }
+            currentScope.push(scope);
+            return scope;
          }
 
 
@@ -156,8 +178,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             return dependency == null ? "compile" : dependency.getScope();
          }
       });
-
-      return referencedArtifacts;
    }
 
    private void pruneUnreferenced(DependencyNode graph)
@@ -194,7 +214,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             Dependency dependency = node.getDependency();
             if (dependency != null)
             {
-               return referencedAritfacts.contains(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
+               return referencedArtifacts.contains(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
             }
             return true;
          }
@@ -258,12 +278,12 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          initScopeMask(rootNode);
 
-         boolean referenced = referencedAritfacts.contains(artifactKey);
-
          currentRootNode = rootNode;
 
-         handler.startDependencyTree(rootArtifact, referenced);
-         traverseNodesRecursive(rootNode.getChildren());
+         if (handler.startDependencyTree(rootArtifact))
+         {
+            traverseNodesRecursive(rootNode.getChildren());
+         }
          handler.endDependencyTree(rootArtifact);
 
          currentRootNode = null;

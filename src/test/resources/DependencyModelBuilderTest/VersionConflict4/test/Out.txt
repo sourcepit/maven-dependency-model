@@ -3,8 +3,8 @@ model
 |  |- a:A:jar:1
 |  |- b:B:jar:1
 |  |- e:E:jar:2
-|  |- d:D:jar:1
-|  \- c:C:jar:1
+|  |- c:C:jar:1
+|  \- d:D:jar:1
 +- dependencyTrees
    |- a:A:jar:1
    |- b:B:jar:1

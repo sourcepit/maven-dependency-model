@@ -11,9 +11,11 @@ import org.sonatype.aether.graph.DependencyNode;
 
 public interface DependencyModelHandler
 {
+   void artifact(Artifact artifact, boolean referenced);
+   
    void startDependencyModel();
 
-   void startDependencyTree(Artifact artifact, boolean referenced);
+   boolean startDependencyTree(Artifact artifact);
 
    void startDependencyNode(DependencyNode node, String scope, boolean optional, boolean selected,
       DependencyNode shadowedNode);

@@ -8,6 +8,7 @@ package org.sourcepit.maven.dependency.model;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
+import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
 
 /**
@@ -62,5 +63,23 @@ public interface DependencyModel extends EObject
     * @generated
     */
    EList<DependencyTree> getDependencyTrees();
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model
+    * @generated
+    */
+   DependencyTree getDependencyTree(MavenArtifact artifact);
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model artifactKeyDataType="org.sourcepit.common.maven.model.ArtifactKey"
+    * @generated
+    */
+   DependencyTree getDependencyTree(ArtifactKey artifactKey);
 
 } // DependencyModel

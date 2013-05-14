@@ -30,6 +30,12 @@
         eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="DependencyModel">
+    <eOperations name="getDependencyTree" eType="#//DependencyTree">
+      <eParameters name="artifact" eType="ecore:EClass ../../../../common-maven/src/main/emf/maven.ecore#//MavenArtifact"/>
+    </eOperations>
+    <eOperations name="getDependencyTree" eType="#//DependencyTree">
+      <eParameters name="artifactKey" eType="ecore:EDataType ../../../../common-maven/src/main/emf/maven.ecore#//ArtifactKey"/>
+    </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="artifacts" upperBound="-1"
         eType="ecore:EClass ../../../../common-maven/src/main/emf/maven.ecore#//MavenArtifact"
         containment="true"/>

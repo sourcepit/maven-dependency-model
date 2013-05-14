@@ -7,6 +7,8 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.DependencyNode;
@@ -39,9 +41,21 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
          out.println("model");
       }
 
+      private Set<Artifact> referencedArtifacts = new HashSet<Artifact>();
+
       @Override
-      public void startDependencyTree(Artifact artifact, boolean referenced)
+      public void artifact(Artifact artifact, boolean referenced)
       {
+         if (referenced)
+         {
+            referencedArtifacts.add(artifact);
+         }
+      }
+
+      @Override
+      public boolean startDependencyTree(Artifact artifact)
+      {
+         final boolean referenced = referencedArtifacts.contains(artifact);
          if (referenced)
          {
             out.println("+- " + artifact);
@@ -50,6 +64,7 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
          {
             out.println("+- " + artifact + " (not referenced)");
          }
+         return true;
       }
 
       @Override

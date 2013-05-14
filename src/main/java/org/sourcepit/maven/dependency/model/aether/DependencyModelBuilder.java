@@ -53,23 +53,33 @@ public class DependencyModelBuilder implements DependencyModelHandler
    private DependencyTree currentDependencyTree;
 
    @Override
-   public void startDependencyTree(Artifact artifact, boolean referenced)
+   public void artifact(Artifact artifact, boolean referenced)
    {
       if (referenced)
       {
-         final MavenArtifact mavenArtifact = createArtifactUnique(artifact);
+         addArtifactUnique(artifact);
+      }
+      else
+      {
+         unreferencedArtifacts.add(MavenModelUtils.toArtifactKey(artifact));
+      }
+   }
+
+   @Override
+   public boolean startDependencyTree(Artifact artifact)
+   {
+      final MavenArtifact mavenArtifact = keyToArtifact.get(MavenModelUtils.toArtifactKey(artifact));
+      if (mavenArtifact != null)
+      {
          final DependencyTree dependencyTree = dependencyModelFactory.createDependencyTree();
          dependencyTree.setArtifact(mavenArtifact);
          model.getDependencyTrees().add(dependencyTree);
          currentDependencyTree = dependencyTree;
       }
-      else
-      {
-         unreferencedArtifacts.add(MavenModelUtils.toMavenArtifact(artifact).getArtifactKey());
-      }
+      return mavenArtifact != null;
    }
 
-   private MavenArtifact createArtifactUnique(Artifact artifact)
+   private MavenArtifact addArtifactUnique(Artifact artifact)
    {
       final MavenArtifact mavenArtifact = MavenModelUtils.toMavenArtifact(artifact);
 
@@ -89,8 +99,6 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private Stack<org.sourcepit.maven.dependency.model.DependencyNode> dependencyNodeStack = new Stack<org.sourcepit.maven.dependency.model.DependencyNode>();
 
-   private Map<org.sourcepit.maven.dependency.model.DependencyNode, DependencyNode> nodeMappings = new HashMap<org.sourcepit.maven.dependency.model.DependencyNode, DependencyNode>();
-
    @Override
    public void startDependencyNode(DependencyNode effectiveNode, String inheritedScope, boolean optional,
       boolean selected, DependencyNode shadowedNode)
@@ -98,7 +106,12 @@ public class DependencyModelBuilder implements DependencyModelHandler
       final org.sourcepit.maven.dependency.model.DependencyNode node = createDependencyNode(effectiveNode,
          inheritedScope, optional, selected, shadowedNode);
 
-      nodeMappings.put(node, effectiveNode);
+      final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact());
+
+      final MavenArtifact mavenArtifact = keyToArtifact.get(artifactKey);
+      checkState(mavenArtifact != null || unreferencedArtifacts.contains(artifactKey), "Artifact %s unknown.",
+         artifactKey);
+      node.setArtifact(mavenArtifact);
 
       if (shadowedNode == null)
       {
@@ -111,10 +124,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
       if (dependencyNodeStack.isEmpty())
       {
-         if (currentDependencyTree != null)
-         {
-            currentDependencyTree.getDependencyNodes().add(node);
-         }
+         currentDependencyTree.getDependencyNodes().add(node);
       }
       else
       {
@@ -275,18 +285,6 @@ public class DependencyModelBuilder implements DependencyModelHandler
    @Override
    public void endDependencyModel()
    {
-      for (Entry<org.sourcepit.maven.dependency.model.DependencyNode, DependencyNode> entry : nodeMappings.entrySet())
-      {
-         DependencyNode effectiveNode = entry.getValue();
-
-         final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact());
-
-         final MavenArtifact mavenArtifact = keyToArtifact.get(artifactKey);
-         checkState(mavenArtifact != null || unreferencedArtifacts.contains(artifactKey), "Artifact %s unknown.",
-            artifactKey);
-         entry.getKey().setArtifact(mavenArtifact);
-      }
-
       resolveConflictNodes();
       // checkState(replacedNodes.isEmpty(), "Unable to find conflict nodes for nodes %s", replacedNodes);
    }

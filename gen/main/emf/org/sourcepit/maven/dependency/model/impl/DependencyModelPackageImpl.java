@@ -8,6 +8,7 @@ package org.sourcepit.maven.dependency.model.impl;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EOperation;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.impl.EPackageImpl;
@@ -472,6 +473,14 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEReference(getDependencyModel_DependencyTrees(), this.getDependencyTree(), null, "dependencyTrees", null, 0,
          -1, DependencyModel.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES,
          !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+      EOperation op = addEOperation(dependencyModelEClass, this.getDependencyTree(), "getDependencyTree", 0, 1,
+         IS_UNIQUE, IS_ORDERED);
+      addEParameter(op, theMavenModelPackage.getMavenArtifact(), "artifact", 0, 1, IS_UNIQUE, IS_ORDERED);
+
+      op = addEOperation(dependencyModelEClass, this.getDependencyTree(), "getDependencyTree", 0, 1, IS_UNIQUE,
+         IS_ORDERED);
+      addEParameter(op, theMavenModelPackage.getArtifactKey(), "artifactKey", 0, 1, IS_UNIQUE, IS_ORDERED);
 
       initEClass(dependencyTreeEClass, DependencyTree.class, "DependencyTree", !IS_ABSTRACT, !IS_INTERFACE,
          IS_GENERATED_INSTANCE_CLASS);

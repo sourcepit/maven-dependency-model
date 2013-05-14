@@ -62,11 +62,15 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       String id = "a";
 
       Artifact a1 = newArtifact(id);
-      builder.startDependencyTree(a1, true);
+      Artifact a2 = newArtifact(id);
+      
+      builder.artifact(a1, true);
+      builder.artifact(a2, true);
+      
+      builder.startDependencyTree(a1);
       builder.endDependencyTree(a1);
 
-      Artifact a2 = newArtifact(id);
-      builder.startDependencyTree(a2, true);
+      builder.startDependencyTree(a2);
       builder.endDependencyTree(a2);
 
       builder.endDependencyModel();
