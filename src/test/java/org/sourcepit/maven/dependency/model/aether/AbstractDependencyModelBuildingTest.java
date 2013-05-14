@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 
+import javax.inject.Inject;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -33,6 +35,16 @@ import org.sourcepit.common.utils.io.Read.FromStream;
 
 public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest
 {
+   @Inject
+   private ArtifactFactory artifactFactory;
+
+   @Override
+   protected boolean isUseIndex()
+   {
+      // TODO Auto-generated method stub
+      return true;
+   }
+
    @Rule
    public TestName name = new TestName();
 
@@ -236,8 +248,8 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
          transformer1 = new ReplaceRootNode(rootNode);
       }
 
-      DependencyModelBuildingGraphTransformer transformer2 = new DependencyModelBuildingGraphTransformer(printer,
-         computeTreePerArtifact, scopeTest);
+      DependencyModelBuildingGraphTransformer transformer2 = new DependencyModelBuildingGraphTransformer(
+         artifactFactory, printer, computeTreePerArtifact, scopeTest);
 
       ChainedDependencyGraphTransformer.newInstance(transformer1, transformer2).transformGraph(graph, null);
 

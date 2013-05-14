@@ -14,7 +14,7 @@ import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
-import org.sourcepit.maven.dependency.model.aether.DependencyModelHandler;
+import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
 public class DependencyModelBuildingGraphTransformerTest extends AbstractDependencyModelBuildingTest
 {
@@ -44,12 +44,13 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
       private Set<Artifact> referencedArtifacts = new HashSet<Artifact>();
 
       @Override
-      public void artifact(Artifact artifact, boolean referenced)
+      public Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced)
       {
          if (referenced)
          {
             referencedArtifacts.add(artifact);
          }
+         return null;
       }
 
       @Override

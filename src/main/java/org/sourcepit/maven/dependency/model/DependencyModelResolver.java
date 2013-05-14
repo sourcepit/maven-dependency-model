@@ -20,11 +20,13 @@ import org.sourcepit.maven.dependency.model.DependencyModel;
 
 public interface DependencyModelResolver
 {
-   DependencyModel resolve(@NotNull Collection<Dependency> dependencies) throws ProjectBuildingException,
-      DependencyResolutionException;
+   DependencyModel resolve(@NotNull Collection<Dependency> dependencies, ArtifactAttachmentFactory attachmentFactory)
+      throws ProjectBuildingException, DependencyResolutionException;
 
-   DependencyModel resolve(@NotNull Artifact artifact) throws ProjectBuildingException, DependencyResolutionException;
+   DependencyModel resolve(@NotNull Artifact artifact, ArtifactAttachmentFactory attachmentFactory)
+      throws ProjectBuildingException, DependencyResolutionException;
 
-   DependencyModel resolve(@NotNull MavenProject project) throws DependencyResolutionException;
+   DependencyModel resolve(@NotNull MavenProject project, ArtifactAttachmentFactory attachmentFactory)
+      throws DependencyResolutionException;
 
 }

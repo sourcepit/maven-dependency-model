@@ -6,6 +6,8 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import static org.sourcepit.common.utils.lang.Exceptions.pipe;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,6 +48,7 @@ import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.collection.DependencySelector;
 import org.sonatype.aether.impl.VersionResolver;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
 import org.sonatype.aether.util.filter.ScopeDependencyFilter;
 import org.sonatype.aether.util.graph.DefaultDependencyNode;
@@ -54,12 +57,19 @@ import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.utils.lang.Exceptions;
+import org.sourcepit.maven.dependency.model.ArtifactAttachmentFactory;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelResolver;
 
 @Named("aether")
 public class AetherDependencyModelResolver implements DependencyModelResolver
 {
+   @Inject
+   private ArtifactFactory artifactFactory;
+
+   @Inject
+   private AttachmentResolver attachmentResolver;
+
    @Inject
    private LegacySupport buildContext;
 
@@ -73,8 +83,8 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
     * {@inheritDoc}
     */
    @Override
-   public DependencyModel resolve(@NotNull Collection<Dependency> dependencies) throws ProjectBuildingException,
-      DependencyResolutionException
+   public DependencyModel resolve(@NotNull Collection<Dependency> dependencies,
+      ArtifactAttachmentFactory attachmentFactory) throws ProjectBuildingException, DependencyResolutionException
    {
       final Model model;
 
@@ -125,36 +135,37 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       }, request);
 
       final MavenProject project = result.getProject();
-      return resolve(project, false);
+      return resolve(project, false, attachmentFactory);
    }
 
    /**
     * {@inheritDoc}
     */
    @Override
-   public DependencyModel resolve(@NotNull Artifact artifact) throws ProjectBuildingException,
-      DependencyResolutionException
+   public DependencyModel resolve(@NotNull Artifact artifact, ArtifactAttachmentFactory attachmentFactory)
+      throws ProjectBuildingException, DependencyResolutionException
    {
       final MavenProject project = buildProject(artifact);
-      return resolve(project);
+      return resolve(project, attachmentFactory);
    }
 
    /**
     * {@inheritDoc}
     */
    @Override
-   public DependencyModel resolve(@NotNull MavenProject project) throws DependencyResolutionException
+   public DependencyModel resolve(@NotNull MavenProject project, ArtifactAttachmentFactory attachmentFactory)
+      throws DependencyResolutionException
    {
-      return resolve(project, true);
+      return resolve(project, true, attachmentFactory);
    }
 
    @Inject
    private VersionResolver versionResolver;
 
-   private DependencyModel resolve(@NotNull MavenProject project, boolean resolveRoot)
-      throws DependencyResolutionException
+   private DependencyModel resolve(@NotNull MavenProject project, boolean resolveRoot,
+      ArtifactAttachmentFactory attachmentFactory) throws DependencyResolutionException
    {
-      final DependencyModelBuilder modelBuilder = new DependencyModelBuilder();
+      final DependencyModelBuilder modelBuilder = new DependencyModelBuilder(attachmentFactory);
 
       final RepositorySystemSession repositorySession = newRepositorySystemSession(project, resolveRoot, modelBuilder);
 
@@ -165,12 +176,24 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
 
       DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(resolutionRequest);
 
+      final Collection<org.sonatype.aether.artifact.Artifact> resolvedAttachments;
+      try
+      {
+         resolvedAttachments = attachmentResolver.resolveAttachments(repositorySession,
+            resolutionResult.getDependencyGraph());
+      }
+      catch (ArtifactResolutionException e)
+      {
+         throw pipe(e);
+      }
+
       DependencyModel model = modelBuilder.getDependencyModel();
 
-      applyResolvedArtifacts(project, resolutionResult, model);
+      applyResolvedArtifacts(project, resolutionResult, resolvedAttachments, model);
 
       return model;
    }
+
 
    private RepositorySystemSession newRepositorySystemSession(MavenProject project, boolean resolveRoot,
       final DependencyModelBuilder modelBuilder)
@@ -189,7 +212,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       }
 
       transformers.add(new LatestAndReleseVersionResolverTransformer(versionResolver));
-      transformers.add(new DependencyModelBuildingGraphTransformer(modelBuilder, true, false));
+      transformers.add(new DependencyModelBuildingGraphTransformer(artifactFactory, modelBuilder, true, false));
 
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          transformers.toArray(new DependencyGraphTransformer[transformers.size()]));
@@ -213,22 +236,27 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
    }
 
    private void applyResolvedArtifacts(MavenProject project, DependencyResolutionResult resolutionResult,
-      DependencyModel model)
+      Collection<org.sonatype.aether.artifact.Artifact> resolvedAttachments, DependencyModel model)
    {
-      Map<ArtifactKey, MavenArtifact> foo = new HashMap<ArtifactKey, MavenArtifact>();
+      Map<ArtifactKey, MavenArtifact> keyToArtifact = new HashMap<ArtifactKey, MavenArtifact>();
 
       EList<MavenArtifact> artifacts2 = model.getArtifacts();
       for (MavenArtifact mavenArtifact : artifacts2)
       {
-         foo.put(mavenArtifact.getArtifactKey(), mavenArtifact);
+         keyToArtifact.put(mavenArtifact.getArtifactKey(), mavenArtifact);
       }
 
-      List<org.sonatype.aether.graph.Dependency> resolvedDependencies = resolutionResult.getResolvedDependencies();
-      for (org.sonatype.aether.graph.Dependency dependency : resolvedDependencies)
+      for (org.sonatype.aether.artifact.Artifact artifact : resolvedAttachments)
+      {
+         final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+         keyToArtifact.get(artifactKey).setFile(artifact.getFile());
+      }
+
+      for (org.sonatype.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies())
       {
          org.sonatype.aether.artifact.Artifact artifact = dependency.getArtifact();
          final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
-         foo.get(artifactKey).setFile(artifact.getFile());
+         keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
    }
 

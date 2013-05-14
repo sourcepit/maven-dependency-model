@@ -7,6 +7,7 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
+import org.sourcepit.maven.dependency.model.ArtifactAttachment;
+import org.sourcepit.maven.dependency.model.ArtifactAttachmentFactory;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelFactory;
 import org.sourcepit.maven.dependency.model.DependencyTree;
@@ -35,9 +38,17 @@ public class DependencyModelBuilder implements DependencyModelHandler
    private final DependencyModelFactory dependencyModelFactory;
    private DependencyModel model;
 
+   private final ArtifactAttachmentFactory attachmentFactory;
+   
    public DependencyModelBuilder()
    {
+      this(null);
+   }
+
+   public DependencyModelBuilder(ArtifactAttachmentFactory attachmentFactory)
+   {
       this.dependencyModelFactory = DependencyModelFactory.eINSTANCE;
+      this.attachmentFactory = attachmentFactory;
    }
 
    @Override
@@ -53,22 +64,27 @@ public class DependencyModelBuilder implements DependencyModelHandler
    private DependencyTree currentDependencyTree;
 
    @Override
-   public void artifact(Artifact artifact, boolean referenced)
+   public Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced)
    {
       if (referenced)
       {
-         addArtifactUnique(artifact);
+         if (addArtifactUnique(artifact) && attachmentFactory != null)
+         {
+            return attachmentFactory.createAttachments(toArtifactKey(artifact));
+         }
       }
       else
       {
-         unreferencedArtifacts.add(MavenModelUtils.toArtifactKey(artifact));
+         unreferencedArtifacts.add(toArtifactKey(artifact));
       }
+
+      return null;
    }
 
    @Override
    public boolean startDependencyTree(Artifact artifact)
    {
-      final MavenArtifact mavenArtifact = keyToArtifact.get(MavenModelUtils.toArtifactKey(artifact));
+      final MavenArtifact mavenArtifact = keyToArtifact.get(toArtifactKey(artifact));
       if (mavenArtifact != null)
       {
          final DependencyTree dependencyTree = dependencyModelFactory.createDependencyTree();
@@ -79,18 +95,17 @@ public class DependencyModelBuilder implements DependencyModelHandler
       return mavenArtifact != null;
    }
 
-   private MavenArtifact addArtifactUnique(Artifact artifact)
+   private boolean addArtifactUnique(Artifact artifact)
    {
       final MavenArtifact mavenArtifact = MavenModelUtils.toMavenArtifact(artifact);
-
       final ArtifactKey key = mavenArtifact.getArtifactKey();
       if (!keyToArtifact.containsKey(key))
       {
          model.getArtifacts().add(mavenArtifact);
          keyToArtifact.put(key, mavenArtifact);
+         return true;
       }
-
-      return keyToArtifact.get(key);
+      return false;
    }
 
    private Map<DependencyNode, org.sourcepit.maven.dependency.model.DependencyNode> unreplacedNodes = new HashMap<DependencyNode, org.sourcepit.maven.dependency.model.DependencyNode>();

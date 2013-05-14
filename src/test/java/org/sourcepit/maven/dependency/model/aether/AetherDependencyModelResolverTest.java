@@ -9,6 +9,7 @@ package org.sourcepit.maven.dependency.model.aether;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -39,6 +40,7 @@ import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelResolver;
 import org.sourcepit.maven.dependency.model.DependencyNode;
 import org.sourcepit.maven.dependency.model.DependencyTree;
+import org.sourcepit.maven.dependency.model.JavaSourceAttachmentFactory;
 
 public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentTest
 {
@@ -98,7 +100,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact rootArtifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(rootArtifact);
+      DependencyModel model = modelResolver.resolve(rootArtifact, null);
       assertEquals(1, model.getArtifacts().size());
       assertEquals(1, model.getDependencyTrees().size());
 
@@ -122,7 +124,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact rootArtifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(rootArtifact);
+      DependencyModel model = modelResolver.resolve(rootArtifact, null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
 
@@ -156,7 +158,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact rootArtifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(rootArtifact);
+      DependencyModel model = modelResolver.resolve(rootArtifact, null);
       assertEquals(4, model.getArtifacts().size());
       assertEquals(4, model.getDependencyTrees().size());
 
@@ -183,7 +185,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       try
       {
-         modelResolver.resolve(rootArtifact);
+         modelResolver.resolve(rootArtifact, null);
          fail();
       }
       catch (IllegalStateException e)
@@ -206,7 +208,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       dependencies.add(newDependency("A", "1"));
       dependencies.add(newDependency("B", "1"));
 
-      DependencyModel model = modelResolver.resolve(dependencies);
+      DependencyModel model = modelResolver.resolve(dependencies, null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
    }
@@ -230,7 +232,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
 
       EList<MavenArtifact> artifacts = model.getArtifacts();
       assertEquals(3, artifacts.size());
@@ -294,7 +296,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
 
       EList<MavenArtifact> artifacts = model.getArtifacts();
       assertEquals(2, artifacts.size());
@@ -349,7 +351,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
 
       EList<MavenArtifact> artifacts = model.getArtifacts();
       assertEquals(1, artifacts.size());
@@ -390,7 +392,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
 
@@ -424,7 +426,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
 
@@ -456,7 +458,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
 
-      DependencyModel model = modelResolver.resolve(artifact);
+      DependencyModel model = modelResolver.resolve(artifact, null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
 
@@ -469,6 +471,51 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       final MavenArtifact artifactA = model.getArtifacts().get(0);
       DependencyNode node = model.getDependencyTree(artifactA).getDependencyNodes().get(0);
       assertEquals("[1,2)", node.getEffectiveVersionConstraint());
+   }
+
+   @Test
+   public void testSourceAttachment() throws Exception
+   {
+      Model pom;
+
+      pom = newModel("B", "1");
+      pom.setPackaging("java-source"); // abused as type
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "1");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact, new JavaSourceAttachmentFactory());
+      assertEquals(4, model.getArtifacts().size());
+
+      MavenArtifact artifactA = model.getArtifacts().get(0);
+      assertEquals("A", artifactA.getArtifactId());
+      assertNull(artifactA.getClassifier());
+      assertNotNull(artifactA.getFile());
+      
+      MavenArtifact sourceA = model.getArtifacts().get(1);
+      assertEquals("A", sourceA.getArtifactId());
+      assertEquals("sources", sourceA.getClassifier());
+      assertEquals("java-source", sourceA.getType());
+      assertNull(sourceA.getFile());
+      
+      MavenArtifact artifactB = model.getArtifacts().get(2);
+      assertEquals("B", artifactB.getArtifactId());
+      assertNull(artifactB.getClassifier());
+      assertNotNull(artifactB.getFile());
+      
+      MavenArtifact sourceB = model.getArtifacts().get(3);
+      assertEquals("B", sourceB.getArtifactId());
+      assertEquals("sources", sourceB.getClassifier());
+      assertEquals("java-source", sourceB.getType());
+      assertNotNull(sourceB.getFile());
+
    }
 
    private static Model newModel(String artifactId, String version)

@@ -11,10 +11,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
@@ -27,6 +26,10 @@ import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
+import org.sourcepit.maven.dependency.model.ArtifactAttachment;
+
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 
 public class DependencyModelBuildingGraphTransformer implements DependencyGraphTransformer
 {
@@ -47,9 +50,12 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private Set<ArtifactKey> referencedArtifacts;
 
-   public DependencyModelBuildingGraphTransformer(DependencyModelHandler handler, boolean computeTreePerArtifact,
-      boolean scopeTest)
+   private final ArtifactFactory artifactFactory;
+
+   public DependencyModelBuildingGraphTransformer(ArtifactFactory artifactFactory, DependencyModelHandler handler,
+      boolean computeTreePerArtifact, boolean scopeTest)
    {
+      this.artifactFactory = artifactFactory;
       this.handler = handler;
       this.computeTreePerArtifact = computeTreePerArtifact;
       this.scopeTest = scopeTest;
@@ -72,14 +78,11 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          graph = transformer.transformGraph(graph, context);
       }
 
-      final Map<ArtifactKey, Artifact> allArtifacts = new LinkedHashMap<ArtifactKey, Artifact>();
+      final Multimap<ArtifactKey, DependencyNode> keyToNodes = LinkedHashMultimap.create();
       referencedArtifacts = new HashSet<ArtifactKey>();
-      computeReferencedArtifacts(graph, allArtifacts, referencedArtifacts);
+      computeReferencedArtifacts(graph, keyToNodes, referencedArtifacts);
 
-      for (Entry<ArtifactKey, Artifact> entry : allArtifacts.entrySet())
-      {
-         handler.artifact(entry.getValue(), referencedArtifacts.contains(entry.getKey()));
-      }
+      handleArtifacts(keyToNodes);
 
       final List<DependencyNode> roots;
       if (graph.getDependency() == null)
@@ -99,7 +102,56 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       return graph;
    }
 
-   private void computeReferencedArtifacts(DependencyNode graph, final Map<ArtifactKey, Artifact> allArtifacts,
+   private void handleArtifacts(final Multimap<ArtifactKey, DependencyNode> keyToNodes)
+   {
+      for (final ArtifactKey artifactKey : keyToNodes.keySet())
+      {
+         final Collection<DependencyNode> nodes = keyToNodes.get(artifactKey);
+         final DependencyNode node = nodes.iterator().next();
+         final Artifact artifact = node.getDependency().getArtifact();
+         final boolean referenced = referencedArtifacts.contains(artifactKey);
+         handleArtifacts(keyToNodes, nodes, artifact, referenced);
+      }
+   }
+
+   private void handleArtifacts(Multimap<ArtifactKey, DependencyNode> keyToNodes, Collection<DependencyNode> nodes,
+      Artifact artifact, boolean referenced)
+   {
+      final Set<ArtifactAttachment> attachments = handler.artifact(artifact, referenced);
+      if (attachments != null)
+      {
+         for (ArtifactAttachment attachment : attachments)
+         {
+            Artifact attachedArtifact = artifactFactory.createArtifact(artifact, attachment.getClassifier(),
+               attachment.getType());
+
+            final ArtifactKey attachmentKey = MavenModelUtils.toArtifactKey(attachedArtifact);
+            if (keyToNodes.containsKey(attachmentKey))
+            {
+               attachedArtifact = keyToNodes.get(attachmentKey).iterator().next().getDependency().getArtifact();
+            }
+            else
+            {
+               handleArtifacts(keyToNodes, nodes, attachedArtifact, referenced);
+            }
+
+            final String dataKey = attachment.isRequired() ? "requiredAttachments" : "optionalAttachments";
+            for (DependencyNode node : nodes)
+            {
+               @SuppressWarnings("unchecked")
+               Set<Artifact> attachedArtifacts = (Set<Artifact>) node.getData().get(dataKey);
+               if (attachedArtifacts == null)
+               {
+                  attachedArtifacts = new LinkedHashSet<Artifact>();
+                  node.setData(dataKey, attachedArtifacts);
+               }
+               attachedArtifacts.add(attachedArtifact);
+            }
+         }
+      }
+   }
+
+   private void computeReferencedArtifacts(DependencyNode graph, final Multimap<ArtifactKey, DependencyNode> allNodes,
       final Set<ArtifactKey> referencedArtifacts)
    {
       graph.accept(new AbstractDependencyVisitor(false)
@@ -123,7 +175,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                {
                   final Artifact artifact = effectiveNode.getDependency().getArtifact();
                   final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
-                  allArtifacts.put(artifactKey, artifact);
+                  allNodes.put(artifactKey, effectiveNode);
                   referencedArtifacts.add(artifactKey);
                }
             }
@@ -139,7 +191,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             {
                final Artifact artifact = dependency.getArtifact();
                final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
-               allArtifacts.put(artifactKey, artifact);
+               allNodes.put(artifactKey, node);
 
                if (!replaced && (scopeTest || !"test".equals(scope)))
                {

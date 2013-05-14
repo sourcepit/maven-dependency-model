@@ -6,13 +6,16 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import java.util.Set;
+
 import org.sonatype.aether.artifact.Artifact;
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
 public interface DependencyModelHandler
 {
-   void artifact(Artifact artifact, boolean referenced);
-   
+   Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced);
+
    void startDependencyModel();
 
    boolean startDependencyTree(Artifact artifact);
