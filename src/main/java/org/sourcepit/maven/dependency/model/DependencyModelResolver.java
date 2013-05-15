@@ -18,6 +18,7 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 
 
+// TODO exceptions handling...
 public interface DependencyModelResolver
 {
    DependencyModel resolve(@NotNull Collection<Dependency> dependencies, ArtifactAttachmentFactory attachmentFactory)

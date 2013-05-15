@@ -1,0 +1,9 @@
+model
++- artifacts
+|  |- a:A:jar:2
+|  \- b:B:jar:2
++- dependencyTrees
+   |- b:B:jar:2
+   \- a:A:jar:2
+      |- b:B:jar:2:compile -> b:B:jar:2
+      \- a:A:jar:2:compile (was a:A:jar:1:test) -> a:A:jar:2 (conflicted) (not selected)

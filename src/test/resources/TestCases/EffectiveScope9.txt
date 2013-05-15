@@ -1,0 +1,5 @@
+(null)
++- a:A:jar:2:compile
+|  +- b:B:jar:2:compile
+|  +- a:A:jar:1:test
+|  |  +- b:B:jar:1:compile

@@ -41,7 +41,6 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    @Override
    protected boolean isUseIndex()
    {
-      // TODO Auto-generated method stub
       return true;
    }
 
@@ -109,6 +108,12 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    }
 
    @Test
+   public void testVersionConflict6() throws Exception
+   {
+      test();
+   }
+   
+   @Test
    public void testEffectiveScope1() throws Exception
    {
       test();
@@ -152,6 +157,12 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 
    @Test
    public void testEffectiveScope8() throws Exception
+   {
+      test();
+   }
+   
+   @Test
+   public void testEffectiveScope9() throws Exception
    {
       test();
    }
