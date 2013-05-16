@@ -230,4 +230,25 @@ public final class DependencyUtils
 
       return existingGroups;
    }
+   
+   public static boolean isConflicting(final Set<VersionConflictKey> conflictKeys, Set<VersionConflictKey> conflictKeys2)
+   {
+      for (VersionConflictKey conflictKey2 : conflictKeys2)
+      {
+         if (conflictKeys.contains(conflictKey2))
+         {
+            return true;
+         }
+      }
+
+      for (VersionConflictKey conflictKey : conflictKeys)
+      {
+         if (conflictKeys2.contains(conflictKey))
+         {
+            return true;
+         }
+      }
+
+      return false;
+   }
 }

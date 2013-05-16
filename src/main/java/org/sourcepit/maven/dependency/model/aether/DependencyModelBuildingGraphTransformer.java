@@ -6,6 +6,8 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.model.ArtifactKey;
+import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
@@ -177,7 +180,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                   final Artifact artifact = effectiveNode.getDependency().getArtifact();
                   final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
                   allNodes.put(artifactKey, effectiveNode);
-                  referencedArtifacts.add(artifactKey);
+                  addReferenced(allNodes, referencedArtifacts, parent, effectiveNode, artifactKey);
                }
             }
 
@@ -196,11 +199,40 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
                if (!replaced && (scopeTest || !"test".equals(scope)))
                {
-                  referencedArtifacts.add(artifactKey);
+                  addReferenced(allNodes, referencedArtifacts, parent, node, artifactKey);
                }
             }
 
             return super.onVisitEnter(parent, node);
+         }
+
+         private void addReferenced(final Multimap<ArtifactKey, DependencyNode> allNodes,
+            final Set<ArtifactKey> referencedArtifacts, DependencyNode parent, DependencyNode node,
+            ArtifactKey artifactKey)
+         {
+            boolean referenced = true;
+            if (parent != null)
+            {
+               final Set<VersionConflictKey> keys1 = new DependencyNode2Adapter(parent).getConflictKeys();
+               final Set<VersionConflictKey> keys2 = new DependencyNode2Adapter(node).getConflictKeys();
+               if (DependencyUtils.isConflicting(keys1, keys2))
+               {
+                  referenced = false;
+               }
+               else
+               {
+                  final Dependency dependency = parent.getDependency();
+                  if (dependency != null)
+                  {
+                     referenced = referencedArtifacts.contains(toArtifactKey(dependency.getArtifact()));
+                  }
+               }
+            }
+
+            if (referenced)
+            {
+               referencedArtifacts.add(artifactKey);
+            }
          }
 
 

@@ -48,7 +48,7 @@ public class HideDuplicatedSiblings implements DependencyGraphTransformer
                   continue;
                }
                final Set<VersionConflictKey> conflictKeys2 = DependencyNode2Adapter.get(sibling).getConflictKeys();
-               if (isIntersecting(conflictKeys, conflictKeys2))
+               if (DependencyUtils.isConflicting(conflictKeys, conflictKeys2))
                {
                   conflicts.add(sibling);
                }
@@ -58,27 +58,6 @@ public class HideDuplicatedSiblings implements DependencyGraphTransformer
             {
                DependencyNode2Adapter.get(conflicts.get(i)).setVisible(false);
             }
-         }
-
-         private boolean isIntersecting(final Set<VersionConflictKey> conflictKeys, Set<VersionConflictKey> conflictKeys2)
-         {
-            for (VersionConflictKey conflictKey2 : conflictKeys2)
-            {
-               if (conflictKeys.contains(conflictKey2))
-               {
-                  return true;
-               }
-            }
-
-            for (VersionConflictKey conflictKey : conflictKeys)
-            {
-               if (conflictKeys2.contains(conflictKey))
-               {
-                  return true;
-               }
-            }
-
-            return false;
          }
       });
       return graph;
