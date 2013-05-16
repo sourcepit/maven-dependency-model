@@ -15,12 +15,15 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
    @Override
    public DependencyNode choose(List<DependencyNode> nodes)
    {
+      final boolean hasVisibles = hasVisibles(nodes);
+
       DependencyNode chosen = null;
       int chosenDepth = Integer.MAX_VALUE;
+
       for (DependencyNode node : nodes)
       {
          final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-         if (!adapter.isVisible() || getRoot(node, adapter) == null)
+         if ((hasVisibles && !adapter.isVisible()) || getRoot(node, adapter) == null)
          {
             continue;
          }
@@ -33,6 +36,19 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
          }
       }
       return chosen;
+   }
+
+   private boolean hasVisibles(List<DependencyNode> nodes)
+   {
+      for (DependencyNode node : nodes)
+      {
+         final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+         if (adapter.isVisible())
+         {
+            return true;
+         }
+      }
+      return false;
    }
 
    private DependencyNode getRoot(DependencyNode node, DependencyNode2 adapter)

@@ -166,6 +166,12 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    {
       test();
    }
+   
+   @Test
+   public void testEffectiveScope10() throws Exception
+   {
+      test();
+   }
 
    private void test() throws Exception
    {
