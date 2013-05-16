@@ -72,6 +72,10 @@
       <styles xmi:type="notation:FilteringStyle" xmi:id="_eOiQhKuKEeK5GLzX8qV7VQ"/>
     </children>
     <children xmi:type="notation:Node" xmi:id="_eOiQhauKEeK5GLzX8qV7VQ" type="5002">
+      <children xmi:type="notation:Node" xmi:id="_mqBcwL1qEeKkzL00__UKKw" type="2002">
+        <element xmi:type="ecore:EOperation" href="DependencyModel.ecore#//DependencyModel/getArtifact"/>
+        <layoutConstraint xmi:type="notation:Location" xmi:id="_mqBcwb1qEeKkzL00__UKKw"/>
+      </children>
       <children xmi:type="notation:Node" xmi:id="_8WDYILxpEeKyieajT-LRiw" type="2002">
         <element xmi:type="ecore:EOperation" href="DependencyModel.ecore#//DependencyModel/getDependencyTree"/>
         <layoutConstraint xmi:type="notation:Location" xmi:id="_8WDYIbxpEeKyieajT-LRiw"/>

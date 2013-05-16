@@ -7,6 +7,7 @@
 package org.sourcepit.maven.dependency.model.impl;
 
 import org.sourcepit.common.maven.model.ArtifactKey;
+import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyTree;
 
@@ -15,6 +16,18 @@ public final class DependencyModelOperations
    private DependencyModelOperations()
    {
       super();
+   }
+   
+   public static MavenArtifact getArtifact(DependencyModel model, ArtifactKey artifactKey)
+   {
+      for (MavenArtifact artifact : model.getArtifacts())
+      {
+         if (artifactKey.equals(artifact.getArtifactKey()))
+         {
+            return artifact;
+         }
+      }
+      return null;
    }
 
    public static DependencyTree getDependencyTree(DependencyModel model, ArtifactKey artifactKey)

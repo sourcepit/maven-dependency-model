@@ -36,6 +36,9 @@
     <eOperations name="getDependencyTree" eType="#//DependencyTree">
       <eParameters name="artifactKey" eType="ecore:EDataType ../../../../common-maven/src/main/emf/maven.ecore#//ArtifactKey"/>
     </eOperations>
+    <eOperations name="getArtifact" eType="ecore:EClass ../../../../common-maven/src/main/emf/maven.ecore#//MavenArtifact">
+      <eParameters name="artifactKey" eType="ecore:EDataType ../../../../common-maven/src/main/emf/maven.ecore#//ArtifactKey"/>
+    </eOperations>
     <eStructuralFeatures xsi:type="ecore:EReference" name="artifacts" upperBound="-1"
         eType="ecore:EClass ../../../../common-maven/src/main/emf/maven.ecore#//MavenArtifact"
         containment="true"/>

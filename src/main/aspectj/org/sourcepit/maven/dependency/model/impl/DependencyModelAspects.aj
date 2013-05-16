@@ -13,13 +13,19 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
 
 public aspect DependencyModelAspects
 {
+   pointcut getArtifact(DependencyModel model, ArtifactKey artifactKey): target(model) && args(artifactKey) && execution(MavenArtifact getArtifact(ArtifactKey));
+   
+   MavenArtifact around(DependencyModel model, ArtifactKey artifactKey) : getArtifact(model, artifactKey){
+      return DependencyModelOperations.getArtifact(model, artifactKey);
+   }
+   
    pointcut getDependencyTree(DependencyModel model, MavenArtifact artifact): target(model) && args(artifact) && execution(DependencyTree getDependencyTree(MavenArtifact));
-
-   pointcut getDependencyTree1(DependencyModel model, ArtifactKey artifactKey): target(model) && args(artifactKey) && execution(DependencyTree getDependencyTree(ArtifactKey));
 
    DependencyTree around(DependencyModel model, MavenArtifact artifact) : getDependencyTree(model, artifact){
       return DependencyModelOperations.getDependencyTree(model, artifact.getArtifactKey());
    }
+   
+   pointcut getDependencyTree1(DependencyModel model, ArtifactKey artifactKey): target(model) && args(artifactKey) && execution(DependencyTree getDependencyTree(ArtifactKey));
 
    DependencyTree around(DependencyModel model, ArtifactKey artifactKey) : getDependencyTree1(model, artifactKey){
       return DependencyModelOperations.getDependencyTree(model, artifactKey);

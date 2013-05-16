@@ -482,6 +482,10 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
          IS_ORDERED);
       addEParameter(op, theMavenModelPackage.getArtifactKey(), "artifactKey", 0, 1, IS_UNIQUE, IS_ORDERED);
 
+      op = addEOperation(dependencyModelEClass, theMavenModelPackage.getMavenArtifact(), "getArtifact", 0, 1,
+         IS_UNIQUE, IS_ORDERED);
+      addEParameter(op, theMavenModelPackage.getArtifactKey(), "artifactKey", 0, 1, IS_UNIQUE, IS_ORDERED);
+
       initEClass(dependencyTreeEClass, DependencyTree.class, "DependencyTree", !IS_ABSTRACT, !IS_INTERFACE,
          IS_GENERATED_INSTANCE_CLASS);
       initEReference(getDependencyTree_Artifact(), theMavenModelPackage.getMavenArtifact(), null, "artifact", null, 1,

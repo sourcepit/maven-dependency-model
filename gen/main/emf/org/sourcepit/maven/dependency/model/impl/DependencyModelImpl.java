@@ -147,6 +147,19 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
+   public MavenArtifact getArtifact(ArtifactKey artifactKey)
+   {
+      // TODO: implement this method
+      // Ensure that you remove @generated or mark it @generated NOT
+      throw new UnsupportedOperationException();
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
    @Override
    public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
    {

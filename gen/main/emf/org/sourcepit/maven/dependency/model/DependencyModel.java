@@ -82,4 +82,13 @@ public interface DependencyModel extends EObject
     */
    DependencyTree getDependencyTree(ArtifactKey artifactKey);
 
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @model artifactKeyDataType="org.sourcepit.common.maven.model.ArtifactKey"
+    * @generated
+    */
+   MavenArtifact getArtifact(ArtifactKey artifactKey);
+
 } // DependencyModel
