@@ -174,7 +174,15 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       resolutionRequest.setRepositorySession(repositorySession);
       resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
 
-      DependencyResolutionResult resolutionResult = dependenciesResolver.resolve(resolutionRequest);
+      DependencyResolutionResult resolutionResult;
+      try
+      {
+         resolutionResult = dependenciesResolver.resolve(resolutionRequest);
+      }
+      catch (DependencyResolutionException e)
+      {
+         resolutionResult = e.getResult();
+      }
 
       final Collection<org.sonatype.aether.artifact.Artifact> resolvedAttachments;
       try
@@ -212,7 +220,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       }
 
       transformers.add(new LatestAndReleseVersionResolverTransformer(versionResolver));
-      transformers.add(new DependencyModelBuildingGraphTransformer(artifactFactory, modelBuilder, true, false));
+      transformers.add(new DependencyModelBuildingGraphTransformer(artifactFactory, modelBuilder, false, false));
 
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          transformers.toArray(new DependencyGraphTransformer[transformers.size()]));
