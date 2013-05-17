@@ -6,10 +6,15 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import java.util.Stack;
+
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.collection.DependencyGraphTransformationContext;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
+import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.model.ArtifactKey;
+import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
 public class ApplyScopeAndOptional implements DependencyGraphTransformer
 {
@@ -19,9 +24,21 @@ public class ApplyScopeAndOptional implements DependencyGraphTransformer
    {
       graph.accept(new AbstractDependencyVisitor(false)
       {
+         Stack<ArtifactKey> path = new Stack<ArtifactKey>();
+
          @Override
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
+            Dependency dependency = node.getDependency();
+            ArtifactKey artifactKey = dependency == null ? null : MavenModelUtils.toArtifactKey(dependency
+               .getArtifact());
+
+            if (path.contains(artifactKey))
+            {
+               path.push(artifactKey);
+               return false;
+            }
+
             final int depth = path.size();
             boolean visible = DependencyNode2Adapter.get(node).isVisible();
             if (visible && depth > 1)
@@ -30,15 +47,23 @@ public class ApplyScopeAndOptional implements DependencyGraphTransformer
                visible = parentAdapter.isVisible();
                if (visible)
                {
-                  final String scope = node.getDependency().getScope();
-                  if (node.getDependency().isOptional() || scope.equals("test") || scope.equals("provided"))
+                  final String scope = dependency.getScope();
+                  if (dependency.isOptional() || scope.equals("test") || scope.equals("provided"))
                   {
                      visible = false;
                   }
                }
             }
             DependencyNode2Adapter.get(node).setVisible(visible);
+            path.push(artifactKey);
             return true;
+         }
+
+         @Override
+         protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
+         {
+            path.pop();
+            return super.onVisitLeave(parent, node);
          }
       });
       return graph;

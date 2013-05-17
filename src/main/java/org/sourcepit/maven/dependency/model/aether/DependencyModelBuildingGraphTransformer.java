@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
@@ -267,6 +268,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private void pruneUnreferenced(DependencyNode graph)
    {
+      final Multimap<DependencyNode, DependencyNode> foo = LinkedHashMultimap.create();
+
       graph.accept(new AbstractDependencyVisitor(false)
       {
          @Override
@@ -277,7 +280,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                final DependencyNode childNode = (DependencyNode) it.next();
                if (!isReferenced(childNode))
                {
-                  it.remove();
+                  foo.put(node, childNode);
+                  // it.remove();
                }
             }
             return super.onVisitLeave(parent, node);
@@ -293,29 +297,29 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             return true;
          }
       });
+
+      for (Entry<DependencyNode, Collection<DependencyNode>> entry : foo.asMap().entrySet())
+      {
+         DependencyNode parent = entry.getKey();
+         parent.getChildren().removeAll(entry.getValue());
+      }
    }
 
-   private Stack<DependencyNode> treeStack = new Stack<DependencyNode>();
+   private Stack<ArtifactKey> treeStack = new Stack<ArtifactKey>();
 
    private void traverseTrees(List<DependencyNode> nodes, DependencyGraphTransformationContext context)
       throws RepositoryException
    {
       for (DependencyNode node : nodes)
       {
-         if (treeStack.contains(node))
-         {
-            final StringBuilder sb = new StringBuilder();
-            for (DependencyNode n : treeStack)
-            {
-               sb.append(n);
-               sb.append(" -> ");
-            }
-            sb.append(node);
+         final ArtifactKey artifactKey = toArtifactKey(node.getDependency().getArtifact());
 
-            throw new IllegalStateException("Cyclic dependencies " + sb);
+         if (treeStack.contains(artifactKey)) // cycle
+         {
+            return;
          }
 
-         treeStack.push(node);
+         treeStack.push(artifactKey);
 
          traverseTrees(node.getChildren(), context);
          traverceTree(node, node.getDependency().getArtifact(), computeTreePerArtifact, context);
@@ -331,6 +335,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
    private Set<ArtifactKey> visited = new HashSet<ArtifactKey>();
 
    private final Stack<DependencyNode> nodeStack = new Stack<DependencyNode>();
+
+   private final Stack<ArtifactKey> keyStack = new Stack<ArtifactKey>();
 
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
@@ -371,6 +377,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          currentRootNode = rootNode;
          nodeStack.push(rootNode);
+         keyStack.push(artifactKey);
 
          if (handler.startDependencyTree(rootArtifact))
          {
@@ -380,6 +387,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
          currentRootNode = null;
          nodeStack.clear();
+         keyStack.clear();
       }
    }
 
@@ -447,18 +455,30 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
       final DependencyNode effectiveNode = getEffectiveNode(node);
 
-      final boolean cycle = nodeStack.contains(effectiveNode);
+      ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact());
+
+      int idx = keyStack.indexOf(artifactKey);
+
+      final boolean cycle = idx > -1;
+
+      DependencyNode cycleNode = null;
+      if (cycle)
+      {
+         cycleNode = nodeStack.get(idx);
+      }
 
       final String scope = getEffectiveScope(node);
 
-      final boolean selected = !cycle && isSelected(node, effectiveNode, scope, depth);
+      final boolean selected = isSelected(node, effectiveNode, scope, depth);
 
       nodeStack.push(effectiveNode);
+      keyStack.push(artifactKey);
       parentScopes.push(scope);
       parentOptionals.push(Boolean.valueOf(optional));
       parentSelected.push(Boolean.valueOf(selected));
 
-      handler.startDependencyNode(effectiveNode, scope, optional, selected, effectiveNode == node ? null : node);
+      handler.startDependencyNode(effectiveNode, scope, optional, selected, effectiveNode == node ? null : node,
+         cycleNode, idx == 0);
       if (!cycle)
       {
          traverseNodesRecursive(effectiveNode.getChildren());
@@ -469,6 +489,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       parentOptionals.pop();
       parentScopes.pop();
       nodeStack.pop();
+      keyStack.pop();
    }
 
    private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, String effectiveScope,
@@ -501,7 +522,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
          active = false;
       }
 
-      if (active && effectiveNode != node)
+      if (active && effectiveNode != node && currentRootNode != effectiveNode)
       {
          boolean isChosen = false;
 

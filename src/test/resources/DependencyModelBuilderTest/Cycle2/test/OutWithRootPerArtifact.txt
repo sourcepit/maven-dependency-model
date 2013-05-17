@@ -1,0 +1,21 @@
+model
++- artifacts
+|  |- root:ROOT:jar:1
+|  |- a:A:jar:1
+|  |- b:B:jar:1
+|  \- c:C:jar:1
++- dependencyTrees
+   |- b:B:jar:1
+   |  \- a:A:jar:1:test -> a:A:jar:1
+   |     |- b:B:jar:1:test (was b:B:jar:1:compile) -> b:B:jar:1 (conflicted) (not selected)
+   |     \- c:C:jar:1:test -> c:C:jar:1 (not selected)
+   |- c:C:jar:1
+   |- a:A:jar:1
+   |  |- b:B:jar:1:compile -> b:B:jar:1
+   |  |  \- a:A:jar:1:compile (was a:A:jar:1:test) -> a:A:jar:1 (conflicted) (not selected)
+   |  \- c:C:jar:1:test -> c:C:jar:1
+   \- root:ROOT:jar:1
+      \- a:A:jar:1:compile -> a:A:jar:1
+         |- b:B:jar:1:compile -> b:B:jar:1
+         |  \- a:A:jar:1:compile (was a:A:jar:1:test) -> a:A:jar:1 (conflicted) (not selected) (cycle)
+         \- c:C:jar:1:test -> c:C:jar:1 (not selected)

@@ -45,6 +45,7 @@ import org.sourcepit.maven.dependency.model.DependencyNode;
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#isOptional <em>Optional</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getConflictVersionConstraint <em>Conflict
  * Version Constraint</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl#getCycleNode <em>Cycle Node</em>}</li>
  * </ul>
  * </p>
  * 
@@ -227,6 +228,17 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @ordered
     */
    protected String conflictVersionConstraint = CONFLICT_VERSION_CONSTRAINT_EDEFAULT;
+
+   /**
+    * The cached value of the '{@link #getCycleNode() <em>Cycle Node</em>}' reference.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @see #getCycleNode()
+    * @generated
+    * @ordered
+    */
+   protected DependencyNode cycleNode;
 
    /**
     * <!-- begin-user-doc -->
@@ -639,6 +651,54 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
+   public DependencyNode getCycleNode()
+   {
+      if (cycleNode != null && cycleNode.eIsProxy())
+      {
+         InternalEObject oldCycleNode = (InternalEObject) cycleNode;
+         cycleNode = (DependencyNode) eResolveProxy(oldCycleNode);
+         if (cycleNode != oldCycleNode)
+         {
+            if (eNotificationRequired())
+               eNotify(new ENotificationImpl(this, Notification.RESOLVE,
+                  DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE, oldCycleNode, cycleNode));
+         }
+      }
+      return cycleNode;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public DependencyNode basicGetCycleNode()
+   {
+      return cycleNode;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public void setCycleNode(DependencyNode newCycleNode)
+   {
+      DependencyNode oldCycleNode = cycleNode;
+      cycleNode = newCycleNode;
+      if (eNotificationRequired())
+         eNotify(new ENotificationImpl(this, Notification.SET, DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE,
+            oldCycleNode, cycleNode));
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
    public String getGroupId()
    {
       // TODO: implement this method
@@ -809,6 +869,10 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             return isOptional();
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
             return getConflictVersionConstraint();
+         case DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE :
+            if (resolve)
+               return getCycleNode();
+            return basicGetCycleNode();
       }
       return super.eGet(featureID, resolve, coreType);
    }
@@ -859,6 +923,9 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
             setConflictVersionConstraint((String) newValue);
             return;
+         case DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE :
+            setCycleNode((DependencyNode) newValue);
+            return;
       }
       super.eSet(featureID, newValue);
    }
@@ -907,6 +974,9 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT :
             setConflictVersionConstraint(CONFLICT_VERSION_CONSTRAINT_EDEFAULT);
             return;
+         case DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE :
+            setCycleNode((DependencyNode) null);
+            return;
       }
       super.eUnset(featureID);
    }
@@ -949,6 +1019,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
             return CONFLICT_VERSION_CONSTRAINT_EDEFAULT == null
                ? conflictVersionConstraint != null
                : !CONFLICT_VERSION_CONSTRAINT_EDEFAULT.equals(conflictVersionConstraint);
+         case DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE :
+            return cycleNode != null;
       }
       return super.eIsSet(featureID);
    }

@@ -35,6 +35,21 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
             chosenDepth = nodeDepth;
          }
       }
+
+      if (chosen == null)
+      {
+         for (DependencyNode node : nodes)
+         {
+            final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
+            final int nodeDepth = adapter.getMinimalDepth();
+            if (chosenDepth > nodeDepth)
+            {
+               chosen = node;
+               chosenDepth = nodeDepth;
+            }
+         }
+      }
+
       return chosen;
    }
 

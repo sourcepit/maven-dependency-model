@@ -1,0 +1,15 @@
+model
++- b:B:jar:1
+|  +- a:A:jar:1 (test) (not selected)
+|  |  +- b:B:jar:1 (compile -> test) (not selected) (cycle with root)
+|  |  +- c:C:jar:1 (test) (not selected)
++- c:C:jar:1 (not referenced)
++- a:A:jar:1
+|  +- b:B:jar:1 (compile)
+|  |  +- a:A:jar:1 (test -> compile) (cycle with root)
+|  +- c:C:jar:1 (test) (not selected)
++- root:ROOT:jar:1
+|  +- a:A:jar:1 (compile)
+|  |  +- b:B:jar:1 (compile)
+|  |  |  +- a:A:jar:1 (test -> compile) (not selected) (cycle)
+|  |  +- c:C:jar:1 (test) (not selected)

@@ -63,10 +63,10 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
 
       Artifact a1 = newArtifact(id);
       Artifact a2 = newArtifact(id);
-      
+
       builder.artifact(a1, true);
       builder.artifact(a2, true);
-      
+
       builder.startDependencyTree(a1);
       builder.endDependencyTree(a1);
 
@@ -262,6 +262,11 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       if (!node.isSelected())
       {
          sb.append(" (not selected)");
+      }
+
+      if (node.getCycleNode() != null)
+      {
+         sb.append(" (cycle)");
       }
 
       return sb.toString();

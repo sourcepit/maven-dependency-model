@@ -21,7 +21,7 @@ public interface DependencyModelHandler
    boolean startDependencyTree(Artifact artifact);
 
    void startDependencyNode(DependencyNode node, String scope, boolean optional, boolean selected,
-      DependencyNode shadowedNode);
+      DependencyNode shadowedNode, DependencyNode cycleNode, boolean cycleWithTree);
 
    void endDependencyNode(DependencyNode node);
 

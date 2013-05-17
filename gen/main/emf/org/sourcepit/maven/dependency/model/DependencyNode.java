@@ -33,6 +33,7 @@ import org.sourcepit.common.maven.model.Scope;
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#isOptional <em>Optional</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getConflictVersionConstraint <em>Conflict Version
  * Constraint</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyNode#getCycleNode <em>Cycle Node</em>}</li>
  * </ul>
  * </p>
  * 
@@ -355,6 +356,34 @@ public interface DependencyNode extends EObject
     * @generated
     */
    void setConflictVersionConstraint(String value);
+
+   /**
+    * Returns the value of the '<em><b>Cycle Node</b></em>' reference.
+    * <!-- begin-user-doc -->
+    * <p>
+    * If the meaning of the '<em>Cycle</em>' reference isn't clear, there really should be more of a description here...
+    * </p>
+    * <!-- end-user-doc -->
+    * 
+    * @return the value of the '<em>Cycle Node</em>' reference.
+    * @see #setCycleNode(DependencyNode)
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyNode_CycleNode()
+    * @model
+    * @generated
+    */
+   DependencyNode getCycleNode();
+
+   /**
+    * Sets the value of the '{@link org.sourcepit.maven.dependency.model.DependencyNode#getCycleNode
+    * <em>Cycle Node</em>}' reference.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @param value the new value of the '<em>Cycle Node</em>' reference.
+    * @see #getCycleNode()
+    * @generated
+    */
+   void setCycleNode(DependencyNode value);
 
    /**
     * <!-- begin-user-doc -->

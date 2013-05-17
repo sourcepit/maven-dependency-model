@@ -12,7 +12,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -173,8 +172,12 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    {
       Model pom;
 
+      pom = newModel("C", "1");
+      addDependency(pom, "B", "1");
+      repositoryFacade.deploy(pom);
+
       pom = newModel("B", "1");
-      addDependency(pom, "A", "1");
+      addDependency(pom, "C", "1");
       repositoryFacade.deploy(pom);
 
       pom = newModel("A", "1");
@@ -183,14 +186,71 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       final Artifact rootArtifact = getEmbeddedMaven().createArtifact(pom);
 
-      try
-      {
-         modelResolver.resolve(rootArtifact, null);
-         fail();
-      }
-      catch (IllegalStateException e)
-      {
-      }
+      DependencyModel model = modelResolver.resolve(rootArtifact, null);
+      assertEquals(3, model.getDependencyTrees().size());
+
+      EList<MavenArtifact> artifacts = model.getArtifacts();
+      assertEquals(3, artifacts.size());
+
+      MavenArtifact artifactA = artifacts.get(0);
+      assertEquals("A", artifactA.getArtifactId());
+      MavenArtifact artifactB = artifacts.get(1);
+      assertEquals("B", artifactB.getArtifactId());
+      MavenArtifact artifactC = artifacts.get(2);
+      assertEquals("C", artifactC.getArtifactId());
+
+      DependencyTree tree;
+      tree = model.getDependencyTree(artifactA);
+      assertSame(artifactA, tree.getArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+
+      DependencyNode node;
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertTrue(node.isSelected());
+      assertEquals(1, node.getChildren().size());
+
+      node = node.getChildren().get(0);
+      assertSame(artifactC, node.getArtifact());
+      assertTrue(node.isSelected());
+      assertEquals(1, node.getChildren().size());
+
+      node = node.getChildren().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertFalse(node.isSelected());
+      assertEquals(0, node.getChildren().size());
+      assertSame(node.eContainer().eContainer(), node.getConflictNode());
+      assertSame(node.eContainer().eContainer(), node.getCycleNode());
+      
+      tree = model.getDependencyTree(artifactB);
+      assertSame(artifactB, tree.getArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+      
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactC, node.getArtifact());
+      assertTrue(node.isSelected());
+      assertEquals(1, node.getChildren().size());
+      
+      node = node.getChildren().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertFalse(node.isSelected());
+      assertEquals(0, node.getChildren().size());
+      assertNull(node.getCycleNode()); // cycle with tree
+      
+      tree = model.getDependencyTree(artifactC);
+      assertSame(artifactC, tree.getArtifact());
+      assertEquals(1, tree.getDependencyNodes().size());
+      
+      node = tree.getDependencyNodes().get(0);
+      assertSame(artifactB, node.getArtifact());
+      assertTrue(node.isSelected());
+      assertEquals(1, node.getChildren().size());
+      
+      node = node.getChildren().get(0);
+      assertSame(artifactC, node.getArtifact());
+      assertFalse(node.isSelected());
+      assertEquals(0, node.getChildren().size());
+      assertNull(node.getCycleNode()); // cycle with tree
    }
 
    @Test
@@ -498,18 +558,18 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertEquals("A", artifactA.getArtifactId());
       assertNull(artifactA.getClassifier());
       assertNotNull(artifactA.getFile());
-      
+
       MavenArtifact sourceA = model.getArtifacts().get(1);
       assertEquals("A", sourceA.getArtifactId());
       assertEquals("sources", sourceA.getClassifier());
       assertEquals("java-source", sourceA.getType());
       assertNull(sourceA.getFile());
-      
+
       MavenArtifact artifactB = model.getArtifacts().get(2);
       assertEquals("B", artifactB.getArtifactId());
       assertNull(artifactB.getClassifier());
       assertNotNull(artifactB.getFile());
-      
+
       MavenArtifact sourceB = model.getArtifacts().get(3);
       assertEquals("B", sourceB.getArtifactId());
       assertEquals("sources", sourceB.getClassifier());

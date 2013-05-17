@@ -46,6 +46,18 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 
    @Rule
    public TestName name = new TestName();
+   
+   @Test
+   public void testCycle1() throws Exception
+   {
+      test();
+   }
+   
+   @Test
+   public void testCycle2() throws Exception
+   {
+      test();
+   }
 
    @Test
    public void testSimple() throws Exception

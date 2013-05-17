@@ -188,6 +188,16 @@ public interface DependencyModelPackage extends EPackage
    int DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT = 10;
 
    /**
+    * The feature id for the '<em><b>Cycle Node</b></em>' reference.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    * @ordered
+    */
+   int DEPENDENCY_NODE__CYCLE_NODE = 11;
+
+   /**
     * The number of structural features of the '<em>Dependency Node</em>' class.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -195,7 +205,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_NODE_FEATURE_COUNT = 11;
+   int DEPENDENCY_NODE_FEATURE_COUNT = 12;
 
    /**
     * The meta object id for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl
@@ -440,6 +450,19 @@ public interface DependencyModelPackage extends EPackage
    EAttribute getDependencyNode_ConflictVersionConstraint();
 
    /**
+    * Returns the meta object for the reference '
+    * {@link org.sourcepit.maven.dependency.model.DependencyNode#getCycleNode <em>Cycle Node</em>}'.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @return the meta object for the reference '<em>Cycle Node</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyNode#getCycleNode()
+    * @see #getDependencyNode()
+    * @generated
+    */
+   EReference getDependencyNode_CycleNode();
+
+   /**
     * Returns the meta object for class '{@link org.sourcepit.maven.dependency.model.DependencyModel
     * <em>Dependency Model</em>}'.
     * <!-- begin-user-doc -->
@@ -650,6 +673,15 @@ public interface DependencyModelPackage extends EPackage
        * @generated
        */
       EAttribute DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT = eINSTANCE.getDependencyNode_ConflictVersionConstraint();
+
+      /**
+       * The meta object literal for the '<em><b>Cycle Node</b></em>' reference feature.
+       * <!-- begin-user-doc -->
+       * <!-- end-user-doc -->
+       * 
+       * @generated
+       */
+      EReference DEPENDENCY_NODE__CYCLE_NODE = eINSTANCE.getDependencyNode_CycleNode();
 
       /**
        * The meta object literal for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl

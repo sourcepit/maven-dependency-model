@@ -70,7 +70,7 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
 
       @Override
       public void startDependencyNode(DependencyNode node, String effectiveScope, boolean optional, boolean selected,
-         DependencyNode shadowedNode)
+         DependencyNode shadowedNode, DependencyNode cycleNode, boolean cycleWithTrees)
       {
          depth++;
 
@@ -105,6 +105,18 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
          if (!selected)
          {
             sb.append(" (not selected)");
+         }
+
+         if (cycleNode != null)
+         {
+            if (cycleWithTrees)
+            {
+               sb.append(" (cycle with root)");
+            }
+            else
+            {
+               sb.append(" (cycle)");
+            }
          }
 
          out.println(sb);

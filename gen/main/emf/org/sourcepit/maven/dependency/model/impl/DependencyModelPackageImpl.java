@@ -261,6 +261,17 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
+   public EReference getDependencyNode_CycleNode()
+   {
+      return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(11);
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
    public EClass getDependencyModel()
    {
       return dependencyModelEClass;
@@ -367,6 +378,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       createEReference(dependencyNodeEClass, DEPENDENCY_NODE__DECLARED_DEPENDENCY);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__OPTIONAL);
       createEAttribute(dependencyNodeEClass, DEPENDENCY_NODE__CONFLICT_VERSION_CONSTRAINT);
+      createEReference(dependencyNodeEClass, DEPENDENCY_NODE__CYCLE_NODE);
 
       dependencyModelEClass = createEClass(DEPENDENCY_MODEL);
       createEReference(dependencyModelEClass, DEPENDENCY_MODEL__ARTIFACTS);
@@ -450,6 +462,9 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       initEAttribute(getDependencyNode_ConflictVersionConstraint(), ecorePackage.getEString(),
          "conflictVersionConstraint", null, 0, 1, DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE,
          !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+      initEReference(getDependencyNode_CycleNode(), this.getDependencyNode(), null, "cycleNode", null, 0, 1,
+         DependencyNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES,
+         !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
       addEOperation(dependencyNodeEClass, ecorePackage.getEString(), "getGroupId", 1, 1, IS_UNIQUE, IS_ORDERED);
 

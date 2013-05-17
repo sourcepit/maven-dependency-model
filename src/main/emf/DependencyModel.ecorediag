@@ -266,4 +266,18 @@
     <element xmi:type="ecore:EReference" href="DependencyModel.ecore#//DependencyTree/artifact"/>
     <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_HddEC7AtEeKvb6XxJ5NUbQ" points="[-58, -14, 351, 82]$[-408, -96, 1, 0]"/>
   </edges>
+  <edges xmi:type="notation:Edge" xmi:id="_UUMqwL7EEeK1nI3TB6tJUg" type="3002" source="_I51j0KuKEeK5GLzX8qV7VQ" target="_I51j0KuKEeK5GLzX8qV7VQ">
+    <children xmi:type="notation:Node" xmi:id="_UUQVIL7EEeK1nI3TB6tJUg" type="4011">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_UUQVIb7EEeK1nI3TB6tJUg" x="-10" y="-10"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_UURjQL7EEeK1nI3TB6tJUg" type="4012">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_UURjQb7EEeK1nI3TB6tJUg" x="10" y="10"/>
+    </children>
+    <styles xmi:type="notation:ConnectorStyle" xmi:id="_UUMqwb7EEeK1nI3TB6tJUg" lineColor="4210752"/>
+    <styles xmi:type="notation:FontStyle" xmi:id="_UUMqwr7EEeK1nI3TB6tJUg" fontColor="4210752" fontName="Segoe UI" fontHeight="10"/>
+    <element xmi:type="ecore:EReference" href="DependencyModel.ecore#//DependencyNode/cycleNode"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_UUMqw77EEeK1nI3TB6tJUg" points="[1, 33, 1, 33]$[1, 33, 1, 33]"/>
+    <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_UVRBwL7EEeK1nI3TB6tJUg" id="(0.19157088122605365,0.8558951965065502)"/>
+    <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_UVRBwb7EEeK1nI3TB6tJUg" id="(0.19157088122605365,0.8558951965065502)"/>
+  </edges>
 </notation:Diagram>

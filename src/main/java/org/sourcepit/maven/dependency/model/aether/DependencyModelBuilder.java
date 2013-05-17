@@ -39,7 +39,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
    private DependencyModel model;
 
    private final ArtifactAttachmentFactory attachmentFactory;
-   
+
    public DependencyModelBuilder()
    {
       this(null);
@@ -114,9 +114,11 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private Stack<org.sourcepit.maven.dependency.model.DependencyNode> dependencyNodeStack = new Stack<org.sourcepit.maven.dependency.model.DependencyNode>();
 
+   private Map<DependencyNode, org.sourcepit.maven.dependency.model.DependencyNode> treeNodes = new HashMap<DependencyNode, org.sourcepit.maven.dependency.model.DependencyNode>();
+
    @Override
    public void startDependencyNode(DependencyNode effectiveNode, String inheritedScope, boolean optional,
-      boolean selected, DependencyNode shadowedNode)
+      boolean selected, DependencyNode shadowedNode, DependencyNode cycleNode, boolean cycleWithTree)
    {
       final org.sourcepit.maven.dependency.model.DependencyNode node = createDependencyNode(effectiveNode,
          inheritedScope, optional, selected, shadowedNode);
@@ -137,6 +139,20 @@ public class DependencyModelBuilder implements DependencyModelHandler
          replacedNodes.put(node, effectiveNode);
       }
 
+      if (cycleNode != null)
+      {
+         if (cycleWithTree)
+         {
+            node.setSelected(false);
+         }
+         else
+         {
+            org.sourcepit.maven.dependency.model.DependencyNode target = treeNodes.get(cycleNode);
+            checkState(target != null);
+            node.setCycleNode(target);
+         }
+      }
+
       if (dependencyNodeStack.isEmpty())
       {
          currentDependencyTree.getDependencyNodes().add(node);
@@ -144,6 +160,11 @@ public class DependencyModelBuilder implements DependencyModelHandler
       else
       {
          dependencyNodeStack.peek().getChildren().add(node);
+      }
+      
+      if (!treeNodes.containsKey(effectiveNode))
+      {
+         treeNodes.put(effectiveNode, node);
       }
 
       dependencyNodeStack.push(node);
@@ -181,7 +202,11 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
       if (shadowing)
       {
-         node.setConflictVersionConstraint(effectiveNode.getVersionConstraint().toString());
+         final VersionConstraint versionConstraint = effectiveNode.getVersionConstraint();
+         if (versionConstraint != null)
+         {
+            node.setConflictVersionConstraint(versionConstraint.toString());
+         }
       }
 
       return node;
@@ -274,6 +299,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
    {
       resolveConflictNodes();
       currentDependencyTree = null;
+      treeNodes.clear();
    }
 
    private void resolveConflictNodes()
