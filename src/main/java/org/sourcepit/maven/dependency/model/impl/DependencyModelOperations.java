@@ -34,7 +34,8 @@ public final class DependencyModelOperations
    {
       for (DependencyTree tree : model.getDependencyTrees())
       {
-         if (artifactKey.equals(tree.getArtifact().getArtifactKey()))
+         final MavenArtifact artifact = tree.getArtifact();
+         if (artifact != null && artifactKey.equals(artifact.getArtifactKey()))
          {
             return tree;
          }
