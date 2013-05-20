@@ -29,6 +29,7 @@ import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 import org.sonatype.aether.util.graph.DefaultDependencyNode;
 import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.sourcepit.common.maven.aether.ArtifactFactory;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;
