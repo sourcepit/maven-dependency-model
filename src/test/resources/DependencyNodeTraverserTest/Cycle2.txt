@@ -1,0 +1,7 @@
+(null)
++- a:A:jar:1:compile
+|  +- b:B:jar:1:compile
+|  |  +- (a)a:A:jar:1:compile
+|  |  |  +- b:B:jar:1:compile
+|  |  |  |  +- ^a
+

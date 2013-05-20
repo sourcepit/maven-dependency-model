@@ -46,13 +46,13 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 
    @Rule
    public TestName name = new TestName();
-   
+
    @Test
    public void testCycle1() throws Exception
    {
       test();
    }
-   
+
    @Test
    public void testCycle2() throws Exception
    {
@@ -124,7 +124,13 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    {
       test();
    }
-   
+
+   @Test
+   public void testVersionConflict7() throws Exception
+   {
+      test();
+   }
+
    @Test
    public void testEffectiveScope1() throws Exception
    {
@@ -172,13 +178,13 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    {
       test();
    }
-   
+
    @Test
    public void testEffectiveScope9() throws Exception
    {
       test();
    }
-   
+
    @Test
    public void testEffectiveScope10() throws Exception
    {

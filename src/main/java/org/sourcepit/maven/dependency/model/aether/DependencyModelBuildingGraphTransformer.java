@@ -10,12 +10,10 @@ import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKe
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
@@ -47,11 +45,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
 
    private final DependencyModelHandler handler;
 
-   private final Stack<String> parentScopes = new Stack<String>();
-   private final Stack<Boolean> parentOptionals = new Stack<Boolean>();
-
-   private final Map<DependencyNode, String> scopeMask = new HashMap<DependencyNode, String>();
-
    private Set<ArtifactKey> referencedArtifacts;
 
    private final ArtifactFactory artifactFactory;
@@ -67,8 +60,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       nodeChooser = new NearestDependencyNodeChooser();
 
       transformer = new ChainedDependencyGraphTransformer(new DependencyNode2AdapterTransformer(true),
-         new HideDuplicatedSiblings(), new ApplyScopeAndOptional(), new VersionConflictResolver(nodeChooser),
-         new HideReplacedNodes());
+         new HideDuplicatedSiblings(), new ApplyScopeAndOptional(), new VersionConflictResolver(nodeChooser));
    }
 
    final Multimap<ArtifactKey, DependencyNode> keyToNodes = LinkedHashMultimap.create();
@@ -328,15 +320,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       }
    }
 
-   private DependencyNode currentRootNode;
-
-   private Set<DependencyNode> selected = new HashSet<DependencyNode>();
-
    private Set<ArtifactKey> visited = new HashSet<ArtifactKey>();
-
-   private final Stack<DependencyNode> nodeStack = new Stack<DependencyNode>();
-
-   private final Stack<ArtifactKey> keyStack = new Stack<ArtifactKey>();
 
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
@@ -344,8 +328,6 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(rootArtifact);
       if (visited.add(artifactKey))
       {
-         selected.clear();
-
          // if same node exists with different scope then test use it, otherwise we'll lose dependencies through
          // ScopeChildDependenciesErasure
          if (!scopeTest && "test".equals(rootNode.getDependency().getScope()))
@@ -370,252 +352,10 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             new ResetVisibility().transformGraph(rootNode, context);
             new HideDuplicatedSiblings().transformGraph(rootNode, context);
             new ApplyScopeAndOptional().transformGraph(rootNode, context);
-            new HideReplacedNodes().transformGraph(rootNode, context);
          }
 
-         initScopeMask(rootNode);
-
-         currentRootNode = rootNode;
-         nodeStack.push(rootNode);
-         keyStack.push(artifactKey);
-
-         if (handler.startDependencyTree(rootArtifact))
-         {
-            traverseNodesRecursive(rootNode.getChildren());
-         }
-         handler.endDependencyTree(rootArtifact);
-
-         currentRootNode = null;
-         nodeStack.clear();
-         keyStack.clear();
+         new DependencyModelBuildingNodeTraverser(handler, nodeChooser, scopeTest).traverse(rootNode);
       }
-   }
-
-   private void initScopeMask(DependencyNode root)
-   {
-      scopeMask.clear();
-
-      final DependencyNode2 adapter = DependencyNode2Adapter.get(root);
-      for (List<DependencyNode> conflictGroup : adapter.getConflictingNodeGroups())
-      {
-         final DependencyNode chosen = nodeChooser.choose(conflictGroup);
-         for (DependencyNode node : conflictGroup)
-         {
-            if (node == chosen)
-            {
-               continue;
-            }
-            scopeMask.put(node, chosen.getDependency().getScope());
-         }
-      }
-   }
-
-   private static boolean isRootOf(DependencyNode root, DependencyNode node, boolean followReplacements)
-   {
-      if (root.equals(node))
-      {
-         return true;
-      }
-
-      final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-
-      for (DependencyNode parent : adapter.getParents())
-      {
-         final DependencyNode effectiveParent = getEffectiveNode(parent);
-
-         if (!DependencyNode2Adapter.get(parent).isVisible() || !followReplacements && effectiveParent != parent)
-         {
-            continue;
-         }
-
-         if (isRootOf(root, effectiveParent, followReplacements))
-         {
-            return true;
-         }
-      }
-
-      return false;
-   }
-
-   private void traverseNodesRecursive(List<DependencyNode> children)
-   {
-      for (DependencyNode child : children)
-      {
-         traverseNodeRecursive(child);
-      }
-   }
-
-   private final Stack<Boolean> parentSelected = new Stack<Boolean>();
-
-   private void traverseNodeRecursive(DependencyNode node)
-   {
-      final int depth = parentSelected.size();
-
-      final boolean optional = isOptional(node);
-
-      final DependencyNode effectiveNode = getEffectiveNode(node);
-
-      ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact());
-
-      int idx = keyStack.indexOf(artifactKey);
-
-      final boolean cycle = idx > -1;
-
-      DependencyNode cycleNode = null;
-      if (cycle)
-      {
-         cycleNode = nodeStack.get(idx);
-      }
-
-      final String scope = getEffectiveScope(node);
-
-      final boolean selected = isSelected(node, effectiveNode, scope, depth);
-
-      nodeStack.push(effectiveNode);
-      keyStack.push(artifactKey);
-      parentScopes.push(scope);
-      parentOptionals.push(Boolean.valueOf(optional));
-      parentSelected.push(Boolean.valueOf(selected));
-
-      handler.startDependencyNode(effectiveNode, scope, optional, selected, effectiveNode == node ? null : node,
-         cycleNode, idx == 0);
-      if (!cycle)
-      {
-         traverseNodesRecursive(effectiveNode.getChildren());
-      }
-      handler.endDependencyNode(effectiveNode);
-
-      parentSelected.pop();
-      parentOptionals.pop();
-      parentScopes.pop();
-      nodeStack.pop();
-      keyStack.pop();
-   }
-
-   private boolean isSelected(DependencyNode node, final DependencyNode effectiveNode, String effectiveScope,
-      final int depth)
-   {
-      if (selected.contains(effectiveNode))
-      {
-         return false;
-      }
-
-      boolean active = true;
-      if (depth > 0)
-      {
-         if (!parentSelected.peek().booleanValue())
-         {
-            active = false;
-         }
-         else if (!DependencyNode2Adapter.get(node).isVisible())
-         {
-            active = false;
-         }
-         else if (getCurrentOptional(node))
-         {
-            active = false;
-         }
-      }
-
-      if (active && !scopeTest && "test".equals(effectiveScope))
-      {
-         active = false;
-      }
-
-      if (active && effectiveNode != node && currentRootNode != effectiveNode)
-      {
-         boolean isChosen = false;
-
-         final Collection<List<DependencyNode>> conflictGroups = DependencyNode2Adapter.get(currentRootNode)
-            .getConflictingNodeGroups();
-
-         // is our node a chosen one (in our tree)?
-         for (List<DependencyNode> conflictGroup : conflictGroups)
-         {
-            if (node == nodeChooser.choose(conflictGroup))
-            {
-               isChosen = true;
-               break;
-            }
-         }
-
-         if (!isChosen)
-         {
-            active = false;
-
-            // our node is not a chosen one, but if no one else holds the ref to the effective node then we have to!
-            // but only if the effective node can't be located in our tree...
-            if (!isRootOf(currentRootNode, effectiveNode, false))
-            {
-               // if node is not in our tree, then check if it is referenced by another node in our tree
-               final Set<DependencyNode> allConflictNodes = new HashSet<DependencyNode>();
-               for (List<DependencyNode> conflictGroup : conflictGroups)
-               {
-                  allConflictNodes.addAll(conflictGroup);
-               }
-               allConflictNodes.remove(node);
-               allConflictNodes.remove(effectiveNode);
-
-               boolean refelsewhere = false;
-               for (DependencyNode dependencyNode : allConflictNodes)
-               {
-                  if (getEffectiveNode(dependencyNode).equals(effectiveNode))
-                  {
-                     refelsewhere = true;
-                     break;
-                  }
-               }
-
-               if (!refelsewhere)
-               {
-                  active = true;
-               }
-            }
-         }
-      }
-
-      if (active)
-      {
-         this.selected.add(effectiveNode);
-      }
-      return active;
-   }
-
-   private boolean isOptional(DependencyNode node)
-   {
-      boolean optional = getCurrentOptional(node);
-      if (!parentOptionals.isEmpty())
-      {
-         final boolean parentOptional = parentOptionals.peek().booleanValue();
-         optional = parentOptional || optional;
-      }
-      return optional;
-   }
-
-   private String getEffectiveScope(DependencyNode node)
-   {
-      String scope = getCurrentScope(node);
-      if (!parentScopes.isEmpty())
-      {
-         final String parentScope = parentScopes.peek();
-         scope = DependencyUtils.getEffectiveScope(parentScope, scope, false);
-      }
-      return scope;
-   }
-
-   private String getCurrentScope(DependencyNode node)
-   {
-      String scope = scopeMask.get(node);
-      if (scope == null)
-      {
-         scope = node.getDependency().getScope();
-      }
-      return scope;
-   }
-
-   private boolean getCurrentOptional(DependencyNode node)
-   {
-      return node.getDependency().isOptional();
    }
 
    private static DependencyNode getEffectiveNode(DependencyNode node)
