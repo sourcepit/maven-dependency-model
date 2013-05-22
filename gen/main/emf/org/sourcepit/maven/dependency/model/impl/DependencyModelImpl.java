@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.impl.EObjectImpl;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
+import org.eclipse.emf.ecore.util.EObjectResolvingEList;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
@@ -31,6 +32,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl#getArtifacts <em>Artifacts</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl#getDependencyTrees <em>Dependency Trees
  * </em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.impl.DependencyModelImpl#getRootArtifacts <em>Root Artifacts</em>}</li>
  * </ul>
  * </p>
  * 
@@ -59,6 +61,17 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @ordered
     */
    protected EList<DependencyTree> dependencyTrees;
+
+   /**
+    * The cached value of the '{@link #getRootArtifacts() <em>Root Artifacts</em>}' reference list.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @see #getRootArtifacts()
+    * @generated
+    * @ordered
+    */
+   protected EList<MavenArtifact> rootArtifacts;
 
    /**
     * <!-- begin-user-doc -->
@@ -113,6 +126,22 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
             DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES);
       }
       return dependencyTrees;
+   }
+
+   /**
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    */
+   public EList<MavenArtifact> getRootArtifacts()
+   {
+      if (rootArtifacts == null)
+      {
+         rootArtifacts = new EObjectResolvingEList<MavenArtifact>(MavenArtifact.class, this,
+            DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS);
+      }
+      return rootArtifacts;
    }
 
    /**
@@ -188,6 +217,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
             return getArtifacts();
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :
             return getDependencyTrees();
+         case DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS :
+            return getRootArtifacts();
       }
       return super.eGet(featureID, resolve, coreType);
    }
@@ -212,6 +243,10 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
             getDependencyTrees().clear();
             getDependencyTrees().addAll((Collection<? extends DependencyTree>) newValue);
             return;
+         case DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS :
+            getRootArtifacts().clear();
+            getRootArtifacts().addAll((Collection<? extends MavenArtifact>) newValue);
+            return;
       }
       super.eSet(featureID, newValue);
    }
@@ -233,6 +268,9 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :
             getDependencyTrees().clear();
             return;
+         case DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS :
+            getRootArtifacts().clear();
+            return;
       }
       super.eUnset(featureID);
    }
@@ -252,6 +290,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
             return artifacts != null && !artifacts.isEmpty();
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :
             return dependencyTrees != null && !dependencyTrees.isEmpty();
+         case DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS :
+            return rootArtifacts != null && !rootArtifacts.isEmpty();
       }
       return super.eIsSet(featureID);
    }

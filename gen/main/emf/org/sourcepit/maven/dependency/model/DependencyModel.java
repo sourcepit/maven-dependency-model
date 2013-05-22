@@ -21,6 +21,7 @@ import org.sourcepit.common.maven.model.MavenArtifact;
  * <ul>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyModel#getArtifacts <em>Artifacts</em>}</li>
  * <li>{@link org.sourcepit.maven.dependency.model.DependencyModel#getDependencyTrees <em>Dependency Trees</em>}</li>
+ * <li>{@link org.sourcepit.maven.dependency.model.DependencyModel#getRootArtifacts <em>Root Artifacts</em>}</li>
  * </ul>
  * </p>
  * 
@@ -63,6 +64,23 @@ public interface DependencyModel extends EObject
     * @generated
     */
    EList<DependencyTree> getDependencyTrees();
+
+   /**
+    * Returns the value of the '<em><b>Root Artifacts</b></em>' reference list.
+    * The list contents are of type {@link org.sourcepit.common.maven.model.MavenArtifact}.
+    * <!-- begin-user-doc -->
+    * <p>
+    * If the meaning of the '<em>Root Artifacts</em>' reference list isn't clear, there really should be more of a
+    * description here...
+    * </p>
+    * <!-- end-user-doc -->
+    * 
+    * @return the value of the '<em>Root Artifacts</em>' reference list.
+    * @see org.sourcepit.maven.dependency.model.DependencyModelPackage#getDependencyModel_RootArtifacts()
+    * @model
+    * @generated
+    */
+   EList<MavenArtifact> getRootArtifacts();
 
    /**
     * <!-- begin-user-doc -->

@@ -45,6 +45,8 @@
         containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="dependencyTrees" upperBound="-1"
         eType="#//DependencyTree" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rootArtifacts" upperBound="-1"
+        eType="ecore:EClass ../../../../common-maven/src/main/emf/maven.ecore#//MavenArtifact"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="DependencyTree">
     <eStructuralFeatures xsi:type="ecore:EReference" name="artifact" lowerBound="1"

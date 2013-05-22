@@ -6,6 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
 import static org.sourcepit.common.utils.lang.Exceptions.pipe;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +48,7 @@ import org.eclipse.emf.common.util.EList;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.collection.DependencySelector;
+import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.impl.VersionResolver;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
@@ -196,11 +198,30 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          throw pipe(e);
       }
 
-      DependencyModel model = modelBuilder.getDependencyModel();
+      final DependencyModel model = modelBuilder.getDependencyModel();
 
       applyResolvedArtifacts(project, resolutionResult, resolvedAttachments, model);
 
+      final DependencyNode dependencyGraph = resolutionResult.getDependencyGraph();
+      if (resolveRoot)
+      {
+         addNodeArtifact(model.getRootArtifacts(), model, dependencyGraph);
+      }
+      else
+      {
+         for (DependencyNode dependencyNode : dependencyGraph.getChildren())
+         {
+            addNodeArtifact(model.getRootArtifacts(), model, dependencyNode);
+         }
+      }
+
       return model;
+   }
+
+   private void addNodeArtifact(List<MavenArtifact> roots, DependencyModel model, DependencyNode dependencyNode)
+   {
+      MavenArtifact artifact = model.getArtifact(toArtifactKey(dependencyNode.getDependency().getArtifact()));
+      roots.add(artifact);
    }
 
 

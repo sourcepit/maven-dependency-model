@@ -240,6 +240,16 @@ public interface DependencyModelPackage extends EPackage
    int DEPENDENCY_MODEL__DEPENDENCY_TREES = 1;
 
    /**
+    * The feature id for the '<em><b>Root Artifacts</b></em>' reference list.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @generated
+    * @ordered
+    */
+   int DEPENDENCY_MODEL__ROOT_ARTIFACTS = 2;
+
+   /**
     * The number of structural features of the '<em>Dependency Model</em>' class.
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -247,7 +257,7 @@ public interface DependencyModelPackage extends EPackage
     * @generated
     * @ordered
     */
-   int DEPENDENCY_MODEL_FEATURE_COUNT = 2;
+   int DEPENDENCY_MODEL_FEATURE_COUNT = 3;
 
    /**
     * The meta object id for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyTreeImpl
@@ -501,6 +511,19 @@ public interface DependencyModelPackage extends EPackage
    EReference getDependencyModel_DependencyTrees();
 
    /**
+    * Returns the meta object for the reference list '
+    * {@link org.sourcepit.maven.dependency.model.DependencyModel#getRootArtifacts <em>Root Artifacts</em>}'.
+    * <!-- begin-user-doc -->
+    * <!-- end-user-doc -->
+    * 
+    * @return the meta object for the reference list '<em>Root Artifacts</em>'.
+    * @see org.sourcepit.maven.dependency.model.DependencyModel#getRootArtifacts()
+    * @see #getDependencyModel()
+    * @generated
+    */
+   EReference getDependencyModel_RootArtifacts();
+
+   /**
     * Returns the meta object for class '{@link org.sourcepit.maven.dependency.model.DependencyTree
     * <em>Dependency Tree</em>}'.
     * <!-- begin-user-doc -->
@@ -712,6 +735,15 @@ public interface DependencyModelPackage extends EPackage
        * @generated
        */
       EReference DEPENDENCY_MODEL__DEPENDENCY_TREES = eINSTANCE.getDependencyModel_DependencyTrees();
+
+      /**
+       * The meta object literal for the '<em><b>Root Artifacts</b></em>' reference list feature.
+       * <!-- begin-user-doc -->
+       * <!-- end-user-doc -->
+       * 
+       * @generated
+       */
+      EReference DEPENDENCY_MODEL__ROOT_ARTIFACTS = eINSTANCE.getDependencyModel_RootArtifacts();
 
       /**
        * The meta object literal for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyTreeImpl
