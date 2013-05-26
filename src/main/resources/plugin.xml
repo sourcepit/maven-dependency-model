@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+-->
+
+<plugin>
+
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated Example -->
+      <package
+            uri="http://www.sourcepit.org/maven/dependency/model/0.1"
+            class="org.sourcepit.maven.dependency.model.DependencyModelPackage"
+            genModel="META-INF/emf/DependencyModel.genmodel"/>
+   </extension>
+
+</plugin>
