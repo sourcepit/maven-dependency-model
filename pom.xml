@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>common-maven</artifactId>
-			<version>0.1.0-alpha-10</version>
+			<version>0.1.0-alpha-11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
