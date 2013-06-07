@@ -6,6 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
+import static org.apache.maven.RepositoryUtils.toRepo;
 import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
 import static org.sourcepit.common.utils.lang.Exceptions.pipe;
 
@@ -49,8 +50,10 @@ import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.collection.DependencyGraphTransformer;
 import org.sonatype.aether.collection.DependencySelector;
 import org.sonatype.aether.graph.DependencyNode;
+import org.sonatype.aether.impl.RemoteRepositoryManager;
 import org.sonatype.aether.impl.VersionResolver;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
+import org.sonatype.aether.transfer.NoRepositoryConnectorException;
 import org.sonatype.aether.util.FilterRepositorySystemSession;
 import org.sonatype.aether.util.filter.ScopeDependencyFilter;
 import org.sonatype.aether.util.graph.DefaultDependencyNode;
@@ -81,6 +84,9 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
 
    @Inject
    private ProjectDependenciesResolver dependenciesResolver;
+
+   @Inject
+   private RemoteRepositoryManager repositoryManager;
 
    /**
     * {@inheritDoc}
@@ -168,6 +174,8 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
    private DependencyModel resolve(@NotNull MavenProject project, boolean resolveRoot,
       ArtifactAttachmentFactory attachmentFactory) throws DependencyResolutionException
    {
+      project = filterUnconnectableRepos(project);
+
       final DependencyModelBuilder modelBuilder = new DependencyModelBuilder(attachmentFactory);
 
       final RepositorySystemSession repositorySession = newRepositorySystemSession(project, resolveRoot, modelBuilder);
@@ -216,6 +224,35 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       }
 
       return model;
+   }
+
+   private MavenProject filterUnconnectableRepos(MavenProject project)
+   {
+      final RepositorySystemSession repositorySession = buildContext.getRepositorySession();
+
+      final List<ArtifactRepository> repositories = project.getRemoteArtifactRepositories();
+      final List<ArtifactRepository> validRepositories = new ArrayList<ArtifactRepository>();
+      final List<ArtifactRepository> invalidRepositories = new ArrayList<ArtifactRepository>();
+      for (ArtifactRepository artifactRepository : repositories)
+      {
+         try
+         {
+            repositoryManager.getRepositoryConnector(repositorySession, toRepo(artifactRepository));
+            validRepositories.add(artifactRepository);
+         }
+         catch (NoRepositoryConnectorException e)
+         {
+            invalidRepositories.add(artifactRepository);
+         }
+      }
+
+      if (!invalidRepositories.isEmpty())
+      {
+         project = project.clone();
+         project.setRemoteArtifactRepositories(validRepositories);
+      }
+
+      return project;
    }
 
    private void addNodeArtifact(List<MavenArtifact> roots, DependencyModel model, DependencyNode dependencyNode)
