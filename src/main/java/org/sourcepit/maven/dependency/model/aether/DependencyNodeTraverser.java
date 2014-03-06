@@ -12,8 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-import org.sonatype.aether.graph.Dependency;
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.utils.props.LinkedPropertiesMap;
 import org.sourcepit.common.utils.props.PropertiesMap;

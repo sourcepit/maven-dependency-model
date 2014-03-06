@@ -26,16 +26,16 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectBuildingResult;
 import org.apache.maven.project.ProjectDependenciesResolver;
-import org.sonatype.aether.RepositorySystemSession;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.collection.DependencySelector;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.util.FilterRepositorySystemSession;
-import org.sonatype.aether.util.filter.ScopeDependencyFilter;
-import org.sonatype.aether.util.graph.selector.AndDependencySelector;
-import org.sonatype.aether.util.graph.selector.ExclusionDependencySelector;
-import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
-import org.sonatype.aether.util.graph.transformer.JavaEffectiveScopeCalculator;
+import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2AdapterTransformer;
 import org.sourcepit.maven.dependency.model.aether.NearestDependencyNodeChooser;
 import org.sourcepit.maven.dependency.model.aether.VersionConflictResolver;
@@ -74,10 +74,9 @@ public class DependencyTreeBuilder
 
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          new DependencyNode2AdapterTransformer(false), new VersionConflictResolver(new NearestDependencyNodeChooser()),
-         new JavaEffectiveScopeCalculator());
+         new JavaDependencyContextRefiner());
 
-      final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(
-         buildContext.getRepositorySession())
+      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession()
       {
          @Override
          public DependencySelector getDependencySelector()
@@ -91,6 +90,11 @@ public class DependencyTreeBuilder
             return transformer;
          }
 
+         @Override
+         protected RepositorySystemSession getSession()
+         {
+            return buildContext.getRepositorySession();
+         }
       };
 
       final DefaultDependencyResolutionRequest resolutionRequest = new DefaultDependencyResolutionRequest();

@@ -20,15 +20,15 @@ import java.io.StringWriter;
 
 import javax.inject.Inject;
 
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.sonatype.aether.RepositoryException;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.util.artifact.DefaultArtifact;
-import org.sonatype.aether.util.graph.DefaultDependencyNode;
-import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.aether.ArtifactFactory;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
@@ -38,12 +38,6 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 {
    @Inject
    private ArtifactFactory artifactFactory;
-
-   @Override
-   protected boolean isUseIndex()
-   {
-      return true;
-   }
 
    @Rule
    public TestName name = new TestName();
@@ -263,7 +257,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
             return writer.toString();
          }
       };
-      return read(fromStream, buffIn(cpIn(getClassLoader(), resource)));
+      return read(fromStream, buffIn(cpIn(getClass().getClassLoader(), resource)));
    }
 
    private String transformGraph(Artifact root, DependencyNode graph, boolean computeTreePerArtifact, boolean scopeTest)
@@ -277,8 +271,7 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       ReplaceRootNode transformer1 = null;
       if (root != null)
       {
-         DefaultDependencyNode rootNode = new DefaultDependencyNode();
-         rootNode.setDependency(new org.sonatype.aether.graph.Dependency(root, "compile"));
+         DefaultDependencyNode rootNode = new DefaultDependencyNode(new org.eclipse.aether.graph.Dependency(root, "compile"));
          rootNode.setRequestContext("project");
 
          transformer1 = new ReplaceRootNode(rootNode);

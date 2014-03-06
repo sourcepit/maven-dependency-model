@@ -18,10 +18,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.version.Version;
-import org.sonatype.aether.version.VersionConstraint;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.version.Version;
+import org.eclipse.aether.version.VersionConstraint;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.MavenDependency;
@@ -161,7 +162,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
       {
          dependencyNodeStack.peek().getChildren().add(node);
       }
-      
+
       if (!treeNodes.containsKey(effectiveNode))
       {
          treeNodes.put(effectiveNode, node);
@@ -214,7 +215,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private String getManagedVersionConstraint(DependencyNode node)
    {
-      if (node.getPremanagedVersion() != null)
+      if (DependencyManagerUtils.getPremanagedVersion(node) != null)
       {
          return node.getVersionConstraint().toString();
       }
@@ -223,7 +224,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private static Scope getManagedScope(DependencyNode node)
    {
-      if (node.getPremanagedScope() != null)
+      if (DependencyManagerUtils.getPremanagedScope(node) != null)
       {
          return Scope.get(node.getDependency().getScope());
       }
@@ -251,7 +252,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private static String getDeclaredVersionConstraint(DependencyNode node)
    {
-      final String premanagedVersion = node.getPremanagedVersion();
+      final String premanagedVersion = DependencyManagerUtils.getPremanagedVersion(node);
       if (premanagedVersion != null)
       {
          return premanagedVersion;
@@ -280,7 +281,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private static Scope getDeclaredScope(DependencyNode node)
    {
-      String declaredScope = node.getPremanagedScope();
+      String declaredScope = DependencyManagerUtils.getPremanagedScope(node);
       if (declaredScope == null)
       {
          declaredScope = node.getDependency().getScope();

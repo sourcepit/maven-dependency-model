@@ -6,18 +6,18 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.props.PropertiesMap;
@@ -178,12 +178,6 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    protected String getTestName()
    {
       return name.getMethodName().substring("test".length());
-   }
-
-   @Override
-   protected boolean isUseIndex()
-   {
-      return true;
    }
 
    @Override

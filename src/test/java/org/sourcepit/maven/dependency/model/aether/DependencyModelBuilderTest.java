@@ -13,17 +13,20 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.emf.common.util.EList;
 import org.junit.Test;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.graph.Dependency;
-import org.sonatype.aether.util.graph.DefaultDependencyNode;
-import org.sonatype.aether.util.version.GenericVersionScheme;
 import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.MavenModelFactory;
@@ -31,8 +34,6 @@ import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyTree;
-import org.sourcepit.maven.dependency.model.aether.DependencyModelBuilder;
-import org.sourcepit.maven.dependency.model.aether.DependencyModelHandler;
 
 public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingTest
 {
@@ -85,6 +86,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
    public void testToDeclaredDependency() throws Exception
    {
       DefaultDependencyNode node = new DefaultDependencyNode(new Dependency(newArtifact("a"), "compile", true));
+      node.setData(new HashMap<Object, Object>());
 
       MavenDependency declaredDependency = DependencyModelBuilder.toDeclaredDependency(node);
       assertEquals("a", declaredDependency.getGroupId());
@@ -105,9 +107,10 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       assertEquals("LATEST", declaredDependency.getVersionConstraint());
       assertEquals(Scope.COMPILE, declaredDependency.getScope());
 
-      node.setPremanagedScope("test");
-      node.setPremanagedVersion("66");
-
+      node.setManagedBits(DependencyNode.MANAGED_SCOPE + DependencyNode.MANAGED_VERSION);
+      node.getData().put(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, "test");
+      node.getData().put(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, "66");
+      
       declaredDependency = DependencyModelBuilder.toDeclaredDependency(node);
       assertEquals("a", declaredDependency.getGroupId());
       assertEquals("A", declaredDependency.getArtifactId());
@@ -115,8 +118,9 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       assertEquals("66", declaredDependency.getVersionConstraint());
       assertEquals(Scope.TEST, declaredDependency.getScope());
 
-      node.setPremanagedScope("compile");
-      node.setPremanagedVersion("1");
+      node.setManagedBits(DependencyNode.MANAGED_SCOPE + DependencyNode.MANAGED_VERSION);
+      node.getData().put(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, "compile");
+      node.getData().put(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, "1");
 
       declaredDependency = DependencyModelBuilder.toDeclaredDependency(node);
       assertEquals("a", declaredDependency.getGroupId());

@@ -45,19 +45,19 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectBuildingResult;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.impl.RepositoryConnectorProvider;
+import org.eclipse.aether.impl.VersionResolver;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.emf.common.util.EList;
-import org.sonatype.aether.RepositorySystemSession;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.collection.DependencySelector;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.impl.RemoteRepositoryManager;
-import org.sonatype.aether.impl.VersionResolver;
-import org.sonatype.aether.resolution.ArtifactResolutionException;
-import org.sonatype.aether.transfer.NoRepositoryConnectorException;
-import org.sonatype.aether.util.FilterRepositorySystemSession;
-import org.sonatype.aether.util.filter.ScopeDependencyFilter;
-import org.sonatype.aether.util.graph.DefaultDependencyNode;
-import org.sonatype.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.sourcepit.common.maven.aether.ArtifactFactory;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
@@ -86,7 +86,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
    private ProjectDependenciesResolver dependenciesResolver;
 
    @Inject
-   private RemoteRepositoryManager repositoryManager;
+   private RepositoryConnectorProvider repositoryConnectorProvider;
 
    /**
     * {@inheritDoc}
@@ -195,7 +195,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          resolutionResult = e.getResult();
       }
 
-      final Collection<org.sonatype.aether.artifact.Artifact> resolvedAttachments;
+      final Collection<org.eclipse.aether.artifact.Artifact> resolvedAttachments;
       try
       {
          resolvedAttachments = attachmentResolver.resolveAttachments(repositorySession,
@@ -237,7 +237,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       {
          try
          {
-            repositoryManager.getRepositoryConnector(repositorySession, toRepo(artifactRepository));
+            repositoryConnectorProvider.newRepositoryConnector(repositorySession, toRepo(artifactRepository));
             validRepositories.add(artifactRepository);
          }
          catch (NoRepositoryConnectorException e)
@@ -269,9 +269,9 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
 
       if (resolveRoot)
       {
-         DefaultDependencyNode rootNode = new DefaultDependencyNode();
-         rootNode.setDependency(new org.sonatype.aether.graph.Dependency(RepositoryUtils.toArtifact(project
-            .getArtifact()), "compile"));
+         org.eclipse.aether.graph.Dependency dependency = new org.eclipse.aether.graph.Dependency(
+            RepositoryUtils.toArtifact(project.getArtifact()), "compile");
+         DefaultDependencyNode rootNode = new DefaultDependencyNode(dependency);
          rootNode.setRepositories(project.getRemoteProjectRepositories());
          rootNode.setRequestContext("project");
 
@@ -284,8 +284,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          transformers.toArray(new DependencyGraphTransformer[transformers.size()]));
 
-      final RepositorySystemSession repositorySession = new FilterRepositorySystemSession(
-         buildContext.getRepositorySession())
+      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession()
       {
          @Override
          public DependencySelector getDependencySelector()
@@ -298,12 +297,18 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          {
             return transformer;
          }
+
+         @Override
+         protected RepositorySystemSession getSession()
+         {
+            return buildContext.getRepositorySession();
+         }
       };
       return repositorySession;
    }
 
    private void applyResolvedArtifacts(MavenProject project, DependencyResolutionResult resolutionResult,
-      Collection<org.sonatype.aether.artifact.Artifact> resolvedAttachments, DependencyModel model)
+      Collection<org.eclipse.aether.artifact.Artifact> resolvedAttachments, DependencyModel model)
    {
       Map<ArtifactKey, MavenArtifact> keyToArtifact = new HashMap<ArtifactKey, MavenArtifact>();
 
@@ -313,15 +318,15 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
          keyToArtifact.put(mavenArtifact.getArtifactKey(), mavenArtifact);
       }
 
-      for (org.sonatype.aether.artifact.Artifact artifact : resolvedAttachments)
+      for (org.eclipse.aether.artifact.Artifact artifact : resolvedAttachments)
       {
          final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
 
-      for (org.sonatype.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies())
+      for (org.eclipse.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies())
       {
-         org.sonatype.aether.artifact.Artifact artifact = dependency.getArtifact();
+         org.eclipse.aether.artifact.Artifact artifact = dependency.getArtifact();
          final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }

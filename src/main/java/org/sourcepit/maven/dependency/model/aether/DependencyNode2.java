@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 
 public interface DependencyNode2

@@ -11,9 +11,9 @@ import static java.util.Collections.addAll;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.sonatype.aether.collection.DependencyCollectionContext;
-import org.sonatype.aether.collection.DependencySelector;
-import org.sonatype.aether.graph.Dependency;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.Dependency;
 
 public class ScopeErasure implements DependencySelector
 {

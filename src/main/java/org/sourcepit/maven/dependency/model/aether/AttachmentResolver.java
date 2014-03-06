@@ -17,14 +17,14 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.sonatype.aether.RepositorySystemSession;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.graph.DependencyVisitor;
-import org.sonatype.aether.impl.ArtifactResolver;
-import org.sonatype.aether.resolution.ArtifactRequest;
-import org.sonatype.aether.resolution.ArtifactResolutionException;
-import org.sonatype.aether.resolution.ArtifactResult;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
+import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.sourcepit.common.utils.lang.PipedException;
 
 @Named
@@ -98,7 +98,7 @@ public class AttachmentResolver
    {
       final List<ArtifactRequest> requests = new ArrayList<ArtifactRequest>(attachments.size());
 
-      for (org.sonatype.aether.artifact.Artifact artifact : attachments)
+      for (org.eclipse.aether.artifact.Artifact artifact : attachments)
       {
          requests.add(new ArtifactRequest(artifact, node.getRepositories(), node.getRequestContext()));
       }

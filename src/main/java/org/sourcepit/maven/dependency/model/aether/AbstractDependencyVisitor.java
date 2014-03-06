@@ -8,8 +8,8 @@ package org.sourcepit.maven.dependency.model.aether;
 
 import java.util.Stack;
 
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.graph.DependencyVisitor;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
 
 public abstract class AbstractDependencyVisitor implements DependencyVisitor
 {

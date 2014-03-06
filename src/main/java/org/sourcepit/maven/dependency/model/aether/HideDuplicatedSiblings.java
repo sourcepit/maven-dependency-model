@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.sonatype.aether.RepositoryException;
-import org.sonatype.aether.collection.DependencyGraphTransformationContext;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 
 public class HideDuplicatedSiblings implements DependencyGraphTransformer

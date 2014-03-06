@@ -8,7 +8,7 @@ package org.sourcepit.maven.dependency.model.aether;
 
 import java.util.List;
 
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
 
 public interface DependencyNodeChooser
 {

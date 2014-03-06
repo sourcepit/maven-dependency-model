@@ -8,17 +8,17 @@ package org.sourcepit.maven.dependency.model.aether;
 
 import javax.validation.constraints.NotNull;
 
-import org.sonatype.aether.RepositoryException;
-import org.sonatype.aether.artifact.Artifact;
-import org.sonatype.aether.collection.DependencyGraphTransformationContext;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.graph.Dependency;
-import org.sonatype.aether.graph.DependencyNode;
-import org.sonatype.aether.graph.DependencyVisitor;
-import org.sonatype.aether.impl.VersionResolver;
-import org.sonatype.aether.resolution.VersionRequest;
-import org.sonatype.aether.resolution.VersionResolutionException;
-import org.sonatype.aether.resolution.VersionResult;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
+import org.eclipse.aether.impl.VersionResolver;
+import org.eclipse.aether.resolution.VersionRequest;
+import org.eclipse.aether.resolution.VersionResolutionException;
+import org.eclipse.aether.resolution.VersionResult;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.utils.lang.Exceptions;
 import org.sourcepit.common.utils.lang.PipedException;

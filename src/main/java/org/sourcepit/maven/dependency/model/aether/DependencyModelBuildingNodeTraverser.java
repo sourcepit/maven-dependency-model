@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.utils.props.PropertiesMap;
 
 public class DependencyModelBuildingNodeTraverser extends DependencyNodeTraverser

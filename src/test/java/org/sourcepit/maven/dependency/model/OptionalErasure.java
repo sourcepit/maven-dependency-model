@@ -6,9 +6,9 @@
 
 package org.sourcepit.maven.dependency.model;
 
-import org.sonatype.aether.collection.DependencyCollectionContext;
-import org.sonatype.aether.collection.DependencySelector;
-import org.sonatype.aether.graph.Dependency;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.Dependency;
 
 public class OptionalErasure implements DependencySelector
 {

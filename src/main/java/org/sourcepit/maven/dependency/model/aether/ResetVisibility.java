@@ -6,10 +6,10 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import org.sonatype.aether.RepositoryException;
-import org.sonatype.aether.collection.DependencyGraphTransformationContext;
-import org.sonatype.aether.collection.DependencyGraphTransformer;
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.graph.DependencyNode;
 
 public class ResetVisibility implements DependencyGraphTransformer
 {

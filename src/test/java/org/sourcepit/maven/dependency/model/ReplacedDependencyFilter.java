@@ -8,8 +8,8 @@ package org.sourcepit.maven.dependency.model;
 
 import java.util.List;
 
-import org.sonatype.aether.graph.DependencyFilter;
-import org.sonatype.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2Adapter;
 
