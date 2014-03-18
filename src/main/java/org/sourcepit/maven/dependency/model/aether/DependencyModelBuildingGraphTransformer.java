@@ -58,7 +58,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
       this.computeTreePerArtifact = computeTreePerArtifact;
       this.scopeTest = scopeTest;
 
-      nodeChooser = new NearestDependencyNodeChooser();
+      nodeChooser = new NearestDependencyNodeChooser(!computeTreePerArtifact);
 
       transformer = new ChainedDependencyGraphTransformer(new DependencyNode2AdapterTransformer(true),
          new HideDuplicatedSiblings(), new ApplyScopeAndOptional(), new VersionConflictResolver(nodeChooser));
@@ -355,7 +355,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             new ApplyScopeAndOptional().transformGraph(rootNode, context);
          }
 
-         new DependencyModelBuildingNodeTraverser(handler, nodeChooser, scopeTest).traverse(rootNode);
+         new DependencyModelBuildingNodeTraverser(handler, new NearestDependencyNodeChooser(false), scopeTest).traverse(rootNode);
       }
    }
 

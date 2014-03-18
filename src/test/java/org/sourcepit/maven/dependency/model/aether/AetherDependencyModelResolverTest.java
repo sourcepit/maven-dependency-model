@@ -6,12 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -400,7 +395,6 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    public void testScopeTest_EraseChildDepsOfTestDeps() throws Exception
    {
       Model pom;
-
       pom = newModel("C", "1");
       repositoryFacade.deploy(pom);
 
@@ -434,6 +428,56 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertSame(Scope.TEST, node.getEffectiveScope());
       assertFalse(node.isSelected());
       assertEquals(0, node.getChildren().size());
+   }
+
+   @Test
+   public void testScope_FallbackToNonTestNode() throws Exception
+   {
+      Model pom;
+      
+      pom = newModel("C", "2");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "2");
+      addDependency(pom, "C", "2");
+      repositoryFacade.deploy(pom);
+      
+      pom = newModel("C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("B", "1");
+      addDependency(pom, "C", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("A", "1");
+      addDependency(pom, "B", "1");
+      repositoryFacade.deploy(pom);
+
+      pom = newModel("root", "1");
+      addDependency(pom, "A", "1");
+      addDependency(pom, "B", "2").setScope("test");
+      repositoryFacade.deploy(pom);
+
+      final Artifact artifact = getEmbeddedMaven().createArtifact(pom);
+
+      DependencyModel model = modelResolver.resolve(artifact, null);
+
+      for (DependencyTree tree : model.getDependencyTrees())
+      {
+         for (DependencyNode node : tree.getDependencyNodes())
+         {
+            assertArtifactsNotNull(node);
+         }
+      }
+   }
+
+   private void assertArtifactsNotNull(DependencyNode node)
+   {
+      assertNotNull(node.getArtifact());
+      for (DependencyNode childNode : node.getChildren())
+      {
+         assertArtifactsNotNull(childNode);
+      }
    }
 
    @Test
@@ -589,21 +633,21 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       pom.setPackaging("pom");
       pom.getModules().add("module-a");
       pom.getModules().add("module-b");
-      
+
       final File parentPom = new File(getWs().getRoot(), "pom.xml");
       new DefaultModelWriter().write(parentPom, null, pom);
-      
+
       final File aPom = new File(getWs().getRoot(), "module-a/pom.xml");
       pom = newModel("module-a", "1");
       new DefaultModelWriter().write(aPom, null, pom);
-      
+
       final File bPom = new File(getWs().getRoot(), "module-b/pom.xml");
       pom = newModel("module-b", "1");
       addDependency(pom, "module-a", "1");
       new DefaultModelWriter().write(bPom, null, pom);
-      
+
       MavenExecutionResult2 result = buildProject(parentPom);
-      
+
       MavenSession session = result.getSession();
       for (MavenProject project : session.getProjects()) // fake compile for ReactorReader
       {
@@ -612,24 +656,24 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       MavenProject projectB = session.getProjects().get(1);
       assertEquals("module-b", projectB.getArtifactId());
       session.setCurrentProject(projectB);
-      
+
       buildContext.setSession(session);
-      
+
       DependencyModel model = modelResolver.resolve(projectB.getArtifact(), null);
       assertEquals(2, model.getArtifacts().size());
       assertEquals(2, model.getDependencyTrees().size());
-      
+
       MavenArtifact artifactB = model.getArtifacts().get(0);
       assertEquals("module-b", artifactB.getArtifactId());
       assertNotNull(artifactB.getFile());
-      
+
       MavenArtifact artifactA = model.getArtifacts().get(1);
       assertEquals("module-a", artifactA.getArtifactId());
       assertNotNull(artifactA.getFile());
-      
+
       DependencyTree tree = model.getDependencyTree(artifactB);
       assertEquals(1, tree.getDependencyNodes().size());
-      
+
       DependencyNode nodeA = tree.getDependencyNodes().get(0);
       assertSame(artifactA, nodeA.getArtifact());
    }

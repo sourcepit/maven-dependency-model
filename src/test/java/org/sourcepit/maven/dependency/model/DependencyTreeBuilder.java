@@ -73,7 +73,7 @@ public class DependencyTreeBuilder
       final DependencySelector selector = buildDependencySelector(request);
 
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
-         new DependencyNode2AdapterTransformer(false), new VersionConflictResolver(new NearestDependencyNodeChooser()),
+         new DependencyNode2AdapterTransformer(false), new VersionConflictResolver(new NearestDependencyNodeChooser(false)),
          new JavaDependencyContextRefiner());
 
       final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession()

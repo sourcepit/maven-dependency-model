@@ -64,7 +64,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    @Test
    public void testReplaced1() throws Exception
    {
-      DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser();
+      DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser(false);
 
       DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          new DependencyNode2AdapterTransformer(true), new HideDuplicatedSiblings(), new ApplyScopeAndOptional(),
@@ -107,7 +107,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    @Test
    public void testReplaced2() throws Exception
    {
-      DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser();
+      DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser(false);
 
       DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          new DependencyNode2AdapterTransformer(true), new HideDuplicatedSiblings(), new ApplyScopeAndOptional(),

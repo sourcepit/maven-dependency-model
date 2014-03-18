@@ -12,6 +12,13 @@ import org.eclipse.aether.graph.DependencyNode;
 
 public class NearestDependencyNodeChooser implements DependencyNodeChooser
 {
+   private boolean skipTest;
+
+   public NearestDependencyNodeChooser(boolean skipTest)
+   {
+      this.skipTest = skipTest;
+   }
+
    @Override
    public DependencyNode choose(List<DependencyNode> nodes)
    {
@@ -24,6 +31,12 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       {
          final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
          if ((hasVisibles && !adapter.isVisible()) || getRoot(node, adapter) == null)
+         {
+            continue;
+         }
+
+         String scope = node.getDependency().getScope();
+         if (skipTest && "test".equals(scope))
          {
             continue;
          }
