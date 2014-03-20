@@ -6,14 +6,17 @@
 
 package org.sourcepit.maven.dependency.model.poc;
 
+import static org.junit.Assert.assertEquals;
 import static org.sourcepit.common.utils.io.IO.cpIn;
 import static org.sourcepit.common.utils.io.IO.read;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,7 +48,9 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
@@ -65,6 +70,9 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    @Inject
    private DependencyCollector dependencyCollector;
+
+   @Rule
+   public TestName name = new TestName();
 
    @Override
    protected Environment newEnvironment()
@@ -94,10 +102,34 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       return getWs().newDir("remote-repo");
    }
 
+   protected String getTestName()
+   {
+      return name.getMethodName().substring("test".length());
+   }
+
    @Test
    public void testFoo() throws Exception
    {
-      List<Model> models = parsePoms("DependencyCollectionTest/foo.txt");
+      test();
+   }
+
+   @Test
+   public void testVersionConflict1() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_Provided_01() throws Exception
+   {
+      test();
+   }
+
+   private void test() throws IOException, Exception, DependencyCollectionException
+   {
+      String fileName = getClass().getSimpleName() + "/" + getTestName();
+
+      List<Model> models = parsePoms(fileName);
       for (int i = 1; i < models.size(); i++)
       {
          repositoryFacade.deploy(models.get(i));
@@ -112,7 +144,12 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
       CollectResult collectResult = collectDependencies(session, project);
 
-      print(collectResult.getRoot(), 0);
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      print(new PrintStream(out, false, "UTF-8"), collectResult.getRoot(), 0);
+
+      String parseExpected = parseExpected(fileName);
+
+      assertEquals(parseExpected, new String(out.toByteArray(), "UTF-8"));
    }
 
    private List<Model> parsePoms(String res) throws IOException
@@ -252,23 +289,85 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       super.tearDown();
    }
 
-   private static void print(DependencyNode node, int level)
+   private static void print(PrintStream out, DependencyNode node, int level)
    {
       StringBuilder sb = new StringBuilder();
-      for (int i = 0; i < level; i++)
+      if (level > 0)
       {
-         sb.append("   ");
+         for (int i = 0; i < level - 1; i++)
+         {
+            sb.append("|  ");
+         }
+         sb.append("+- ");
       }
-      sb.append(node.toString());
-      sb.append(" ");
 
-      System.out.println(sb);
+      org.eclipse.aether.artifact.Artifact artifact = node.getArtifact();
+      if (artifact == null)
+      {
+         sb.append("(null)");
+      }
+      else
+      {
+         sb.append(artifact.getGroupId());
+         sb.append(':');
+         sb.append(artifact.getArtifactId());
+         sb.append(':');
+         sb.append(artifact.getExtension());
+         sb.append(':');
+         sb.append(artifact.getVersion());
+      }
+
+      org.eclipse.aether.graph.Dependency dependency = node.getDependency();
+      if (dependency != null)
+      {
+         sb.append(':');
+         sb.append(dependency.getScope());
+         if (dependency.isOptional())
+         {
+            sb.append(":optional");
+         }
+      }
+
+      out.println(sb);
       level++;
 
       for (DependencyNode dependencyNode : node.getChildren())
       {
-         print(dependencyNode, level);
+         print(out, dependencyNode, level);
       }
+   }
+
+   private static final String NL = System.getProperty("line.separator");
+
+   private String parseExpected(String resource) throws IOException
+   {
+      return read(new Read.FromStream<String>()
+      {
+         @Override
+         public String read(InputStream inputStream) throws Exception
+         {
+            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+            StringBuilder sb = null;
+
+            for (String ln = r.readLine(); ln != null; ln = r.readLine())
+            {
+               if (ln.startsWith("#expected"))
+               {
+                  sb = new StringBuilder();
+                  continue;
+               }
+
+               if (sb != null)
+               {
+                  sb.append(ln);
+                  sb.append(NL);
+               }
+            }
+
+            return sb == null ? null : sb.toString();
+         }
+      }, cpIn(getClass().getClassLoader(), resource));
    }
 
    private List<DependencyNode> parseGraps(String resource) throws IOException
@@ -286,6 +385,11 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
             for (String ln = r.readLine(); ln != null; ln = r.readLine())
             {
+               if (ln.startsWith("#expected"))
+               {
+                  break;
+               }
+
                if (ln.isEmpty())
                {
                   if (sb != null)
@@ -301,7 +405,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
                      sb = new StringBuilder();
                   }
                   sb.append(ln);
-                  sb.append('\n');
+                  sb.append(NL);
                }
             }
 
