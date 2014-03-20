@@ -6,10 +6,17 @@
 
 package org.sourcepit.maven.dependency.model.poc;
 
+import static org.sourcepit.common.utils.io.IO.cpIn;
+import static org.sourcepit.common.utils.io.IO.read;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +29,6 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.ModelBase;
 import org.apache.maven.model.io.ModelWriter;
 import org.apache.maven.plugin.LegacySupport;
 import org.apache.maven.project.MavenProject;
@@ -43,44 +49,11 @@ import org.junit.Test;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
+import org.sourcepit.common.utils.io.Read;
+import org.sourcepit.maven.dependency.model.aether.DependencyGraphParser;
 
 public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 {
-   private final class MavenModelParser extends AbstractGraphParser
-   {
-      private final LinkedList<Model> models = new LinkedList<Model>();
-
-      @Override
-      protected void visit(int depth, String[] dependency)
-      {
-         if (depth == 0)
-         {
-            final Model pom = new Model();
-            pom.setModelVersion("4.0.0");
-            pom.setGroupId(dependency[0]);
-            pom.setArtifactId(dependency[1]);
-            pom.setPackaging(dependency[2]);
-            pom.setVersion(dependency[3]);
-
-            models.add(pom);
-         }
-         else
-         {
-            Dependency dep = new Dependency();
-            dep.setGroupId(dependency[0]);
-            dep.setArtifactId(dependency[1]);
-            dep.setType(dependency[2]);
-            dep.setVersion(dependency[3]);
-            models.getLast().addDependency(dep);
-         }
-      }
-
-      public List<Model> getModels()
-      {
-         return models;
-      }
-   }
-
    @Inject
    private ArtifactRepositoryFacade repositoryFacade;
 
@@ -124,19 +97,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    @Test
    public void testFoo() throws Exception
    {
-      StringBuilder sb = new StringBuilder();
-      sb.append("project:project:jar:1\n");
-      sb.append("- a:a:jar:1\n");
-
-      sb.append("a:a:jar:1\n");
-      sb.append("- b:b:jar:1\n");
-
-      sb.append("b:b:jar:1\n");
-
-      MavenModelParser parser = new MavenModelParser();
-      parser.parse(sb.toString());
-
-      final List<Model> models = parser.getModels();
+      List<Model> models = parsePoms("DependencyCollectionTest/foo.txt");
       for (int i = 1; i < models.size(); i++)
       {
          repositoryFacade.deploy(models.get(i));
@@ -152,6 +113,59 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       CollectResult collectResult = collectDependencies(session, project);
 
       print(collectResult.getRoot(), 0);
+   }
+
+   private List<Model> parsePoms(String res) throws IOException
+   {
+      List<DependencyNode> graphs = parseGraps(res);
+      List<Model> poms = new ArrayList<Model>(graphs.size());
+      for (DependencyNode graph : graphs)
+      {
+         final Model pom = toPom(graph.getDependency().getArtifact());
+         for (DependencyNode child : graph.getChildren())
+         {
+            pom.addDependency(toDependency(child));
+         }
+
+         poms.add(pom);
+      }
+      return poms;
+   }
+
+   private static Dependency toDependency(DependencyNode node)
+   {
+      org.eclipse.aether.graph.Dependency dependency = node.getDependency();
+
+      org.eclipse.aether.artifact.Artifact artifact = dependency.getArtifact();
+
+      Dependency dep = new Dependency();
+      dep.setGroupId(artifact.getGroupId());
+      dep.setArtifactId(artifact.getArtifactId());
+      dep.setType(artifact.getExtension());
+      dep.setClassifier(artifact.getClassifier());
+
+      dep.setScope(dependency.getScope());
+
+      dep.setVersion(node.getVersionConstraint().toString());
+
+      return dep;
+   }
+
+   private static Model toPom(org.eclipse.aether.artifact.Artifact artifact)
+   {
+      final Model pom = new Model();
+      pom.setModelVersion("4.0.0");
+      pom.setGroupId(artifact.getGroupId());
+      pom.setArtifactId(artifact.getArtifactId());
+      pom.setVersion(artifact.getVersion());
+
+      final String extension = artifact.getExtension();
+      if (extension != null)
+      {
+         pom.setPackaging(extension);
+      }
+
+      return pom;
    }
 
    private CollectResult collectDependencies(final RepositorySystemSession session, final MavenProject project)
@@ -238,32 +252,6 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       super.tearDown();
    }
 
-   private static Model newModel(String artifactId, String version)
-   {
-      final Model pom = new Model();
-      pom.setModelVersion("4.0.0");
-      pom.setGroupId(artifactId.toLowerCase());
-      pom.setArtifactId(artifactId);
-      pom.setVersion(version);
-      return pom;
-   }
-
-   private static Dependency newDependency(String artifactId, String version)
-   {
-      final Dependency dependency = new Dependency();
-      dependency.setGroupId(artifactId.toLowerCase());
-      dependency.setArtifactId(artifactId);
-      dependency.setVersion(version);
-      return dependency;
-   }
-
-   private static Dependency addDependency(ModelBase model, String artifactId, String version)
-   {
-      final Dependency dependency = newDependency(artifactId, version);
-      model.getDependencies().add(dependency);
-      return dependency;
-   }
-
    private static void print(DependencyNode node, int level)
    {
       StringBuilder sb = new StringBuilder();
@@ -281,5 +269,58 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       {
          print(dependencyNode, level);
       }
+   }
+
+   private List<DependencyNode> parseGraps(String resource) throws IOException
+   {
+      List<String> graphs = read(new Read.FromStream<List<String>>()
+      {
+         @Override
+         public List<String> read(InputStream inputStream) throws Exception
+         {
+            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+            List<String> segments = new ArrayList<String>();
+
+            StringBuilder sb = null;
+
+            for (String ln = r.readLine(); ln != null; ln = r.readLine())
+            {
+               if (ln.isEmpty())
+               {
+                  if (sb != null)
+                  {
+                     segments.add(sb.toString());
+                     sb = null;
+                  }
+               }
+               else
+               {
+                  if (sb == null)
+                  {
+                     sb = new StringBuilder();
+                  }
+                  sb.append(ln);
+                  sb.append('\n');
+               }
+            }
+
+            if (sb != null)
+            {
+               segments.add(sb.toString());
+               sb = null;
+            }
+
+            return segments;
+         }
+      }, cpIn(getClass().getClassLoader(), resource));
+
+      final List<DependencyNode> nodes = new ArrayList<DependencyNode>(graphs.size());
+      for (String grap : graphs)
+      {
+         nodes.add(new DependencyGraphParser().parseLiteral(grap));
+      }
+
+      return nodes;
    }
 }
