@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,6 +56,7 @@ import org.junit.rules.TestName;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
+import org.sourcepit.common.utils.io.IOHandle;
 import org.sourcepit.common.utils.io.Read;
 import org.sourcepit.maven.dependency.model.aether.DependencyGraphParser;
 
@@ -128,34 +130,65 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private void test() throws IOException, Exception, DependencyCollectionException
    {
-      final String fileName = getClass().getSimpleName() + "/" + getTestName();
+      final Map<String, String> parts = getTestDefinition();
 
-      final Map<String, String> parts = splitParts(fileName);
+      final List<Model> models = parsePoms(parts.get("input"));
+      deploy(models);
 
-      final String input = parts.get("input");
+      CollectResult collectResult = null;
 
-      final List<Model> models = parsePoms(input);
-      for (int i = 1; i < models.size(); i++)
+      final Model root = getRoot(models);
+      if (root != null)
       {
-         repositoryFacade.deploy(models.get(i));
+         final File projectFile = getWs().newFile("pom.xml");
+         modelWriter.write(projectFile, null, root);
+         final MavenProject project = buildProject(projectFile).getProject();
+         RepositorySystemSession session = buildContext.getRepositorySession();
+         collectResult = collectDependencies(session, project);
       }
 
-      final File projectFile = getWs().newFile("pom.xml");
-      modelWriter.write(projectFile, null, models.get(0));
+      final String actual = toString(collectResult);
 
-      final MavenProject project = buildProject(projectFile).getProject();
-
-      RepositorySystemSession session = buildContext.getRepositorySession();
-
-      CollectResult collectResult = collectDependencies(session, project);
-
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      print(new PrintStream(out, false, "UTF-8"), collectResult.getRoot(), 0);
-
-      assertEquals(parts.get("expected"), new String(out.toByteArray(), "UTF-8"));
+      assertEquals(parts.get("expected"), actual);
    }
 
-   private List<Model> parsePoms(String input) throws IOException
+   private Map<String, String> getTestDefinition() throws IOException
+   {
+      final String fileName = getClass().getSimpleName() + "/" + getTestName();
+      return splitParts(cpIn(getClass().getClassLoader(), fileName));
+   }
+
+   private static String toString(CollectResult collectResult) throws UnsupportedEncodingException
+   {
+      final ByteArrayOutputStream out = new ByteArrayOutputStream();
+      print(new PrintStream(out, false, "UTF-8"), collectResult.getRoot(), 0);
+      return new String(out.toByteArray(), "UTF-8");
+   }
+
+   private static Model getRoot(List<Model> models)
+   {
+      for (Model model : models)
+      {
+         if ("true".equals(model.getProperties().getProperty("root")))
+         {
+            return model;
+         }
+      }
+      return null;
+   }
+
+   private void deploy(final List<Model> models)
+   {
+      for (Model model : models)
+      {
+         if ("true".equals(model.getProperties().getProperty("deploy", "true")))
+         {
+            repositoryFacade.deploy(model);
+         }
+      }
+   }
+
+   private static List<Model> parsePoms(String input) throws IOException
    {
       List<DependencyNode> graphs = new DependencyGraphParser().parseMultipleLiteral(input);
       List<Model> poms = new ArrayList<Model>(graphs.size());
@@ -203,6 +236,12 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       if (extension != null)
       {
          pom.setPackaging(extension);
+      }
+
+      final Map<String, String> properties = artifact.getProperties();
+      if (properties != null)
+      {
+         pom.getProperties().putAll(properties);
       }
 
       return pom;
@@ -342,7 +381,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private static final String NL = System.getProperty("line.separator");
 
-   private Map<String, String> splitParts(String resource) throws IOException
+   private static Map<String, String> splitParts(IOHandle<InputStream> res) throws IOException
    {
       return read(new Read.FromStream<Map<String, String>>()
       {
@@ -389,6 +428,6 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
             return parts;
          }
-      }, cpIn(getClass().getClassLoader(), resource));
+      }, res);
    }
 }

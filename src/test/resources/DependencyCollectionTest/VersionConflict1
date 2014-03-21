@@ -1,5 +1,5 @@
 #>> input
-project:project:jar:1
+project:project:jar:1;root=true;deploy=false
 +- a:A:jar:1:compile
 +- b:B:jar:2:compile
 ---
