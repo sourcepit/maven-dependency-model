@@ -1,15 +1,20 @@
-#input
+#>> input
 project:project:jar:1
 +- a:A:jar:1:compile
 +- b:B:jar:2:compile
-
+---
 a:A:jar:1
 +- b:B:jar:1:compile
-
+---
 b:B:jar:2
 +- c:C:jar:1:compile
+---
+b:B:jar:1
+---
+c:C:jar:1
+---
 
-#expected
+#>> expected
 project:project:jar:1
 +- a:A:jar:1:compile
 +- b:B:jar:2:compile

@@ -207,6 +207,22 @@ public class DependencyGraphParser
       }
       return ret;
    }
+   
+   /**
+    * Parse multiple graphs in one resource, divided by "---".
+    */
+   public List<DependencyNode> parseMultipleLiteral(String dependencyGraphs) throws IOException
+   {
+      BufferedReader reader = new BufferedReader(new StringReader(dependencyGraphs));
+      List<DependencyNode> ret = new ArrayList<DependencyNode>();
+      DependencyNode root = null;
+      while ((root = parse(reader)) != null)
+      {
+         ret.add(root);
+      }
+      reader.close();
+      return ret;
+   }
 
    /**
     * Parse the graph definition read from the given URL.

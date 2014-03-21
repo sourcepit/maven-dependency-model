@@ -20,6 +20,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -127,9 +128,13 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private void test() throws IOException, Exception, DependencyCollectionException
    {
-      String fileName = getClass().getSimpleName() + "/" + getTestName();
+      final String fileName = getClass().getSimpleName() + "/" + getTestName();
 
-      List<Model> models = parsePoms(fileName);
+      final Map<String, String> parts = splitParts(fileName);
+
+      final String input = parts.get("input");
+
+      final List<Model> models = parsePoms(input);
       for (int i = 1; i < models.size(); i++)
       {
          repositoryFacade.deploy(models.get(i));
@@ -147,14 +152,12 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       print(new PrintStream(out, false, "UTF-8"), collectResult.getRoot(), 0);
 
-      String parseExpected = parseExpected(fileName);
-
-      assertEquals(parseExpected, new String(out.toByteArray(), "UTF-8"));
+      assertEquals(parts.get("expected"), new String(out.toByteArray(), "UTF-8"));
    }
 
-   private List<Model> parsePoms(String res) throws IOException
+   private List<Model> parsePoms(String input) throws IOException
    {
-      List<DependencyNode> graphs = parseGraps(res);
+      List<DependencyNode> graphs = new DependencyGraphParser().parseMultipleLiteral(input);
       List<Model> poms = new ArrayList<Model>(graphs.size());
       for (DependencyNode graph : graphs)
       {
@@ -339,92 +342,53 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private static final String NL = System.getProperty("line.separator");
 
-   private String parseExpected(String resource) throws IOException
+   private Map<String, String> splitParts(String resource) throws IOException
    {
-      return read(new Read.FromStream<String>()
+      return read(new Read.FromStream<Map<String, String>>()
       {
          @Override
-         public String read(InputStream inputStream) throws Exception
+         public Map<String, String> read(InputStream inputStream) throws Exception
          {
-            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            Map<String, String> parts = new LinkedHashMap<String, String>();
+
+            final BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
 
             StringBuilder sb = null;
 
-            for (String ln = r.readLine(); ln != null; ln = r.readLine())
-            {
-               if (ln.startsWith("#expected"))
-               {
-                  sb = new StringBuilder();
-                  continue;
-               }
-
-               if (sb != null)
-               {
-                  sb.append(ln);
-                  sb.append(NL);
-               }
-            }
-
-            return sb == null ? null : sb.toString();
-         }
-      }, cpIn(getClass().getClassLoader(), resource));
-   }
-
-   private List<DependencyNode> parseGraps(String resource) throws IOException
-   {
-      List<String> graphs = read(new Read.FromStream<List<String>>()
-      {
-         @Override
-         public List<String> read(InputStream inputStream) throws Exception
-         {
-            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-
-            List<String> segments = new ArrayList<String>();
-
-            StringBuilder sb = null;
+            String partName = null;
 
             for (String ln = r.readLine(); ln != null; ln = r.readLine())
             {
-               if (ln.startsWith("#expected"))
-               {
-                  break;
-               }
-
-               if (ln.isEmpty())
+               if (ln.startsWith("#>>"))
                {
                   if (sb != null)
                   {
-                     segments.add(sb.toString());
+                     parts.put(partName, sb.toString());
+                     partName = null;
                      sb = null;
                   }
+                  partName = ln.substring(3).trim();
+                  continue;
                }
-               else
+
+               if (sb == null)
                {
-                  if (sb == null)
-                  {
-                     sb = new StringBuilder();
-                  }
-                  sb.append(ln);
-                  sb.append(NL);
+                  sb = new StringBuilder();
                }
+
+               sb.append(ln);
+               sb.append(NL);
             }
 
             if (sb != null)
             {
-               segments.add(sb.toString());
+               parts.put(partName, sb.toString());
+               partName = null;
                sb = null;
             }
 
-            return segments;
+            return parts;
          }
       }, cpIn(getClass().getClassLoader(), resource));
-
-      final List<DependencyNode> nodes = new ArrayList<DependencyNode>(graphs.size());
-      for (String grap : graphs)
-      {
-         nodes.add(new DependencyGraphParser().parseLiteral(grap));
-      }
-
-      return nodes;
    }
 }
