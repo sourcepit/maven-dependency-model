@@ -39,6 +39,7 @@ import org.apache.maven.plugin.LegacySupport;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.CollectRequest;
@@ -111,19 +112,145 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testFoo() throws Exception
+   public void testOptional_01() throws Exception
    {
       test();
    }
 
    @Test
-   public void testVersionConflict1() throws Exception
+   public void testOptional_02() throws Exception
    {
       test();
    }
 
    @Test
-   public void testScopes_Provided_01() throws Exception
+   public void testOptional_03() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testOptional_04() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testOptional_05() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testOptional_06() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_01_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_02_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_03_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_04_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_05_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_06_Test() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_01_System() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_02_System() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_03_System() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_04_System() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_05_System() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_06_System() throws Exception
+   {
+      test();
+   }
+   
+   @Test
+   public void testScopes_01_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_02_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_03_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_04_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_05_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testScopes_06_Provided() throws Exception
    {
       test();
    }
@@ -218,6 +345,9 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       dep.setClassifier(artifact.getClassifier());
 
       dep.setScope(dependency.getScope());
+      dep.setOptional(dependency.isOptional());
+
+      dep.setSystemPath(artifact.getProperty(ArtifactProperties.LOCAL_PATH, null));
 
       dep.setVersion(node.getVersionConstraint().toString());
 

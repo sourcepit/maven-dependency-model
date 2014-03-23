@@ -1,14 +1,13 @@
 #>> input
 project:project:jar:1;root=true;deploy=false
-+- a:a:jar:1
++- a:A:jar:1:compile
 ---
-a:a:jar:1
-+- b:b:jar:1
+a:A:jar:1
++- b:B:jar:1:compile:optional
 ---
-b:b:jar:1
+b:B:jar:1
 ---
 
 #>> expected
 project:project:jar:1
-+- a:a:jar:1:compile
-|  +- b:b:jar:1:compile
++- a:A:jar:1:compile
