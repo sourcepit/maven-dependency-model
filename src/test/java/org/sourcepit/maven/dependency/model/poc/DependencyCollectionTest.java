@@ -218,7 +218,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    {
       test();
    }
-   
+
    @Test
    public void testScopes_01_Provided() throws Exception
    {
@@ -251,6 +251,30 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    @Test
    public void testScopes_06_Provided() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testVersionConflict_01() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testVersionConflict_02() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testVersionConflict_03() throws Exception
+   {
+      test();
+   }
+
+   @Test
+   public void testCycle_01() throws Exception
    {
       test();
    }

@@ -1,0 +1,13 @@
+#>> input
+project:project:jar:1;root=true;deploy=false
++- b:B:jar:1:compile
++- b:B:jar:2:compile
+---
++- b:B:jar:1
+---
++- b:B:jar:2
+---
+
+#>> expected
+project:project:jar:1
++- b:B:jar:2:compile
