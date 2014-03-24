@@ -8,6 +8,10 @@ project:project:jar:1;root=true;deploy=false
 +- b:B:jar:2
 ---
 
-#>> expected
+#>> expected transformationMode=noop
+project:project:jar:1
++- b:B:jar:2:compile
+
+#>> expected transformationMode=maven
 project:project:jar:1
 +- b:B:jar:2:compile

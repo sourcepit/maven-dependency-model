@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.inject.Inject;
 
@@ -38,6 +39,7 @@ import org.apache.maven.model.io.ModelWriter;
 import org.apache.maven.plugin.LegacySupport;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
+import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactType;
@@ -45,10 +47,12 @@ import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -279,14 +283,17 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       test();
    }
 
+   public static enum TransformationMode
+   {
+      NOOP, MAVEN,
+   }
+
    private void test() throws IOException, Exception, DependencyCollectionException
    {
       final Map<String, String> parts = getTestDefinition();
 
       final List<Model> models = parsePoms(parts.get("input"));
       deploy(models);
-
-      CollectResult collectResult = null;
 
       final Model root = getRoot(models);
       if (root != null)
@@ -295,12 +302,15 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
          modelWriter.write(projectFile, null, root);
          final MavenProject project = buildProject(projectFile).getProject();
          RepositorySystemSession session = buildContext.getRepositorySession();
-         collectResult = collectDependencies(session, project);
+
+         String actual;
+         actual = toString(collectDependencies(session, project, TransformationMode.NOOP));
+         assertEquals(parts.get("expected transformationMode=noop"), actual);
+
+         actual = toString(collectDependencies(session, project, TransformationMode.MAVEN));
+         assertEquals(parts.get("expected transformationMode=maven"), actual);
       }
 
-      final String actual = toString(collectResult);
-
-      assertEquals(parts.get("expected"), actual);
    }
 
    private Map<String, String> getTestDefinition() throws IOException
@@ -312,7 +322,8 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    private static String toString(CollectResult collectResult) throws UnsupportedEncodingException
    {
       final ByteArrayOutputStream out = new ByteArrayOutputStream();
-      print(new PrintStream(out, false, "UTF-8"), collectResult.getRoot(), 0);
+      final Stack<DependencyNode> parentNodes = new Stack<DependencyNode>();
+      print(new PrintStream(out, false, "UTF-8"), parentNodes, collectResult.getRoot(), 0);
       return new String(out.toByteArray(), "UTF-8");
    }
 
@@ -401,10 +412,33 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       return pom;
    }
 
-   private CollectResult collectDependencies(final RepositorySystemSession session, final MavenProject project)
-      throws DependencyCollectionException
+   private CollectResult collectDependencies(final RepositorySystemSession repositorySystemSession,
+      final MavenProject project, final TransformationMode transformationMode) throws DependencyCollectionException
    {
-      CollectRequest collectRequest = newCollectRequest(session, project);
+      final AbstractForwardingRepositorySystemSession session = new AbstractForwardingRepositorySystemSession()
+      {
+         @Override
+         protected RepositorySystemSession getSession()
+         {
+            return repositorySystemSession;
+         }
+
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            switch (transformationMode)
+            {
+               case NOOP :
+                  return new NoopDependencyGraphTransformer();
+               case MAVEN :
+                  return super.getDependencyGraphTransformer();
+               default :
+                  throw new IllegalStateException();
+            }
+         }
+      };
+
+      final CollectRequest collectRequest = newCollectRequest(session, project);
       return dependencyCollector.collectDependencies(session, collectRequest);
    }
 
@@ -485,7 +519,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       super.tearDown();
    }
 
-   private static void print(PrintStream out, DependencyNode node, int level)
+   private static void print(PrintStream out, Stack<DependencyNode> parentNodes, DependencyNode node, int level)
    {
       StringBuilder sb = new StringBuilder();
       if (level > 0)
@@ -524,12 +558,23 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
          }
       }
 
-      out.println(sb);
+      out.print(sb);
       level++;
 
-      for (DependencyNode dependencyNode : node.getChildren())
+      if (parentNodes.contains(node))
       {
-         print(out, dependencyNode, level);
+         out.println(" (cyclic)");
+      }
+      else
+      {
+         out.println();
+         
+         parentNodes.push(node);
+         for (DependencyNode dependencyNode : node.getChildren())
+         {
+            print(out, parentNodes, dependencyNode, level);
+         }
+         parentNodes.pop();
       }
    }
 
@@ -567,14 +612,18 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
                if (sb == null)
                {
                   sb = new StringBuilder();
+                  sb.append(ln);
                }
-
-               sb.append(ln);
-               sb.append(NL);
+               else
+               {
+                  sb.append(NL);
+                  sb.append(ln);
+               }
             }
 
             if (sb != null)
             {
+               sb.append(NL);
                parts.put(partName, sb.toString());
                partName = null;
                sb = null;

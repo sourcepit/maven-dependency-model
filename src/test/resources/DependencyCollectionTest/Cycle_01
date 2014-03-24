@@ -14,7 +14,14 @@ a:A:jar:1:compile
 +- b:B:jar:1:compile
 ---
 
-#>> expected
+#>> expected transformationMode=noop
+project:project:jar:1
++- a:A:jar:1:compile
+|  +- b:B:jar:1:compile
+|  |  +- a:A:jar:1:compile
+|  |  |  +- b:B:jar:1:compile (cyclic)
+
+#>> expected transformationMode=maven
 project:project:jar:1
 +- a:A:jar:1:compile
 |  +- b:B:jar:1:compile
