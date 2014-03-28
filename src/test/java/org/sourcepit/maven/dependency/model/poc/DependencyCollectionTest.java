@@ -9,6 +9,8 @@ package org.sourcepit.maven.dependency.model.poc;
 import static org.junit.Assert.assertEquals;
 import static org.sourcepit.common.utils.io.IO.cpIn;
 import static org.sourcepit.common.utils.io.IO.read;
+import static org.sourcepit.maven.dependency.model.poc.ConflictResolutionScope.OVERALL_TREE;
+import static org.sourcepit.maven.dependency.model.poc.DependencyResolutionScope.COMPILE_AND_RUNTIME;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -290,6 +292,13 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private void test() throws IOException, Exception, DependencyCollectionException
    {
+      GraphsForDependenciesRequest request = new GraphsForDependenciesRequest();
+      request.getDependencies();
+      request.getRepositories();
+      request.getManagedDependencies();
+      request.setConflictResolutionScope(OVERALL_TREE);
+      request.setDependencyResolutionScope(COMPILE_AND_RUNTIME);
+
       final Map<String, String> parts = getTestDefinition();
 
       final List<Model> models = parsePoms(parts.get("input"));
@@ -568,7 +577,7 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       else
       {
          out.println();
-         
+
          parentNodes.push(node);
          for (DependencyNode dependencyNode : node.getChildren())
          {
