@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.impl;
 
-import javax.validation.constraints.NotNull;
+import org.sourcepit.common.constraints.NotNull;
 
 import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.maven.dependency.model.DependencyNode;

@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import javax.validation.constraints.NotNull;
+import org.sourcepit.common.constraints.NotNull;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;

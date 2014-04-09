@@ -8,7 +8,7 @@ package org.sourcepit.maven.dependency.model;
 
 import java.util.Collection;
 
-import javax.validation.constraints.NotNull;
+import org.sourcepit.common.constraints.NotNull;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;

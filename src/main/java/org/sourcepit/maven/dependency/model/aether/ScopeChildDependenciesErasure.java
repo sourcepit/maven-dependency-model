@@ -8,7 +8,7 @@ package org.sourcepit.maven.dependency.model.aether;
 
 import java.util.Collection;
 
-import javax.validation.constraints.NotNull;
+import org.sourcepit.common.constraints.NotNull;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
