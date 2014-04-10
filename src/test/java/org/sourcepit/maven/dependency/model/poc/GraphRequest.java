@@ -9,14 +9,37 @@ package org.sourcepit.maven.dependency.model.poc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class AbstractGraphRequest
+public class GraphRequest
 {
+   private Artifact rootArtifact;
+   private List<Dependency> dependencies;
    private List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
    private List<Dependency> managedDependencies = new ArrayList<Dependency>();
    private DependencyResolutionScope dependencyResolutionScope;
+
+   public Artifact getRootArtifact()
+   {
+      return rootArtifact;
+   }
+
+   public void setRootArtifact(Artifact rootArtifact)
+   {
+      this.rootArtifact = rootArtifact;
+   }
+
+   public List<Dependency> getDependencies()
+   {
+      return dependencies;
+   }
+
+   public void setDependencies(List<Dependency> dependencies)
+   {
+      this.dependencies = dependencies;
+   }
 
    public List<RemoteRepository> getRepositories()
    {

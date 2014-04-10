@@ -278,9 +278,21 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    {
       test();
    }
+   
+   @Test
+   public void testVersionConflict_04() throws Exception
+   {
+      test();
+   }
 
    @Test
    public void testCycle_01() throws Exception
+   {
+      test();
+   }
+   
+   @Test
+   public void testCycle_02() throws Exception
    {
       test();
    }
@@ -292,14 +304,8 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
 
    private void test() throws IOException, Exception, DependencyCollectionException
    {
-      GraphsForDependenciesRequest request = new GraphsForDependenciesRequest();
-      request.getDependencies();
-      request.getRepositories();
-      request.getManagedDependencies();
-      request.setConflictResolutionScope(OVERALL_TREE);
-      request.setDependencyResolutionScope(COMPILE_AND_RUNTIME);
-
-      final Map<String, String> parts = getTestDefinition();
+      final Map<String, String> parts = TestDefinitionHarness.parseTestDefinition(getClass().getSimpleName() + "/"
+         + getTestName());
 
       final List<Model> models = parsePoms(parts.get("input"));
       deploy(models);
@@ -320,12 +326,6 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
          assertEquals(parts.get("expected transformationMode=maven"), actual);
       }
 
-   }
-
-   private Map<String, String> getTestDefinition() throws IOException
-   {
-      final String fileName = getClass().getSimpleName() + "/" + getTestName();
-      return splitParts(cpIn(getClass().getClassLoader(), fileName));
    }
 
    private static String toString(CollectResult collectResult) throws UnsupportedEncodingException
@@ -587,59 +587,4 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
       }
    }
 
-   private static final String NL = System.getProperty("line.separator");
-
-   private static Map<String, String> splitParts(IOHandle<InputStream> res) throws IOException
-   {
-      return read(new Read.FromStream<Map<String, String>>()
-      {
-         @Override
-         public Map<String, String> read(InputStream inputStream) throws Exception
-         {
-            Map<String, String> parts = new LinkedHashMap<String, String>();
-
-            final BufferedReader r = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-
-            StringBuilder sb = null;
-
-            String partName = null;
-
-            for (String ln = r.readLine(); ln != null; ln = r.readLine())
-            {
-               if (ln.startsWith("#>>"))
-               {
-                  if (sb != null)
-                  {
-                     parts.put(partName, sb.toString());
-                     partName = null;
-                     sb = null;
-                  }
-                  partName = ln.substring(3).trim();
-                  continue;
-               }
-
-               if (sb == null)
-               {
-                  sb = new StringBuilder();
-                  sb.append(ln);
-               }
-               else
-               {
-                  sb.append(NL);
-                  sb.append(ln);
-               }
-            }
-
-            if (sb != null)
-            {
-               sb.append(NL);
-               parts.put(partName, sb.toString());
-               partName = null;
-               sb = null;
-            }
-
-            return parts;
-         }
-      }, res);
-   }
 }

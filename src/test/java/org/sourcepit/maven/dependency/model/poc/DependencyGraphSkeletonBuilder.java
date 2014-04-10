@@ -10,11 +10,7 @@ import org.eclipse.aether.RepositorySystemSession;
 
 public interface DependencyGraphSkeletonBuilder
 {
-   void buildSkeleton(RepositorySystemSession session, GraphForArtifactRequest request);
+   void buildGraphSkeleton(RepositorySystemSession session, GraphRequest request);
 
-   void buildSkeleton(RepositorySystemSession session, GraphForDependenciesRequest request);
-
-   void buildSkeleton(RepositorySystemSession session, GraphsForArtifactRequest request);
-
-   void buildSkeleton(RepositorySystemSession session, GraphsForDependenciesRequest request);
+   void buildGraphsSkeleton(RepositorySystemSession session, GraphsRequest request);
 }

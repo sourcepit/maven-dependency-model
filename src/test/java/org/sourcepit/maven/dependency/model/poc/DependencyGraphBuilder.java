@@ -11,11 +11,7 @@ import org.eclipse.aether.RepositorySystemSession;
 
 public interface DependencyGraphBuilder
 {
-   void buildGraph(RepositorySystemSession session, GraphForArtifactRequest request);
+   void buildGraph(RepositorySystemSession session, GraphRequest request);
 
-   void buildGraph(RepositorySystemSession session, GraphForDependenciesRequest request);
-
-   void buildGraphs(RepositorySystemSession session, GraphsForArtifactRequest request);
-
-   void buildGraphs(RepositorySystemSession session, GraphsForDependenciesRequest request);
+   void buildGraphs(RepositorySystemSession session, GraphsRequest request);
 }

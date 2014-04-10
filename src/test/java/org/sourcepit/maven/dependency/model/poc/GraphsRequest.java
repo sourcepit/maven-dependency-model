@@ -5,20 +5,18 @@
  */
 
 package org.sourcepit.maven.dependency.model.poc;
-
-import org.eclipse.aether.artifact.Artifact;
-
-public class GraphForArtifactRequest extends AbstractGraphRequest
+public class GraphsRequest extends GraphRequest
 {
-   private Artifact artifact;
+   private ConflictResolutionScope conflictResolutionScope;
 
-   public Artifact getArtifact()
+   public ConflictResolutionScope getConflictResolutionScope()
    {
-      return artifact;
+      return conflictResolutionScope;
    }
 
-   public void setArtifact(Artifact artifact)
+   public void setConflictResolutionScope(ConflictResolutionScope conflictResolutionScope)
    {
-      this.artifact = artifact;
+      this.conflictResolutionScope = conflictResolutionScope;
    }
+
 }
