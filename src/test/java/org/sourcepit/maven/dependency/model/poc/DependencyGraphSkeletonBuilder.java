@@ -7,10 +7,14 @@
 package org.sourcepit.maven.dependency.model.poc;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
 
 public interface DependencyGraphSkeletonBuilder
 {
-   void buildGraphSkeleton(RepositorySystemSession session, GraphRequest request);
+   CollectResult buildGraphSkeleton(RepositorySystemSession session, GraphRequest request)
+      throws DependencyCollectionException;
 
-   void buildGraphsSkeleton(RepositorySystemSession session, GraphsRequest request);
+   CollectResult buildGraphsSkeleton(RepositorySystemSession session, GraphsRequest request)
+      throws DependencyCollectionException;
 }

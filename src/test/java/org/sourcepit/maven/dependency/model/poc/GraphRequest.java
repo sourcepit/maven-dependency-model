@@ -16,7 +16,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 public class GraphRequest
 {
    private Artifact rootArtifact;
-   private List<Dependency> dependencies;
+   private List<Dependency> dependencies = new ArrayList<Dependency>();
    private List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
    private List<Dependency> managedDependencies = new ArrayList<Dependency>();
    private DependencyResolutionScope dependencyResolutionScope;
