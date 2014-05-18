@@ -254,6 +254,12 @@ public class DependencyCollectionTest extends EmbeddedMavenEnvironmentTest
    {
       test();
    }
+   
+   @Test
+   public void testVersionConflict_05() throws Exception
+   {
+      test();
+   }
 
    @Test
    public void testCycle_01() throws Exception
