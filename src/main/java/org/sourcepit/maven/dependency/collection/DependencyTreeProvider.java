@@ -6,18 +6,27 @@
 
 package org.sourcepit.maven.dependency.collection;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Stack;
 
 import javax.inject.Inject;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyManagement;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 
-public class DependencyTreeProvider implements TreeProvider<DependencyNode>
+public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvider.Request>
 {
    @Inject
    private RemoteRepositoryManager remoteRepositoryManager;
@@ -32,17 +41,171 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNode>
    {
    }
 
-   @Override
-   public Collection<DependencyNode> getChildren(DependencyNode parent)
+   public static class Request
    {
-      // if selectDependency
+      private Dependency dependency;
+
+      private DependencySelector dependencySelector;
+
+      private DependencyManagement dependencyManagement;
+
+      private boolean savePremanagedState;
+
+      public void setDependency(Dependency dependency)
+      {
+         this.dependency = dependency;
+      }
+
+      public Dependency getDependency()
+      {
+         return dependency;
+      }
+
+      public void setDependencySelector(DependencySelector dependencySelector)
+      {
+         this.dependencySelector = dependencySelector;
+      }
+
+      public DependencySelector getDependencySelector()
+      {
+         return dependencySelector;
+      }
+
+      public void setDependencyManagement(DependencyManagement dependencyManagement)
+      {
+         this.dependencyManagement = dependencyManagement;
+      }
+
+      public DependencyManagement getDependencyManagement()
+      {
+         return dependencyManagement;
+      }
+
+      public void setSavePremanagedState(boolean savePremanagedState)
+      {
+         this.savePremanagedState = savePremanagedState;
+      }
+
+      public boolean isSavePremanagedState()
+      {
+         return savePremanagedState;
+      }
+   }
+
+   @Override
+   public Collection<Request> getChildren(Request request)
+   {
+      final DependencyNodeImpl node = new DependencyNodeImpl();
+      node.setDependency(request.getDependency());
+
       // apply dependency management
+      final DependencyManagement dependencyManagement = request.getDependencyManagement();
+      applyDependencyManagement(node, dependencyManagement, request.isSavePremanagedState(), false);
+
       // resolve version range
+
+
       // read artifact descriptor
       // handle cycle
       // handle relocation
       // traverse children (if traverse dependencies)
+
+      final List<Dependency> children = null;
+
+      final List<Request> childRequests = new ArrayList<Request>(children.size());
+      for (Dependency child : children)
+      {
+         // if selectDependency
+         // TODO do we have to derive child selector first?
+         if (!request.getDependencySelector().selectDependency(child))
+         {
+            continue;
+         }
+         childRequests.add(newChildRequest(request, child));
+      }
+
+      return childRequests;
+   }
+
+   private Request newChildRequest(Request parentRequest, Dependency child)
+   {
+      // TODO Auto-generated method stub
+
       return null;
    }
 
+   private static void applyDependencyManagement(DependencyNodeImpl node, DependencyManagement dependencyManagement,
+      boolean savePremanagedState, boolean disableVersionManagement)
+   {
+      Dependency dependency = node.getDependency();
+      int managedBits = node.getManagedBits();
+
+      final String managedVersion = dependencyManagement.getVersion();
+      if (managedVersion != null && !disableVersionManagement)
+      {
+         final Artifact artifact = dependency.getArtifact();
+         if (savePremanagedState)
+         {
+            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, artifact.getVersion());
+         }
+         dependency = dependency.setArtifact(artifact.setVersion(managedVersion));
+         managedBits |= DependencyNode.MANAGED_VERSION;
+      }
+
+      if (dependencyManagement.getProperties() != null)
+      {
+         Artifact artifact = dependency.getArtifact();
+         dependency = dependency.setArtifact(artifact.setProperties(dependencyManagement.getProperties()));
+         managedBits |= DependencyNode.MANAGED_PROPERTIES;
+      }
+
+      if (dependencyManagement.getScope() != null)
+      {
+         if (savePremanagedState)
+         {
+            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, dependency.getScope());
+         }
+         dependency = dependency.setScope(dependencyManagement.getScope());
+         managedBits |= DependencyNode.MANAGED_SCOPE;
+      }
+
+      if (dependencyManagement.getOptional() != null)
+      {
+         if (savePremanagedState)
+         {
+            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, dependency.isOptional());
+         }
+         dependency = dependency.setOptional(dependencyManagement.getOptional());
+         managedBits |= DependencyNode.MANAGED_OPTIONAL;
+      }
+
+      if (dependencyManagement.getExclusions() != null)
+      {
+         dependency = dependency.setExclusions(dependencyManagement.getExclusions());
+         managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
+      }
+
+      node.setDependency(dependency);
+      node.setManagedBits(managedBits);
+   }
+
+   public static class DefaultBuilder
+   {
+      private final Stack<DependencyNode> nodes = new Stack<DependencyNode>();
+
+      public void startDependency(Dependency dependency)
+      {
+         nodes.push(new DefaultDependencyNode(dependency));
+      }
+
+      public void setManagedVersion(String managedVersion)
+      {
+
+      }
+
+      public void endDependency(Dependency dependency)
+      {
+
+      }
+   }
 }
