@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.core.MavenCoreUtils;
 import org.sourcepit.common.maven.model.ArtifactKey;
-import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
 public class DependencyModelBuildingGraphTransformerTest extends AbstractDependencyModelBuildingTest
@@ -82,7 +82,7 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
          sb.append("+- ");
 
          final Artifact artifact = node.getDependency().getArtifact();
-         final ArtifactKey effectiveKey = MavenModelUtils.toArtifactKey(artifact);
+         final ArtifactKey effectiveKey = MavenCoreUtils.toArtifactKey(artifact);
          if (shadowedNode == null)
          {
             sb.append(effectiveKey);
@@ -91,7 +91,7 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
          }
          else
          {
-            final ArtifactKey originKey = MavenModelUtils.toArtifactKey(shadowedNode.getDependency().getArtifact());
+            final ArtifactKey originKey = MavenCoreUtils.toArtifactKey(shadowedNode.getDependency().getArtifact());
             sb.append(originKey);
             if (!effectiveKey.equals(originKey))
             {

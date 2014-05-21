@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
+import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +28,6 @@ import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransform
 import org.sourcepit.common.maven.aether.ArtifactFactory;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.VersionConflictKey;
-import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
 import com.google.common.collect.LinkedHashMultimap;
@@ -123,7 +122,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             Artifact attachedArtifact = artifactFactory.createArtifact(artifact, attachment.getClassifier(),
                attachment.getType());
 
-            final ArtifactKey attachmentKey = MavenModelUtils.toArtifactKey(attachedArtifact);
+            final ArtifactKey attachmentKey = toArtifactKey(attachedArtifact);
             if (keyToNodes.containsKey(attachmentKey))
             {
                attachedArtifact = keyToNodes.get(attachmentKey).iterator().next().getDependency().getArtifact();
@@ -172,7 +171,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
                if (scopeTest || !"test".equals(scope))
                {
                   final Artifact artifact = effectiveNode.getDependency().getArtifact();
-                  final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+                  final ArtifactKey artifactKey = toArtifactKey(artifact);
                   allNodes.put(artifactKey, effectiveNode);
                   addReferenced(allNodes, referencedArtifacts, parent, effectiveNode, artifactKey);
                }
@@ -188,7 +187,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             if (dependency != null)
             {
                final Artifact artifact = dependency.getArtifact();
-               final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+               final ArtifactKey artifactKey = toArtifactKey(artifact);
                allNodes.put(artifactKey, node);
 
                if (!replaced && (scopeTest || !"test".equals(scope)))
@@ -285,7 +284,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             Dependency dependency = node.getDependency();
             if (dependency != null)
             {
-               return referencedArtifacts.contains(MavenModelUtils.toArtifactKey(dependency.getArtifact()));
+               return referencedArtifacts.contains(toArtifactKey(dependency.getArtifact()));
             }
             return true;
          }
@@ -326,7 +325,7 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
    private void traverceTree(DependencyNode rootNode, Artifact rootArtifact, boolean computeTreePerArtifact,
       DependencyGraphTransformationContext context) throws RepositoryException
    {
-      final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(rootArtifact);
+      final ArtifactKey artifactKey = toArtifactKey(rootArtifact);
       if (visited.add(artifactKey))
       {
          // if same node exists with different scope then test use it, otherwise we'll lose dependencies through
@@ -355,7 +354,8 @@ public class DependencyModelBuildingGraphTransformer implements DependencyGraphT
             new ApplyScopeAndOptional().transformGraph(rootNode, context);
          }
 
-         new DependencyModelBuildingNodeTraverser(handler, new NearestDependencyNodeChooser(false), scopeTest).traverse(rootNode);
+         new DependencyModelBuildingNodeTraverser(handler, new NearestDependencyNodeChooser(false), scopeTest)
+            .traverse(rootNode);
       }
    }
 

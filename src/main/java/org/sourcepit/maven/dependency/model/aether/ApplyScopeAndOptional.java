@@ -13,8 +13,8 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.sourcepit.common.maven.core.MavenCoreUtils;
 import org.sourcepit.common.maven.model.ArtifactKey;
-import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
 public class ApplyScopeAndOptional implements DependencyGraphTransformer
 {
@@ -30,7 +30,7 @@ public class ApplyScopeAndOptional implements DependencyGraphTransformer
          protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
          {
             Dependency dependency = node.getDependency();
-            ArtifactKey artifactKey = dependency == null ? null : MavenModelUtils.toArtifactKey(dependency
+            ArtifactKey artifactKey = dependency == null ? null : MavenCoreUtils.toArtifactKey(dependency
                .getArtifact());
 
             if (path.contains(artifactKey))

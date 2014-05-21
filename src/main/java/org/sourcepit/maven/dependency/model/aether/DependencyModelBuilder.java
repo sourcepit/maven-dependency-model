@@ -7,7 +7,9 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
+import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
+import static org.sourcepit.common.maven.core.MavenCoreUtils.toMavenArtifact;
+import static org.sourcepit.common.maven.core.MavenCoreUtils.toMavenDependecy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +29,6 @@ import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.maven.model.MavenDependency;
 import org.sourcepit.common.maven.model.Scope;
-import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 import org.sourcepit.maven.dependency.model.ArtifactAttachmentFactory;
 import org.sourcepit.maven.dependency.model.DependencyModel;
@@ -98,7 +99,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    private boolean addArtifactUnique(Artifact artifact)
    {
-      final MavenArtifact mavenArtifact = MavenModelUtils.toMavenArtifact(artifact);
+      final MavenArtifact mavenArtifact = toMavenArtifact(artifact);
       final ArtifactKey key = mavenArtifact.getArtifactKey();
       if (!keyToArtifact.containsKey(key))
       {
@@ -124,7 +125,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
       final org.sourcepit.maven.dependency.model.DependencyNode node = createDependencyNode(effectiveNode,
          inheritedScope, optional, selected, shadowedNode);
 
-      final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(effectiveNode.getDependency().getArtifact());
+      final ArtifactKey artifactKey = toArtifactKey(effectiveNode.getDependency().getArtifact());
 
       final MavenArtifact mavenArtifact = keyToArtifact.get(artifactKey);
       checkState(mavenArtifact != null || unreferencedArtifacts.contains(artifactKey), "Artifact %s unknown.",
@@ -233,7 +234,7 @@ public class DependencyModelBuilder implements DependencyModelHandler
 
    public static MavenDependency toDeclaredDependency(DependencyNode node)
    {
-      final MavenDependency declaredDep = MavenModelUtils.toMavenDependecy(node.getDependency());
+      final MavenDependency declaredDep = toMavenDependecy(node.getDependency());
 
       final String declaredVersionConstraint = getDeclaredVersionConstraint(node);
       if (!declaredVersionConstraint.equals(declaredDep.getVersionConstraint()))

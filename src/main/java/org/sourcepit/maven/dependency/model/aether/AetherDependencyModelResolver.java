@@ -7,7 +7,7 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import static org.apache.maven.RepositoryUtils.toRepo;
-import static org.sourcepit.common.maven.model.util.MavenModelUtils.toArtifactKey;
+import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
 import static org.sourcepit.common.utils.lang.Exceptions.pipe;
 
 import java.io.ByteArrayInputStream;
@@ -25,7 +25,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import org.sourcepit.common.constraints.NotNull;
 
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.artifact.Artifact;
@@ -58,10 +57,10 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.emf.common.util.EList;
+import org.sourcepit.common.constraints.NotNull;
 import org.sourcepit.common.maven.aether.ArtifactFactory;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
-import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.utils.lang.Exceptions;
 import org.sourcepit.maven.dependency.model.ArtifactAttachmentFactory;
 import org.sourcepit.maven.dependency.model.DependencyModel;
@@ -320,14 +319,14 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
 
       for (org.eclipse.aether.artifact.Artifact artifact : resolvedAttachments)
       {
-         final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+         final ArtifactKey artifactKey = toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
 
       for (org.eclipse.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies())
       {
          org.eclipse.aether.artifact.Artifact artifact = dependency.getArtifact();
-         final ArtifactKey artifactKey = MavenModelUtils.toArtifactKey(artifact);
+         final ArtifactKey artifactKey = toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
    }
