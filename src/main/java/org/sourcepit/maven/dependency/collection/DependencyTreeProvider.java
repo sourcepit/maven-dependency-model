@@ -15,9 +15,10 @@ import javax.inject.Inject;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyManagement;
+import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -37,19 +38,28 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
    @Inject
    private VersionRangeResolver versionRangeResolver;
 
-   public DependencyTreeProvider(RepositorySystemSession session, CollectRequest request)
+   private final RepositorySystemSession session;
+
+   public DependencyTreeProvider(RepositorySystemSession session)
    {
+      this.session = session;
    }
 
    public static class Request
    {
+      private Context context;
+
       private Dependency dependency;
 
-      private DependencySelector dependencySelector;
+      public void setContext(Context context)
+      {
+         this.context = context;
+      }
 
-      private DependencyManagement dependencyManagement;
-
-      private boolean savePremanagedState;
+      public Context getContext()
+      {
+         return context;
+      }
 
       public void setDependency(Dependency dependency)
       {
@@ -60,6 +70,17 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       {
          return dependency;
       }
+   }
+
+   public static class Context
+   {
+      private DependencySelector dependencySelector;
+
+      private DependencyManager dependencyManagemer;
+
+      private DependencyTraverser dependencyTraverser;
+
+      private boolean savePremanagedState;
 
       public void setDependencySelector(DependencySelector dependencySelector)
       {
@@ -71,14 +92,24 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
          return dependencySelector;
       }
 
-      public void setDependencyManagement(DependencyManagement dependencyManagement)
+      public void setDependencyManagemer(DependencyManager dependencyManagemer)
       {
-         this.dependencyManagement = dependencyManagement;
+         this.dependencyManagemer = dependencyManagemer;
       }
 
-      public DependencyManagement getDependencyManagement()
+      public DependencyManager getDependencyManagemer()
       {
-         return dependencyManagement;
+         return dependencyManagemer;
+      }
+
+      public void setDependencyTraverser(DependencyTraverser dependencyTraverser)
+      {
+         this.dependencyTraverser = dependencyTraverser;
+      }
+
+      public DependencyTraverser getDependencyTraverser()
+      {
+         return dependencyTraverser;
       }
 
       public void setSavePremanagedState(boolean savePremanagedState)
@@ -95,43 +126,65 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
    @Override
    public Collection<Request> getChildren(Request request)
    {
+      final Context context = request.getContext();
+
       final DependencyNodeImpl node = new DependencyNodeImpl();
       node.setDependency(request.getDependency());
 
       // apply dependency management
-      final DependencyManagement dependencyManagement = request.getDependencyManagement();
-      applyDependencyManagement(node, dependencyManagement, request.isSavePremanagedState(), false);
+      final DependencyManagement dependencyManagement = context.getDependencyManagemer().manageDependency(
+         node.getDependency());
+      applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(), false);
 
       // resolve version range
-
 
       // read artifact descriptor
       // handle cycle
       // handle relocation
       // traverse children (if traverse dependencies)
 
+      // TODO determine children
       final List<Dependency> children = null;
+
+      // TODO determine managedDependencies (from descriptor result)
+      final Context childContext = deriveChildContext(context, node.getDependency(), (List<Dependency>) null);
+
+      // TODO do we have to derive child selector first?
+      final DependencySelector dependencySelector = context.getDependencySelector();
 
       final List<Request> childRequests = new ArrayList<Request>(children.size());
       for (Dependency child : children)
       {
          // if selectDependency
-         // TODO do we have to derive child selector first?
-         if (!request.getDependencySelector().selectDependency(child))
+         if (!dependencySelector.selectDependency(child))
          {
             continue;
          }
-         childRequests.add(newChildRequest(request, child));
+
+         final Request childRequest = new Request();
+         childRequest.setContext(childContext);
+         childRequest.setDependency(child);
+         childRequests.add(childRequest);
       }
 
       return childRequests;
    }
 
-   private Request newChildRequest(Request parentRequest, Dependency child)
+   private Context deriveChildContext(Context parentContext, Dependency dependency, List<Dependency> managedDependencies)
    {
-      // TODO Auto-generated method stub
+      final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
+         dependency, managedDependencies);
 
-      return null;
+      final Context childContext = new Context();
+
+      childContext.setSavePremanagedState(parentContext.isSavePremanagedState());
+
+      childContext.setDependencySelector(parentContext.getDependencySelector().deriveChildSelector(collectionContext));
+      childContext.setDependencyManagemer(parentContext.getDependencyManagemer().deriveChildManager(collectionContext));
+      childContext.setDependencyTraverser(parentContext.getDependencyTraverser()
+         .deriveChildTraverser(collectionContext));
+
+      return childContext;
    }
 
    private static void applyDependencyManagement(DependencyNodeImpl node, DependencyManagement dependencyManagement,
