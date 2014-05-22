@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -19,7 +18,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencySelector;
-import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
@@ -119,8 +117,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    private DependencyNodeImpl collect(DependencyNodeContext context, Dependency dependency, List<Artifact> relocations,
       boolean disableVersionManagement)
    {
-      if (relocations != null && !relocations.isEmpty()
-         && !context.getDependencySelector().selectDependency(dependency))
+      final boolean hasRelocations = relocations != null && !relocations.isEmpty();
+      if (hasRelocations && !context.getDependencySelector().selectDependency(dependency))
       {
          return null;
       }
@@ -418,25 +416,5 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
       node.setDependency(dependency);
       node.setManagedBits(managedBits);
-   }
-
-   public static class DefaultBuilder
-   {
-      private final Stack<DependencyNode> nodes = new Stack<DependencyNode>();
-
-      public void startDependency(Dependency dependency)
-      {
-         nodes.push(new DefaultDependencyNode(dependency));
-      }
-
-      public void setManagedVersion(String managedVersion)
-      {
-
-      }
-
-      public void endDependency(Dependency dependency)
-      {
-
-      }
    }
 }
