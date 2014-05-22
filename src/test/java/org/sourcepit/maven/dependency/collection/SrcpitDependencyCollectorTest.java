@@ -6,7 +6,16 @@
 
 package org.sourcepit.maven.dependency.collection;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -16,14 +25,20 @@ import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Relocation;
 import org.apache.maven.plugin.LegacySupport;
+import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +112,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void test() throws DependencyCollectionException
+   public void testDependencies_Single() throws DependencyCollectionException
    {
       final Model pom = new Model();
       pom.setModelVersion("4.0.0");
@@ -107,24 +122,187 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       repositoryFacade.deploy(pom);
 
-      final RepositorySystemSession session = buildContext.getRepositorySession();
-
+      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
          Dependency dependency = toDependency(pom);
          request.addDependency(dependency);
 
-         CollectResult result = srcpitDependencyCollector.collectDependencies(session, request);
-         System.out.println(TestHarness.toString(result));
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
       }
 
+      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
          Dependency dependency = toDependency(pom);
          request.addDependency(dependency);
 
-         CollectResult result = defaultDependencyCollector.collectDependencies(session, request);
-         System.out.println(TestHarness.toString(result));
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+   }
+   
+   @Test
+   public void testDependencies_Transitive() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+      addDependency(a, b);
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b);
+
+      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+   }
+
+   @Test
+   public void testDependency_Single() throws DependencyCollectionException
+   {
+      final Model pom = newPom("a");
+      
+      repositoryFacade.deploy(pom);
+
+      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(pom);
+         request.setRoot(dependency);
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(pom);
+         request.setRoot(dependency);
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+   }
+   
+   @Test
+   public void testDependency_WithExtraDependency() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      repositoryFacade.deploy(a);
+      
+      final Model b = newPom("b");
+      repositoryFacade.deploy(b);
+
+      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addDependency(toDependency(b));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addDependency(toDependency(b));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+   }
+
+   private static final class HookedSession extends AbstractForwardingRepositorySystemSession
+   {
+      private final List<Dependency> selectDependencyCalls = new ArrayList<Dependency>();
+
+      private final RepositorySystemSession session;
+
+      public HookedSession(RepositorySystemSession session)
+      {
+         this.session = session;
+      }
+
+      public List<Dependency> getSelectDependencyCalls()
+      {
+         return selectDependencyCalls;
+      }
+
+      @Override
+      protected RepositorySystemSession getSession()
+      {
+         return session;
+      }
+
+      @Override
+      public DependencySelector getDependencySelector()
+      {
+         return new DependencySelectorRecorder(getSession().getDependencySelector(), selectDependencyCalls);
+      }
+   }
+
+   private static class DependencySelectorRecorder implements DependencySelector
+   {
+      private final DependencySelector dependencySelector;
+      private final List<Dependency> selectDependencyCalls;
+
+      public DependencySelectorRecorder(DependencySelector dependencySelector, List<Dependency> selectDependencyCalls)
+      {
+         this.dependencySelector = dependencySelector;
+         this.selectDependencyCalls = selectDependencyCalls;
+      }
+
+      @Override
+      public boolean selectDependency(Dependency dependency)
+      {
+         selectDependencyCalls.add(dependency);
+         return dependencySelector.selectDependency(dependency);
+      }
+
+      @Override
+      public DependencySelector deriveChildSelector(DependencyCollectionContext context)
+      {
+         return new DependencySelectorRecorder(dependencySelector.deriveChildSelector(context), selectDependencyCalls);
       }
    }
 
@@ -140,18 +318,167 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       addDependency(a, c);
       addDependency(a, b);
-      
+
       repositoryFacade.deploy(a);
       repositoryFacade.deploy(b);
       repositoryFacade.deploy(c);
-      
-      CollectRequest request = newCollectRequest();
-      Dependency dependency = toDependency(a);
-      request.addDependency(dependency);
-      
-      final RepositorySystemSession session = buildContext.getRepositorySession();
-      CollectResult result = defaultDependencyCollector.collectDependencies(session, request);
-      System.out.println(TestHarness.toString(result));
+      repositoryFacade.deploy(newPom("c", "2"));
+
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+
+         final RepositorySystemSession session = buildContext.getRepositorySession();
+         CollectResult result = defaultDependencyCollector.collectDependencies(session, request);
+         System.out.println(TestHarness.toString(result));
+      }
+
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+
+         final RepositorySystemSession session = buildContext.getRepositorySession();
+         CollectResult result = srcpitDependencyCollector.collectDependencies(session, request);
+         System.out.println(TestHarness.toString(result));
+      }
+   }
+
+
+   private static void assertEquals(DependencyNode expected, DependencyNode actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+
+      Assert.assertEquals(expected.getRequestContext(), actual.getRequestContext());
+      assertArtifactsEquals(expected.getAliases(), actual.getAliases());
+      assertEquals(expected.getArtifact(), actual.getArtifact());
+      assertEquals(expected.getDependency(), expected.getDependency());
+      Assert.assertEquals(expected.getManagedBits(), actual.getManagedBits());
+      assertArtifactsEquals(expected.getRelocations(), actual.getRelocations());
+      assertRemoteRepositoriesEquals(expected.getRepositories(), actual.getRepositories());
+      Assert.assertEquals(expected.getVersion(), actual.getVersion());
+      Assert.assertEquals(expected.getVersionConstraint(), actual.getVersionConstraint());
+
+      assertDependencyNodesEquals(expected.getChildren(), actual.getChildren());
+   }
+
+   private static void assertDependencyNodesEquals(List<DependencyNode> expected, List<DependencyNode> actual)
+   {
+      Assert.assertEquals(expected.size(), actual.size());
+      final Iterator<DependencyNode> expectedIt = expected.iterator();
+      final Iterator<DependencyNode> actualIt = actual.iterator();
+      while (expectedIt.hasNext())
+      {
+         assertEquals(expectedIt.next(), actualIt.next());
+      }
+   }
+
+   private static void assertDependenciesEquals(List<Dependency> expected, List<Dependency> actual)
+   {
+      Assert.assertEquals(expected.size(), actual.size());
+      final Iterator<Dependency> expectedIt = expected.iterator();
+      final Iterator<Dependency> actualIt = actual.iterator();
+      while (expectedIt.hasNext())
+      {
+         assertEquals(expectedIt.next(), actualIt.next());
+      }
+   }
+
+   private static void assertEquals(Dependency expected, Dependency actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+
+      assertEquals(expected.getArtifact(), actual.getArtifact());
+      Assert.assertEquals(expected.getScope(), actual.getScope());
+      Assert.assertEquals(expected.getExclusions(), actual.getExclusions());
+      Assert.assertEquals(expected.getOptional(), actual.getOptional());
+   }
+
+   private static void assertRemoteRepositoriesEquals(List<RemoteRepository> expected, List<RemoteRepository> actual)
+   {
+      Assert.assertEquals(expected.size(), actual.size());
+      final Iterator<RemoteRepository> expectedIt = expected.iterator();
+      final Iterator<RemoteRepository> actualIt = actual.iterator();
+      while (expectedIt.hasNext())
+      {
+         assertEquals(expectedIt.next(), actualIt.next());
+      }
+   }
+
+   private static void assertEquals(RemoteRepository expected, RemoteRepository actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+      Assert.assertEquals(expected.getContentType(), actual.getContentType());
+      Assert.assertEquals(expected.getHost(), actual.getHost());
+      Assert.assertEquals(expected.getId(), actual.getId());
+      Assert.assertEquals(expected.getProtocol(), actual.getProtocol());
+      Assert.assertEquals(expected.getUrl(), actual.getUrl());
+      Assert.assertEquals(expected.getAuthentication(), actual.getAuthentication());
+      assertRemoteRepositoriesEquals(expected.getMirroredRepositories(), actual.getMirroredRepositories());
+      Assert.assertEquals(expected.getProxy(), actual.getProxy());
+   }
+
+   private static void assertArtifactsEquals(Collection<Artifact> expected, Collection<Artifact> actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+
+      if (expected instanceof Set)
+      {
+         assertArtifactsEquals(expected, actual);
+      }
+      else if (expected instanceof List)
+      {
+         assertTrue(actual instanceof List);
+         Assert.assertEquals(expected.size(), actual.size());
+         final Iterator<Artifact> expectedIt = expected.iterator();
+         final Iterator<Artifact> actualIt = actual.iterator();
+         while (expectedIt.hasNext())
+         {
+            assertEquals(expectedIt.next(), actualIt.next());
+         }
+      }
+      else
+      {
+         throw new IllegalArgumentException();
+      }
+   }
+
+   private static void assertEquals(Artifact expected, Artifact actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+      Assert.assertEquals(expected.getGroupId(), actual.getGroupId());
+      Assert.assertEquals(expected.getArtifactId(), actual.getArtifactId());
+      Assert.assertEquals(expected.getVersion(), actual.getVersion());
+      Assert.assertEquals(expected.getExtension(), actual.getExtension());
+      Assert.assertEquals(expected.getClassifier(), actual.getClassifier());
+      Assert.assertEquals(expected.getFile(), actual.getFile());
+      Assert.assertEquals(expected.getProperties(), actual.getProperties());
    }
 
    private static org.apache.maven.model.Dependency addDependency(Model from, Model to)
@@ -162,7 +489,6 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       dep.setVersion(to.getVersion());
       dep.setType(to.getPackaging());
       from.addDependency(dep);
-
       return dep;
    }
 
@@ -212,11 +538,16 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
    private Model newPom(String id)
    {
+      return newPom(id, "1");
+   }
+
+   private Model newPom(String id, String version)
+   {
       final Model pom = new Model();
       pom.setModelVersion("4.0.0");
       pom.setGroupId(id);
       pom.setArtifactId(id);
-      pom.setVersion("1");
+      pom.setVersion(version);
       return pom;
    }
 

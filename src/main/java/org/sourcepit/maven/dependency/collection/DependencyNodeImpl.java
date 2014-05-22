@@ -22,25 +22,25 @@ import org.eclipse.aether.version.VersionConstraint;
 
 public class DependencyNodeImpl implements DependencyNode
 {
-   String requestContext;
+   private String requestContext;
 
-   Dependency dependency;
+   private Dependency dependency;
 
-   List<Artifact> relocations;
+   private List<Artifact> relocations;
 
-   Collection<Artifact> aliases;
+   private Collection<Artifact> aliases;
 
-   VersionConstraint versionConstraint;
+   private VersionConstraint versionConstraint;
 
-   Version version;
+   private Version version;
 
-   int managedBits;
+   private int managedBits;
 
-   List<RemoteRepository> repositories;
+   private List<RemoteRepository> repositories;
 
-   Map<Object, Object> data;
+   private Map<Object, Object> data;
 
-   List<DependencyNode> children;
+   private List<DependencyNode> children;
 
    @Override
    public void setRequestContext(String requestContext)
@@ -50,6 +50,10 @@ public class DependencyNodeImpl implements DependencyNode
 
    public String getRequestContext()
    {
+      if (requestContext == null)
+      {
+         requestContext = "";
+      }
       return requestContext;
    }
 
@@ -63,6 +67,11 @@ public class DependencyNodeImpl implements DependencyNode
       return dependency;
    }
 
+   public void setRelocations(List<Artifact> relocations)
+   {
+      this.relocations = relocations;
+   }
+
    public List<Artifact> getRelocations()
    {
       if (relocations == null)
@@ -70,6 +79,11 @@ public class DependencyNodeImpl implements DependencyNode
          relocations = new ArrayList<Artifact>(0);
       }
       return relocations;
+   }
+
+   public void setAliases(Collection<Artifact> aliases)
+   {
+      this.aliases = aliases;
    }
 
    public Collection<Artifact> getAliases()
@@ -81,9 +95,19 @@ public class DependencyNodeImpl implements DependencyNode
       return aliases;
    }
 
+   public void setVersionConstraint(VersionConstraint versionConstraint)
+   {
+      this.versionConstraint = versionConstraint;
+   }
+
    public VersionConstraint getVersionConstraint()
    {
       return versionConstraint;
+   }
+
+   public void setVersion(Version version)
+   {
+      this.version = version;
    }
 
    public Version getVersion()
@@ -139,20 +163,17 @@ public class DependencyNodeImpl implements DependencyNode
 
    public List<DependencyNode> getChildren()
    {
+      if (children == null)
+      {
+         children = new ArrayList<DependencyNode>(0);
+      }
       return children;
    }
 
    @Override
    public void setChildren(List<DependencyNode> children)
    {
-      if (children == null)
-      {
-         this.children = new ArrayList<DependencyNode>(0);
-      }
-      else
-      {
-         this.children = children;
-      }
+      this.children = children;
    }
 
    @Override

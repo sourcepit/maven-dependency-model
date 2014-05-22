@@ -9,14 +9,14 @@ package org.sourcepit.maven.dependency.collection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-
-import javax.inject.Inject;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -27,42 +27,51 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.version.Version;
 
-public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvider.Request>
+public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvider.DependencyNodeRequest>
 {
-   @Inject
-   private RemoteRepositoryManager remoteRepositoryManager;
+   protected final RemoteRepositoryManager remoteRepositoryManager;
 
-   @Inject
-   private ArtifactDescriptorReader descriptorReader;
+   private final ArtifactDescriptorReader descriptorReader;
 
-   @Inject
-   private VersionRangeResolver versionRangeResolver;
+   private final VersionRangeResolver versionRangeResolver;
 
    private final RepositorySystemSession session;
 
-   public DependencyTreeProvider(RepositorySystemSession session)
+   public DependencyTreeProvider(RemoteRepositoryManager remoteRepositoryManager,
+      ArtifactDescriptorReader descriptorReader, VersionRangeResolver versionRangeResolver,
+      RepositorySystemSession session)
    {
+      this.remoteRepositoryManager = remoteRepositoryManager;
+      this.descriptorReader = descriptorReader;
+      this.versionRangeResolver = versionRangeResolver;
       this.session = session;
    }
 
-   public static class Request
+   public static class DependencyNodeRequest
    {
-      private Context context;
+      private DependencyNodeContext context;
 
       private Dependency dependency;
 
-      public void setContext(Context context)
+      private DependencyNode dependencyNode;
+
+      public void setContext(DependencyNodeContext context)
       {
          this.context = context;
       }
 
-      public Context getContext()
+      public DependencyNodeContext getContext()
       {
          return context;
       }
@@ -76,15 +85,27 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       {
          return dependency;
       }
+
+      public void setDependencyNode(DependencyNode dependencyNode)
+      {
+         this.dependencyNode = dependencyNode;
+      }
+
+      public DependencyNode getDependencyNode()
+      {
+         return dependencyNode;
+      }
    }
 
-   public static class Context
+   public static class DependencyNodeContext
    {
       private DependencySelector dependencySelector;
 
-      private DependencyManager dependencyManagemer;
+      private DependencyManager dependencyManager;
 
       private DependencyTraverser dependencyTraverser;
+
+      private DependenciesFilter dependenciesFilter;
 
       private boolean savePremanagedState;
 
@@ -93,6 +114,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       private RequestTrace requestTrace;
 
       private List<RemoteRepository> repositories;
+
+      private LinkedList<DependencyNode> parentNodes;
 
       public void setDependencySelector(DependencySelector dependencySelector)
       {
@@ -104,14 +127,14 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
          return dependencySelector;
       }
 
-      public void setDependencyManagemer(DependencyManager dependencyManagemer)
+      public void setDependencyManager(DependencyManager dependencyManager)
       {
-         this.dependencyManagemer = dependencyManagemer;
+         this.dependencyManager = dependencyManager;
       }
 
-      public DependencyManager getDependencyManagemer()
+      public DependencyManager getDependencyManager()
       {
-         return dependencyManagemer;
+         return dependencyManager;
       }
 
       public void setDependencyTraverser(DependencyTraverser dependencyTraverser)
@@ -122,6 +145,16 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       public DependencyTraverser getDependencyTraverser()
       {
          return dependencyTraverser;
+      }
+
+      public void setDependenciesFilter(DependenciesFilter dependenciesFilter)
+      {
+         this.dependenciesFilter = dependenciesFilter;
+      }
+
+      public DependenciesFilter getDependenciesFilter()
+      {
+         return dependenciesFilter;
       }
 
       public void setSavePremanagedState(boolean savePremanagedState)
@@ -167,48 +200,112 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       {
          this.repositories = repositories;
       }
+
+      public void setParentNodes(LinkedList<DependencyNode> parentNodes)
+      {
+         this.parentNodes = parentNodes;
+      }
+
+      public LinkedList<DependencyNode> getParentNodes()
+      {
+         if (parentNodes == null)
+         {
+            parentNodes = new LinkedList<DependencyNode>();
+         }
+         return parentNodes;
+      }
+
+      public DependencyNodeContext deriveChildContext(RemoteRepositoryManager remoteRepositoryManager,
+         RepositorySystemSession session, DependencyNodeImpl parentNode, List<Dependency> managedDependencies,
+         List<RemoteRepository> repositories)
+      {
+         final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
+            parentNode.getDependency(), managedDependencies);
+
+         final DependencyNodeContext childContext = new DependencyNodeContext();
+         childContext.getParentNodes().add(parentNode);
+
+         childContext.setSavePremanagedState(this.isSavePremanagedState());
+
+         childContext.setDependencySelector(this.getDependencySelector().deriveChildSelector(collectionContext));
+         childContext.setDependencyManager(this.getDependencyManager().deriveChildManager(collectionContext));
+         childContext.setDependencyTraverser(this.getDependencyTraverser().deriveChildTraverser(collectionContext));
+
+         childContext.setDependenciesFilter(this.getDependenciesFilter().deriveChildFilter(collectionContext));
+
+         childContext.setRequestContext(this.getRequestContext());
+         childContext.setRequestTrace(this.getRequestTrace());
+
+
+         final List<RemoteRepository> childRepos;
+         if (session.isIgnoreArtifactDescriptorRepositories())
+         {
+            childRepos = this.getRepositories();
+         }
+         else
+         {
+            childRepos = remoteRepositoryManager.aggregateRepositories(session, this.getRepositories(), repositories,
+               true);
+         }
+
+         childContext.setRepositories(childRepos);
+
+         return childContext;
+      }
+
    }
 
    @Override
-   public Collection<Request> getChildren(Request request)
+   public Collection<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final Context context = request.getContext();
+      final DependencyNodeContext context = request.getContext();
+      final Dependency dependency = request.getDependency();
 
-      final DependencyNodeImpl node = new DependencyNodeImpl();
-      node.setDependency(request.getDependency());
+      boolean disableVersionManagement = false;
 
-      // apply dependency management
-      final DependencyManagement dependencyManagement = context.getDependencyManagemer().manageDependency(
-         node.getDependency());
-      applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(), false);
-
-      // resolve version range
-      final VersionRangeResult rangeResult;
-      try
+      final DependencyNodeImpl node = collect(context, dependency, null, disableVersionManagement);
+      if (node == null) // TODO: test relocation not selected
       {
-         rangeResult = resolveVersionRange(context, node);
-      }
-      catch (VersionRangeResolutionException e)
-      {
-         addException(node.getDependency(), e);
          return Collections.emptyList();
       }
 
-      // read artifact descriptor
-      // handle cycle
-      // handle relocation
+      request.setDependencyNode(node);
+
+      final LinkedList<DependencyNode> parentNodes = context.getParentNodes();
+      if (!parentNodes.isEmpty())
+      {
+         final DependencyNode parentNode = parentNodes.getLast();
+         parentNode.getChildren().add(node);
+      }
+
+      if (!"ok".equals(node.getData().get("collectionStatus")))
+      {
+         return Collections.emptyList();
+      }
+
+      final ArtifactDescriptorResult descriptorResult = (ArtifactDescriptorResult) node.getData().get(
+         "descriptorResult");
+
+      if (Boolean.FALSE.equals(node.getData().get("traverse")))
+      {
+         return Collections.emptyList();
+      }
+
       // traverse children (if traverse dependencies)
+      final List<Dependency> children = context.getDependenciesFilter().filterDependencies(node.getArtifact(),
+         descriptorResult.getDependencies());
 
-      // TODO determine children
-      final List<Dependency> children = null;
+      if (children.isEmpty())
+      {
+         return Collections.emptyList();
+      }
 
-      // TODO determine managedDependencies (from descriptor result)
-      final Context childContext = deriveChildContext(context, node.getDependency(), (List<Dependency>) null);
+      final DependencyNodeContext childContext = context.deriveChildContext(remoteRepositoryManager, session, node,
+         descriptorResult.getManagedDependencies(), descriptorResult.getRepositories());
 
-      // TODO do we have to derive child selector first?
-      final DependencySelector dependencySelector = context.getDependencySelector();
+      final DependencySelector dependencySelector = childContext.getDependencySelector();
 
-      final List<Request> childRequests = new ArrayList<Request>(children.size());
+      final List<DependencyNodeRequest> childRequests = new ArrayList<DependencyNodeRequest>(children.size());
       for (Dependency child : children)
       {
          // if selectDependency
@@ -217,7 +314,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
             continue;
          }
 
-         final Request childRequest = new Request();
+         final DependencyNodeRequest childRequest = new DependencyNodeRequest();
          childRequest.setContext(childContext);
          childRequest.setDependency(child);
          childRequests.add(childRequest);
@@ -226,7 +323,200 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       return childRequests;
    }
 
-   private VersionRangeResult resolveVersionRange(final Context context, final DependencyNodeImpl node)
+   private DependencyNodeImpl collect(DependencyNodeContext context, Dependency dependency, List<Artifact> relocations,
+      boolean disableVersionManagement)
+   {
+      if (relocations != null && !relocations.isEmpty()
+         && !context.getDependencySelector().selectDependency(dependency))
+      {
+         return null;
+      }
+
+      final DependencyNodeImpl node = new DependencyNodeImpl();
+      node.setRequestContext(context.getRequestContext());
+      node.setDependency(dependency);
+      node.setRelocations(relocations);
+
+      // apply dependency management
+      applyDependencyManagement(context, node, disableVersionManagement);
+
+      final Dependency managedDependency = node.getDependency();
+
+      final ArtifactDescriptorResult descriptorResult = resolveAndApplyArtifactDescriptor(context, node);
+      if (descriptorResult != null)
+      {
+         final boolean isCyclic = node.getData().get("cycleNode") != null;
+
+         // handle relocation
+         if (!isCyclic && !descriptorResult.getRelocations().isEmpty())
+         {
+            final Artifact originalArtifact = managedDependency.getArtifact();
+            final Artifact currentArtifact = node.getArtifact();
+
+            disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
+               && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
+
+            return collect(context, dependency.setArtifact(descriptorResult.getArtifact()),
+               descriptorResult.getRelocations(), disableVersionManagement);
+         }
+      }
+
+      node.setData("collectionStatus", "ok");
+
+      return node;
+   }
+
+   private void applyDependencyManagement(DependencyNodeContext context, final DependencyNodeImpl node,
+      boolean disableVersionManagement)
+   {
+      final DependencyManagement dependencyManagement = context.getDependencyManager().manageDependency(
+         node.getDependency());
+      if (dependencyManagement != null)
+      {
+         applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(),
+            disableVersionManagement);
+      }
+   }
+
+   private ArtifactDescriptorResult resolveAndApplyArtifactDescriptor(DependencyNodeContext context,
+      DependencyNodeImpl node)
+   {
+      // resolve version range
+      final VersionRangeResult rangeResult;
+      try
+      {
+         rangeResult = resolveVersionRange(context, node);
+         node.setVersionConstraint(rangeResult.getVersionConstraint());
+      }
+      catch (VersionRangeResolutionException e)
+      {
+         addException(node, e);
+         return null;
+      }
+
+      final Artifact artifact = node.getDependency().getArtifact();
+
+      final boolean noDescriptor = isLackingDescriptor(artifact);
+      final boolean traverse = !noDescriptor
+         && context.getDependencyTraverser().traverseDependency(node.getDependency());
+      node.setData("traverse", Boolean.valueOf(traverse));
+
+      ArtifactDescriptorResult descriptorResult = null;
+      for (final Version version : rangeResult.getVersions())
+      {
+         // read artifact descriptor
+         try
+         {
+            descriptorResult = readArtifactDescriptor(context, artifact.setVersion(version.toString()), noDescriptor);
+            node.getDependency().setArtifact(descriptorResult.getArtifact());
+            node.setVersion(version);
+            node.setAliases(descriptorResult.getAliases());
+            node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
+            node.setData("cycleNode", null);
+            node.setData("descriptorResult", descriptorResult);
+         }
+         catch (ArtifactDescriptorException e)
+         {
+            addException(node, e);
+            continue;
+         }
+
+         // handle cycle
+         final DependencyNode cycleNode = find(context.getParentNodes(), node.getArtifact());
+         if (cycleNode != null)
+         {
+            node.setRepositories(cycleNode.getRepositories());
+            node.setChildren(cycleNode.getChildren());
+            node.setData("cycleNode", cycleNode);
+            continue;
+         }
+      }
+
+      return descriptorResult;
+   }
+
+   private List<RemoteRepository> getRemoteRepositories(ArtifactRepository repository,
+      List<RemoteRepository> repositories)
+   {
+      if (repository instanceof RemoteRepository)
+      {
+         return Collections.singletonList((RemoteRepository) repository);
+      }
+      else if (repository != null)
+      {
+         return Collections.emptyList();
+      }
+      return repositories;
+   }
+
+   private static void addException(final DependencyNodeImpl node, Exception e)
+   {
+      @SuppressWarnings("unchecked")
+      Collection<Exception> exceptions = (Collection<Exception>) node.getData().get("exceptions");
+      if (exceptions == null)
+      {
+         exceptions = new ArrayList<Exception>(1);
+         node.setData("exceptions", exceptions);
+      }
+      exceptions.add(e);
+   }
+
+   public static DependencyNode find(List<DependencyNode> collection, Artifact artifact)
+   {
+      for (int i = collection.size() - 1; i >= 0; i--)
+      {
+         DependencyNode node = collection.get(i);
+
+         Dependency dependency = node.getDependency();
+         if (dependency == null)
+         {
+            break;
+         }
+
+         Artifact a = dependency.getArtifact();
+         if (!a.getArtifactId().equals(artifact.getArtifactId()))
+         {
+            continue;
+         }
+         if (!a.getGroupId().equals(artifact.getGroupId()))
+         {
+            continue;
+         }
+         if (!a.getExtension().equals(artifact.getExtension()))
+         {
+            continue;
+         }
+         if (!a.getClassifier().equals(artifact.getClassifier()))
+         {
+            continue;
+         }
+         /*
+          * NOTE: While a:1 and a:2 are technically different artifacts, we want to consider the path a:2 -> b:2 ->
+          * a:1 a cycle in the current context. The artifacts themselves might not form a cycle but their producing
+          * projects surely do. Furthermore, conflict resolution will always have to consider a:1 a loser (otherwise
+          * its ancestor a:2 would get pruned and so would a:1) so there is no point in building the sub graph of
+          * a:1.
+          */
+
+         return node;
+      }
+
+      return null;
+   }
+
+   private ArtifactDescriptorResult readArtifactDescriptor(final DependencyNodeContext context, Artifact artifact,
+      boolean noDescriptor) throws ArtifactDescriptorException
+   {
+      return readArtifactDescriptor(noDescriptor, session, context.getRequestContext(), context.getRequestTrace(),
+         context.getRepositories(), artifact);
+   }
+
+   private boolean isLackingDescriptor(Artifact artifact)
+   {
+      return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
+   }
+
+   private VersionRangeResult resolveVersionRange(final DependencyNodeContext context, final DependencyNodeImpl node)
       throws VersionRangeResolutionException
    {
       // TODO cache
@@ -234,10 +524,30 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
          context.getRepositories(), node.getDependency());
    }
 
-   private void addException(Dependency dependency, VersionRangeResolutionException e)
+   private ArtifactDescriptorResult readArtifactDescriptor(boolean noDescriptor, RepositorySystemSession session,
+      String requestContext, RequestTrace trace, List<RemoteRepository> repositories, Artifact artifact)
+      throws ArtifactDescriptorException
    {
-      // TODO Auto-generated method stub
+      ArtifactDescriptorResult descriptorResult;
+      ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+      descriptorRequest.setArtifact(artifact);
+      descriptorRequest.setRepositories(repositories);
+      descriptorRequest.setRequestContext(requestContext);
+      descriptorRequest.setTrace(trace);
 
+      if (noDescriptor)
+      {
+         descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
+      }
+      else
+      {
+         // TODO cache
+         // TODO externalize
+
+         descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+
+      }
+      return descriptorResult;
    }
 
    private VersionRangeResult resolveVersionRange(RepositorySystemSession session, String requestContext,
@@ -261,19 +571,40 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       return rangeResult;
    }
 
-   private Context deriveChildContext(Context parentContext, Dependency dependency, List<Dependency> managedDependencies)
+   public static DependencyNodeContext deriveChildContext(RemoteRepositoryManager remoteRepositoryManager,
+      RepositorySystemSession session, DependencyNodeContext parentContext, DependencyNode parentNode,
+      Dependency dependency, List<Dependency> managedDependencies, List<RemoteRepository> repositories)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
          dependency, managedDependencies);
 
-      final Context childContext = new Context();
+      final DependencyNodeContext childContext = new DependencyNodeContext();
+      childContext.getParentNodes().add(parentNode);
 
       childContext.setSavePremanagedState(parentContext.isSavePremanagedState());
 
       childContext.setDependencySelector(parentContext.getDependencySelector().deriveChildSelector(collectionContext));
-      childContext.setDependencyManagemer(parentContext.getDependencyManagemer().deriveChildManager(collectionContext));
+      childContext.setDependencyManager(parentContext.getDependencyManager().deriveChildManager(collectionContext));
       childContext.setDependencyTraverser(parentContext.getDependencyTraverser()
          .deriveChildTraverser(collectionContext));
+
+      childContext.setRequestContext(parentContext.getRequestContext());
+      childContext.setRequestTrace(parentContext.getRequestTrace());
+
+
+      final List<RemoteRepository> childRepos;
+      if (session.isIgnoreArtifactDescriptorRepositories())
+      {
+         childRepos = parentContext.getRepositories();
+      }
+      else
+      {
+         childRepos = remoteRepositoryManager.aggregateRepositories(session, parentContext.getRepositories(),
+            repositories, true);
+      }
+
+      childContext.setRepositories(childRepos);
+
 
       return childContext;
    }
