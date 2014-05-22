@@ -11,7 +11,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -25,14 +24,11 @@ import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Relocation;
 import org.apache.maven.plugin.LegacySupport;
-import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
@@ -122,7 +118,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       repositoryFacade.deploy(pom);
 
-      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
@@ -133,7 +130,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          System.out.println(TestHarness.toString(maven));
       }
 
-      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
@@ -146,8 +144,172 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+   }
+
+   @Test
+   public void testDependencies_ManagedDepth1() throws DependencyCollectionException
+   {
+      final Model a1 = newPom("a", "1");
+      final Model a2 = newPom("a", "2");
+
+      repositoryFacade.deploy(a1);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a1);
+         request.addDependency(dependency);
+         request.addManagedDependency(toDependency(a2));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a1);
+         request.addDependency(dependency);
+         request.addManagedDependency(toDependency(a2));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+   }
+
+   @Test
+   public void testDependency_ManagedDepth0() throws DependencyCollectionException
+   {
+      final Model a1 = newPom("a", "1");
+      final Model a2 = newPom("a", "2");
+
+      repositoryFacade.deploy(a1);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a1));
+         request.addManagedDependency(toDependency(a2));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a1));
+         request.addManagedDependency(toDependency(a2));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
    }
    
+   @Test
+   public void testDependency_ManagedDepth1() throws DependencyCollectionException
+   {
+      final Model a = newPom("a", "1");
+      final Model b1 = newPom("b", "1");
+      final Model b2 = newPom("b", "2");
+
+      addDependency(a, b1);
+      
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b1);
+      repositoryFacade.deploy(b2);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addManagedDependency(toDependency(b2));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+      
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addManagedDependency(toDependency(b2));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+   }
+   
+   @Test
+   public void testDependency_ManagedDepth2() throws DependencyCollectionException
+   {
+      final Model a = newPom("a", "1");
+      final Model c = newPom("c", "1");
+      final Model b1 = newPom("b", "1");
+      final Model b2 = newPom("b", "2");
+
+      addDependency(a, c);
+      addDependency(c, b1);
+      
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(c);
+      repositoryFacade.deploy(b1);
+      repositoryFacade.deploy(b2);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addManagedDependency(toDependency(b2));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+      
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+         request.addManagedDependency(toDependency(b2));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+   }
+
    @Test
    public void testDependencies_Transitive() throws DependencyCollectionException
    {
@@ -158,7 +320,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       repositoryFacade.deploy(a);
       repositoryFacade.deploy(b);
 
-      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
@@ -169,7 +332,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          System.out.println(TestHarness.toString(maven));
       }
 
-      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
@@ -182,16 +346,61 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+   }
+
+   @Test
+   public void testDependencies_ManagedDepth2() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b1 = newPom("b", "1");
+      final Model b2 = newPom("b", "2");
+      addDependency(a, b1);
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b1);
+      repositoryFacade.deploy(b2);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+         request.addManagedDependency(toDependency(b2));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         Dependency dependency = toDependency(a);
+         request.addDependency(dependency);
+         request.addManagedDependency(toDependency(b2));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
    }
 
    @Test
    public void testDependency_Single() throws DependencyCollectionException
    {
       final Model pom = newPom("a");
-      
+
       repositoryFacade.deploy(pom);
 
-      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
@@ -202,7 +411,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          System.out.println(TestHarness.toString(maven));
       }
 
-      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
@@ -215,18 +425,20 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
    }
-   
+
    @Test
    public void testDependency_WithExtraDependency() throws DependencyCollectionException
    {
       final Model a = newPom("a");
       repositoryFacade.deploy(a);
-      
+
       final Model b = newPom("b");
       repositoryFacade.deploy(b);
 
-      final HookedSession mavenSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
@@ -237,7 +449,8 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          System.out.println(TestHarness.toString(maven));
       }
 
-      final HookedSession srcpitSession = new HookedSession(buildContext.getRepositorySession());
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
@@ -250,60 +463,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-   }
-
-   private static final class HookedSession extends AbstractForwardingRepositorySystemSession
-   {
-      private final List<Dependency> selectDependencyCalls = new ArrayList<Dependency>();
-
-      private final RepositorySystemSession session;
-
-      public HookedSession(RepositorySystemSession session)
-      {
-         this.session = session;
-      }
-
-      public List<Dependency> getSelectDependencyCalls()
-      {
-         return selectDependencyCalls;
-      }
-
-      @Override
-      protected RepositorySystemSession getSession()
-      {
-         return session;
-      }
-
-      @Override
-      public DependencySelector getDependencySelector()
-      {
-         return new DependencySelectorRecorder(getSession().getDependencySelector(), selectDependencyCalls);
-      }
-   }
-
-   private static class DependencySelectorRecorder implements DependencySelector
-   {
-      private final DependencySelector dependencySelector;
-      private final List<Dependency> selectDependencyCalls;
-
-      public DependencySelectorRecorder(DependencySelector dependencySelector, List<Dependency> selectDependencyCalls)
-      {
-         this.dependencySelector = dependencySelector;
-         this.selectDependencyCalls = selectDependencyCalls;
-      }
-
-      @Override
-      public boolean selectDependency(Dependency dependency)
-      {
-         selectDependencyCalls.add(dependency);
-         return dependencySelector.selectDependency(dependency);
-      }
-
-      @Override
-      public DependencySelector deriveChildSelector(DependencyCollectionContext context)
-      {
-         return new DependencySelectorRecorder(dependencySelector.deriveChildSelector(context), selectDependencyCalls);
-      }
+      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
    }
 
    @Test
