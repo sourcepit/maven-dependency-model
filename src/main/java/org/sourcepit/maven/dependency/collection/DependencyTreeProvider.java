@@ -8,12 +8,14 @@ package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
 import javax.inject.Inject;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
@@ -25,6 +27,10 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 
 public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvider.Request>
@@ -82,6 +88,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
 
       private boolean savePremanagedState;
 
+      private String requestContext;
+
+      private RequestTrace requestTrace;
+
+      private List<RemoteRepository> repositories;
+
       public void setDependencySelector(DependencySelector dependencySelector)
       {
          this.dependencySelector = dependencySelector;
@@ -121,6 +133,40 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       {
          return savePremanagedState;
       }
+
+      public void setRequestContext(String requestContext)
+      {
+         this.requestContext = requestContext;
+      }
+
+      public String getRequestContext()
+      {
+         return requestContext;
+      }
+
+      public RequestTrace getRequestTrace()
+      {
+         return requestTrace;
+      }
+
+      public void setRequestTrace(RequestTrace requestTrace)
+      {
+         this.requestTrace = requestTrace;
+      }
+
+      public List<RemoteRepository> getRepositories()
+      {
+         if (repositories == null)
+         {
+            repositories = new ArrayList<RemoteRepository>(0);
+         }
+         return repositories;
+      }
+
+      public void setRepositories(List<RemoteRepository> repositories)
+      {
+         this.repositories = repositories;
+      }
    }
 
    @Override
@@ -137,6 +183,16 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(), false);
 
       // resolve version range
+      final VersionRangeResult rangeResult;
+      try
+      {
+         rangeResult = resolveVersionRange(context, node);
+      }
+      catch (VersionRangeResolutionException e)
+      {
+         addException(node.getDependency(), e);
+         return Collections.emptyList();
+      }
 
       // read artifact descriptor
       // handle cycle
@@ -168,6 +224,41 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       }
 
       return childRequests;
+   }
+
+   private VersionRangeResult resolveVersionRange(final Context context, final DependencyNodeImpl node)
+      throws VersionRangeResolutionException
+   {
+      // TODO cache
+      return resolveVersionRange(session, context.getRequestContext(), context.getRequestTrace(),
+         context.getRepositories(), node.getDependency());
+   }
+
+   private void addException(Dependency dependency, VersionRangeResolutionException e)
+   {
+      // TODO Auto-generated method stub
+
+   }
+
+   private VersionRangeResult resolveVersionRange(RepositorySystemSession session, String requestContext,
+      RequestTrace trace, List<RemoteRepository> repositories, Dependency dependency)
+      throws VersionRangeResolutionException
+   {
+      VersionRangeResult rangeResult;
+      VersionRangeRequest rangeRequest = new VersionRangeRequest();
+      rangeRequest.setArtifact(dependency.getArtifact());
+      rangeRequest.setRepositories(repositories);
+      rangeRequest.setRequestContext(requestContext);
+      rangeRequest.setTrace(trace);
+
+      rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
+
+      if (rangeResult.getVersions().isEmpty())
+      {
+         throw new VersionRangeResolutionException(rangeResult, "No versions available for " + dependency.getArtifact()
+            + " within specified range");
+      }
+      return rangeResult;
    }
 
    private Context deriveChildContext(Context parentContext, Dependency dependency, List<Dependency> managedDependencies)
