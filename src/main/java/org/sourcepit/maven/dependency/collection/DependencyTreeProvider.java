@@ -18,9 +18,7 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyManagement;
-import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
-import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -38,7 +36,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 
-public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvider.DependencyNodeRequest>
+public class DependencyTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
    protected final RemoteRepositoryManager remoteRepositoryManager;
 
@@ -56,203 +54,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       this.descriptorReader = descriptorReader;
       this.versionRangeResolver = versionRangeResolver;
       this.session = session;
-   }
-
-   public static class DependencyNodeRequest
-   {
-      private DependencyNodeContext context;
-
-      private Dependency dependency;
-
-      private DependencyNode dependencyNode;
-
-      public void setContext(DependencyNodeContext context)
-      {
-         this.context = context;
-      }
-
-      public DependencyNodeContext getContext()
-      {
-         return context;
-      }
-
-      public void setDependency(Dependency dependency)
-      {
-         this.dependency = dependency;
-      }
-
-      public Dependency getDependency()
-      {
-         return dependency;
-      }
-
-      public void setDependencyNode(DependencyNode dependencyNode)
-      {
-         this.dependencyNode = dependencyNode;
-      }
-
-      public DependencyNode getDependencyNode()
-      {
-         return dependencyNode;
-      }
-   }
-
-   public static class DependencyNodeContext
-   {
-      private DependencySelector dependencySelector;
-
-      private DependencyManager dependencyManager;
-
-      private DependencyTraverser dependencyTraverser;
-
-      private DependenciesFilter dependenciesFilter;
-
-      private boolean savePremanagedState;
-
-      private String requestContext;
-
-      private RequestTrace requestTrace;
-
-      private List<RemoteRepository> repositories;
-
-      private LinkedList<DependencyNode> parentNodes;
-
-      public void setDependencySelector(DependencySelector dependencySelector)
-      {
-         this.dependencySelector = dependencySelector;
-      }
-
-      public DependencySelector getDependencySelector()
-      {
-         return dependencySelector;
-      }
-
-      public void setDependencyManager(DependencyManager dependencyManager)
-      {
-         this.dependencyManager = dependencyManager;
-      }
-
-      public DependencyManager getDependencyManager()
-      {
-         return dependencyManager;
-      }
-
-      public void setDependencyTraverser(DependencyTraverser dependencyTraverser)
-      {
-         this.dependencyTraverser = dependencyTraverser;
-      }
-
-      public DependencyTraverser getDependencyTraverser()
-      {
-         return dependencyTraverser;
-      }
-
-      public void setDependenciesFilter(DependenciesFilter dependenciesFilter)
-      {
-         this.dependenciesFilter = dependenciesFilter;
-      }
-
-      public DependenciesFilter getDependenciesFilter()
-      {
-         return dependenciesFilter;
-      }
-
-      public void setSavePremanagedState(boolean savePremanagedState)
-      {
-         this.savePremanagedState = savePremanagedState;
-      }
-
-      public boolean isSavePremanagedState()
-      {
-         return savePremanagedState;
-      }
-
-      public void setRequestContext(String requestContext)
-      {
-         this.requestContext = requestContext;
-      }
-
-      public String getRequestContext()
-      {
-         return requestContext;
-      }
-
-      public RequestTrace getRequestTrace()
-      {
-         return requestTrace;
-      }
-
-      public void setRequestTrace(RequestTrace requestTrace)
-      {
-         this.requestTrace = requestTrace;
-      }
-
-      public List<RemoteRepository> getRepositories()
-      {
-         if (repositories == null)
-         {
-            repositories = new ArrayList<RemoteRepository>(0);
-         }
-         return repositories;
-      }
-
-      public void setRepositories(List<RemoteRepository> repositories)
-      {
-         this.repositories = repositories;
-      }
-
-      public void setParentNodes(LinkedList<DependencyNode> parentNodes)
-      {
-         this.parentNodes = parentNodes;
-      }
-
-      public LinkedList<DependencyNode> getParentNodes()
-      {
-         if (parentNodes == null)
-         {
-            parentNodes = new LinkedList<DependencyNode>();
-         }
-         return parentNodes;
-      }
-
-      public DependencyNodeContext deriveChildContext(RemoteRepositoryManager remoteRepositoryManager,
-         RepositorySystemSession session, DependencyNodeImpl parentNode, List<Dependency> managedDependencies,
-         List<RemoteRepository> repositories)
-      {
-         final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
-            parentNode.getDependency(), managedDependencies);
-
-         final DependencyNodeContext childContext = new DependencyNodeContext();
-         childContext.getParentNodes().add(parentNode);
-
-         childContext.setSavePremanagedState(this.isSavePremanagedState());
-
-         childContext.setDependencySelector(this.getDependencySelector().deriveChildSelector(collectionContext));
-         childContext.setDependencyManager(this.getDependencyManager().deriveChildManager(collectionContext));
-         childContext.setDependencyTraverser(this.getDependencyTraverser().deriveChildTraverser(collectionContext));
-
-         childContext.setDependenciesFilter(this.getDependenciesFilter().deriveChildFilter(collectionContext));
-
-         childContext.setRequestContext(this.getRequestContext());
-         childContext.setRequestTrace(this.getRequestTrace());
-
-
-         final List<RemoteRepository> childRepos;
-         if (session.isIgnoreArtifactDescriptorRepositories())
-         {
-            childRepos = this.getRepositories();
-         }
-         else
-         {
-            childRepos = remoteRepositoryManager.aggregateRepositories(session, this.getRepositories(), repositories,
-               true);
-         }
-
-         childContext.setRepositories(childRepos);
-
-         return childContext;
-      }
-
    }
 
    @Override
@@ -571,43 +372,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyTreeProvid
       return rangeResult;
    }
 
-   public static DependencyNodeContext deriveChildContext(RemoteRepositoryManager remoteRepositoryManager,
-      RepositorySystemSession session, DependencyNodeContext parentContext, DependencyNode parentNode,
-      Dependency dependency, List<Dependency> managedDependencies, List<RemoteRepository> repositories)
-   {
-      final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
-         dependency, managedDependencies);
-
-      final DependencyNodeContext childContext = new DependencyNodeContext();
-      childContext.getParentNodes().add(parentNode);
-
-      childContext.setSavePremanagedState(parentContext.isSavePremanagedState());
-
-      childContext.setDependencySelector(parentContext.getDependencySelector().deriveChildSelector(collectionContext));
-      childContext.setDependencyManager(parentContext.getDependencyManager().deriveChildManager(collectionContext));
-      childContext.setDependencyTraverser(parentContext.getDependencyTraverser()
-         .deriveChildTraverser(collectionContext));
-
-      childContext.setRequestContext(parentContext.getRequestContext());
-      childContext.setRequestTrace(parentContext.getRequestTrace());
-
-
-      final List<RemoteRepository> childRepos;
-      if (session.isIgnoreArtifactDescriptorRepositories())
-      {
-         childRepos = parentContext.getRepositories();
-      }
-      else
-      {
-         childRepos = remoteRepositoryManager.aggregateRepositories(session, parentContext.getRepositories(),
-            repositories, true);
-      }
-
-      childContext.setRepositories(childRepos);
-
-
-      return childContext;
-   }
 
    private static void applyDependencyManagement(DependencyNodeImpl node, DependencyManagement dependencyManagement,
       boolean savePremanagedState, boolean disableVersionManagement)

@@ -35,8 +35,6 @@ import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
-import org.sourcepit.maven.dependency.collection.DependencyTreeProvider.DependencyNodeContext;
-import org.sourcepit.maven.dependency.collection.DependencyTreeProvider.DependencyNodeRequest;
 
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
