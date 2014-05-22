@@ -15,13 +15,22 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 
 public final class HookedRepositorySystemSession extends AbstractForwardingRepositorySystemSession
 {
    private final List<Dependency> selectDependencyCalls = new ArrayList<Dependency>();
 
+   private int deriveChildSelectorCalls = 0;
+
    private final List<Dependency> manageDependencyCalls = new ArrayList<Dependency>();
+
+   private int deriveChildManagerCalls = 0;
+
+   private final List<Dependency> traverseDependencyCalls = new ArrayList<Dependency>();
+
+   private int deriveChildTraverserCalls = 0;
 
    private final RepositorySystemSession session;
 
@@ -34,10 +43,30 @@ public final class HookedRepositorySystemSession extends AbstractForwardingRepos
    {
       return selectDependencyCalls;
    }
-   
+
+   public int getDeriveChildSelectorCalls()
+   {
+      return deriveChildSelectorCalls;
+   }
+
    public List<Dependency> getManageDependencyCalls()
    {
       return manageDependencyCalls;
+   }
+
+   public int getDeriveChildManagerCalls()
+   {
+      return deriveChildManagerCalls;
+   }
+
+   public List<Dependency> getTraverseDependencyCalls()
+   {
+      return traverseDependencyCalls;
+   }
+
+   public int getDeriveChildTraverserCalls()
+   {
+      return deriveChildTraverserCalls;
    }
 
    @Override
@@ -49,24 +78,28 @@ public final class HookedRepositorySystemSession extends AbstractForwardingRepos
    @Override
    public DependencySelector getDependencySelector()
    {
-      return new DependencySelectorRecorder(getSession().getDependencySelector(), selectDependencyCalls);
+      return new DependencySelectorRecorder(getSession().getDependencySelector());
    }
 
    @Override
    public DependencyManager getDependencyManager()
    {
-      return new DependencyManagerRecorder(super.getDependencyManager(), manageDependencyCalls);
+      return new DependencyManagerRecorder(super.getDependencyManager());
    }
 
-   private static class DependencySelectorRecorder implements DependencySelector
+   @Override
+   public DependencyTraverser getDependencyTraverser()
+   {
+      return new DependencyTraverserRecorder(super.getDependencyTraverser());
+   }
+
+   private class DependencySelectorRecorder implements DependencySelector
    {
       private final DependencySelector dependencySelector;
-      private final List<Dependency> selectDependencyCalls;
 
-      public DependencySelectorRecorder(DependencySelector dependencySelector, List<Dependency> selectDependencyCalls)
+      public DependencySelectorRecorder(DependencySelector dependencySelector)
       {
          this.dependencySelector = dependencySelector;
-         this.selectDependencyCalls = selectDependencyCalls;
       }
 
       @Override
@@ -79,19 +112,18 @@ public final class HookedRepositorySystemSession extends AbstractForwardingRepos
       @Override
       public DependencySelector deriveChildSelector(DependencyCollectionContext context)
       {
-         return new DependencySelectorRecorder(dependencySelector.deriveChildSelector(context), selectDependencyCalls);
+         deriveChildSelectorCalls++;
+         return new DependencySelectorRecorder(dependencySelector.deriveChildSelector(context));
       }
    }
 
-   private static class DependencyManagerRecorder implements DependencyManager
+   private class DependencyManagerRecorder implements DependencyManager
    {
       private final DependencyManager dependencyManager;
-      private final List<Dependency> manageDependencyCalls;
 
-      public DependencyManagerRecorder(DependencyManager dependencyManager, List<Dependency> manageDependencyCalls)
+      public DependencyManagerRecorder(DependencyManager dependencyManager)
       {
          this.dependencyManager = dependencyManager;
-         this.manageDependencyCalls = manageDependencyCalls;
       }
 
       @Override
@@ -104,7 +136,32 @@ public final class HookedRepositorySystemSession extends AbstractForwardingRepos
       @Override
       public DependencyManager deriveChildManager(DependencyCollectionContext context)
       {
-         return new DependencyManagerRecorder(dependencyManager.deriveChildManager(context), manageDependencyCalls);
+         deriveChildManagerCalls++;
+         return new DependencyManagerRecorder(dependencyManager.deriveChildManager(context));
+      }
+   }
+
+   private class DependencyTraverserRecorder implements DependencyTraverser
+   {
+      private final DependencyTraverser dependencyTraverser;
+
+      public DependencyTraverserRecorder(DependencyTraverser dependencyTraverser)
+      {
+         this.dependencyTraverser = dependencyTraverser;
+      }
+
+      @Override
+      public boolean traverseDependency(Dependency dependency)
+      {
+         traverseDependencyCalls.add(dependency);
+         return dependencyTraverser.traverseDependency(dependency);
+      }
+
+      @Override
+      public DependencyTraverser deriveChildTraverser(DependencyCollectionContext context)
+      {
+         deriveChildTraverserCalls++;
+         return new DependencyTraverserRecorder(dependencyTraverser.deriveChildTraverser(context));
       }
    }
 }

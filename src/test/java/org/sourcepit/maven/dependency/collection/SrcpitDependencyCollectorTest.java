@@ -143,8 +143,20 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+
+   private void assertSession(final HookedRepositorySystemSession mavenSession,
+      final HookedRepositorySystemSession srcpitSession)
+   {
+      Assert.assertEquals(mavenSession.getDeriveChildSelectorCalls(), srcpitSession.getDeriveChildSelectorCalls());
       assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
+      
+      Assert.assertEquals(mavenSession.getDeriveChildManagerCalls(), srcpitSession.getDeriveChildManagerCalls());
       assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      
+      Assert.assertEquals(mavenSession.getDeriveChildTraverserCalls(), srcpitSession.getDeriveChildTraverserCalls());
+      assertDependenciesEquals(mavenSession.getTraverseDependencyCalls(), srcpitSession.getTraverseDependencyCalls());
    }
 
    @Test
@@ -182,8 +194,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
@@ -219,10 +230,9 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependency_ManagedDepth1() throws DependencyCollectionException
    {
@@ -231,7 +241,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       final Model b2 = newPom("b", "2");
 
       addDependency(a, b1);
-      
+
       repositoryFacade.deploy(a);
       repositoryFacade.deploy(b1);
       repositoryFacade.deploy(b2);
@@ -247,7 +257,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
       }
-      
+
       final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
          buildContext.getRepositorySession());
       final CollectResult srcpit;
@@ -261,10 +271,9 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependency_ManagedDepth2() throws DependencyCollectionException
    {
@@ -275,7 +284,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
 
       addDependency(a, c);
       addDependency(c, b1);
-      
+
       repositoryFacade.deploy(a);
       repositoryFacade.deploy(c);
       repositoryFacade.deploy(b1);
@@ -292,7 +301,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
       }
-      
+
       final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
          buildContext.getRepositorySession());
       final CollectResult srcpit;
@@ -306,8 +315,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
@@ -345,8 +353,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
@@ -388,8 +395,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
@@ -424,8 +430,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
@@ -462,8 +467,7 @@ public class SrcpitDependencyCollectorTest extends EmbeddedMavenEnvironmentTest
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
-      assertDependenciesEquals(mavenSession.getSelectDependencyCalls(), srcpitSession.getSelectDependencyCalls());
-      assertDependenciesEquals(mavenSession.getManageDependencyCalls(), srcpitSession.getManageDependencyCalls());
+      assertSession(mavenSession, srcpitSession);
    }
 
    @Test
