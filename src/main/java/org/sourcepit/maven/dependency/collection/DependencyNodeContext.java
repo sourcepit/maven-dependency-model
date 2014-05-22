@@ -22,6 +22,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 public class DependencyNodeContext
 {
+   private final RepositorySystemSession session;
+
+   private final RemoteRepositoryManager remoteRepositoryManager;
+
    private DependencySelector dependencySelector;
 
    private DependencyManager dependencyManager;
@@ -39,6 +43,17 @@ public class DependencyNodeContext
    private List<RemoteRepository> repositories;
 
    private LinkedList<DependencyNode> parentNodes;
+
+   public DependencyNodeContext(RepositorySystemSession session, RemoteRepositoryManager remoteRepositoryManager)
+   {
+      this.session = session;
+      this.remoteRepositoryManager = remoteRepositoryManager;
+   }
+   
+   public RepositorySystemSession getSession()
+   {
+      return session;
+   }
 
    public void setDependencySelector(DependencySelector dependencySelector)
    {
@@ -138,14 +153,13 @@ public class DependencyNodeContext
       return parentNodes;
    }
 
-   public DependencyNodeContext deriveChildContext(RemoteRepositoryManager remoteRepositoryManager,
-      RepositorySystemSession session, DependencyNodeImpl parentNode, List<Dependency> managedDependencies,
+   public DependencyNodeContext deriveChildContext(DependencyNodeImpl parentNode, List<Dependency> managedDependencies,
       List<RemoteRepository> repositories)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
          parentNode.getDependency(), managedDependencies);
 
-      final DependencyNodeContext childContext = new DependencyNodeContext();
+      final DependencyNodeContext childContext = new DependencyNodeContext(session, remoteRepositoryManager);
       childContext.getParentNodes().add(parentNode);
 
       childContext.setSavePremanagedState(this.isSavePremanagedState());
@@ -167,8 +181,8 @@ public class DependencyNodeContext
       }
       else
       {
-         childRepos = remoteRepositoryManager.aggregateRepositories(session, this.getRepositories(), repositories,
-            true);
+         childRepos = remoteRepositoryManager
+            .aggregateRepositories(session, this.getRepositories(), repositories, true);
       }
 
       childContext.setRepositories(childRepos);

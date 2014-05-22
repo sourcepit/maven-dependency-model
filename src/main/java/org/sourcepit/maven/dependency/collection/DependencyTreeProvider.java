@@ -23,7 +23,6 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
-import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -38,22 +37,15 @@ import org.eclipse.aether.version.Version;
 
 public class DependencyTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
-   protected final RemoteRepositoryManager remoteRepositoryManager;
 
    private final ArtifactDescriptorReader descriptorReader;
 
    private final VersionRangeResolver versionRangeResolver;
 
-   private final RepositorySystemSession session;
-
-   public DependencyTreeProvider(RemoteRepositoryManager remoteRepositoryManager,
-      ArtifactDescriptorReader descriptorReader, VersionRangeResolver versionRangeResolver,
-      RepositorySystemSession session)
+   public DependencyTreeProvider(ArtifactDescriptorReader descriptorReader, VersionRangeResolver versionRangeResolver)
    {
-      this.remoteRepositoryManager = remoteRepositoryManager;
       this.descriptorReader = descriptorReader;
       this.versionRangeResolver = versionRangeResolver;
-      this.session = session;
    }
 
    @Override
@@ -101,7 +93,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          return Collections.emptyList();
       }
 
-      final DependencyNodeContext childContext = context.deriveChildContext(remoteRepositoryManager, session, node,
+      final DependencyNodeContext childContext = context.deriveChildContext(node,
          descriptorResult.getManagedDependencies(), descriptorResult.getRepositories());
 
       final DependencySelector dependencySelector = childContext.getDependencySelector();
@@ -308,8 +300,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    private ArtifactDescriptorResult readArtifactDescriptor(final DependencyNodeContext context, Artifact artifact,
       boolean noDescriptor) throws ArtifactDescriptorException
    {
-      return readArtifactDescriptor(noDescriptor, session, context.getRequestContext(), context.getRequestTrace(),
-         context.getRepositories(), artifact);
+      return readArtifactDescriptor(noDescriptor, context.getSession(), context.getRequestContext(),
+         context.getRequestTrace(), context.getRepositories(), artifact);
    }
 
    private boolean isLackingDescriptor(Artifact artifact)
@@ -321,7 +313,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       throws VersionRangeResolutionException
    {
       // TODO cache
-      return resolveVersionRange(session, context.getRequestContext(), context.getRequestTrace(),
+      return resolveVersionRange(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
          context.getRepositories(), node.getDependency());
    }
 
