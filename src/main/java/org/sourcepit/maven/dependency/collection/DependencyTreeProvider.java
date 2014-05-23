@@ -53,7 +53,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       final Dependency dependency = request.getDependency();
 
       final DependencyNodeImpl node = collect(context, dependency, null, false);
-      if (node == null) // TODO: test relocation not selected
+      if (node == null)
       {
          return Collections.emptyList();
       }
@@ -65,11 +65,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       {
          final DependencyNode parentNode = parentNodes.getLast();
          parentNode.getChildren().add(node);
-      }
-
-      if (!"ok".equals(node.getData().get("collectionStatus")) || isCyclic(node))
-      {
-         return Collections.emptyList();
       }
 
       final ArtifactDescriptorResult descriptorResult = (ArtifactDescriptorResult) node.getData().get(
@@ -124,56 +119,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
       final Dependency managedDependency = node.getDependency();
 
-      final ArtifactDescriptorResult descriptorResult = resolveAndApplyArtifactDescriptor(context, node);
-      if (descriptorResult != null)
-      {
-         final boolean isCyclic = isCyclic(node);
-
-         // handle relocation
-         if (!isCyclic && !node.getRelocations().isEmpty())
-         {
-            final Artifact originalArtifact = managedDependency.getArtifact();
-            final Artifact currentArtifact = node.getArtifact();
-
-            disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
-               && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
-
-            final Dependency relocatedDependency = dependency.setArtifact(descriptorResult.getArtifact());
-            if (!context.getDependencySelector().selectDependency(relocatedDependency))
-            {
-               return null;
-            }
-
-            return collect(context, relocatedDependency, node.getRelocations(), disableVersionManagement);
-         }
-      }
-      
-      node.setRelocations(relocations);
-      node.setData("collectionStatus", "ok");
-
-      return node;
-   }
-
-   private boolean isCyclic(final DependencyNodeImpl node)
-   {
-      return node.getData().get("cycleNode") != null;
-   }
-
-   private void applyDependencyManagement(DependencyNodeContext context, final DependencyNodeImpl node,
-      boolean disableVersionManagement)
-   {
-      final DependencyManagement dependencyManagement = context.getDependencyManager().manageDependency(
-         node.getDependency());
-      if (dependencyManagement != null)
-      {
-         applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(),
-            disableVersionManagement);
-      }
-   }
-
-   private ArtifactDescriptorResult resolveAndApplyArtifactDescriptor(DependencyNodeContext context,
-      DependencyNodeImpl node)
-   {
       // resolve version range
       final VersionRangeResult rangeResult;
       try
@@ -194,20 +139,75 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          && context.getDependencyTraverser().traverseDependency(node.getDependency());
       node.setData("traverse", Boolean.valueOf(traverse));
 
-      ArtifactDescriptorResult descriptorResult = null;
+      // resolved, cyclic
+      final ArtifactDescriptorResult descriptorResult = resolveAndApplyArtifactDescriptor(context, node, rangeResult);
+      if (descriptorResult != null)
+      {
+         final boolean isCyclic = isCyclic(node);
+
+         // handle relocation
+         if (!isCyclic && !node.getRelocations().isEmpty())
+         {
+            final Artifact originalArtifact = managedDependency.getArtifact();
+            final Artifact currentArtifact = node.getArtifact();
+
+            disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
+               && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
+
+            final Dependency relocatedDependency = node.getDependency();
+            if (!context.getDependencySelector().selectDependency(relocatedDependency))
+            {
+               return null;
+            }
+
+            return collect(context, relocatedDependency, node.getRelocations(), disableVersionManagement);
+         }
+         node.setRelocations(relocations);
+         node.setData("collectionStatus", "ok");
+         return node;
+      }
+      return null;
+   }
+
+   private boolean isCyclic(final DependencyNodeImpl node)
+   {
+      return node.getData().get("cycleNode") != null;
+   }
+
+   private void applyDependencyManagement(DependencyNodeContext context, final DependencyNodeImpl node,
+      boolean disableVersionManagement)
+   {
+      final DependencyManagement dependencyManagement = context.getDependencyManager().manageDependency(
+         node.getDependency());
+      if (dependencyManagement != null)
+      {
+         applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(),
+            disableVersionManagement);
+      }
+   }
+
+   private ArtifactDescriptorResult resolveAndApplyArtifactDescriptor(DependencyNodeContext context,
+      DependencyNodeImpl node, VersionRangeResult rangeResult)
+   {
+      final Artifact artifact = node.getDependency().getArtifact();
+
       for (final Version version : rangeResult.getVersions())
       {
+         node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
+         node.setVersion(version);
+         node.setRelocations(null);
+         node.setAliases(null);
+         node.getData().remove("cycleNode");
+
          // read artifact descriptor
+         ArtifactDescriptorResult descriptorResult = null;
          try
          {
-            descriptorResult = readArtifactDescriptor(context, artifact.setVersion(version.toString()), noDescriptor);
+            descriptorResult = readArtifactDescriptor(context, artifact.setVersion(version.toString()));
+            node.setData("descriptorResult", descriptorResult);
             node.setDependency(node.getDependency().setArtifact(descriptorResult.getArtifact()));
-            node.setVersion(version);
             node.setRelocations(descriptorResult.getRelocations());
             node.setAliases(descriptorResult.getAliases());
-            node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
-            node.setData("cycleNode", null);
-            node.setData("descriptorResult", descriptorResult);
          }
          catch (ArtifactDescriptorException e)
          {
@@ -224,9 +224,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
             node.setData("cycleNode", cycleNode);
             continue;
          }
+
+         return descriptorResult;
       }
 
-      return descriptorResult;
+      return null;
+
    }
 
    private List<RemoteRepository> getRemoteRepositories(ArtifactRepository repository,
@@ -243,7 +246,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return repositories;
    }
 
-   private static void addException(final DependencyNodeImpl node, Exception e)
+   protected void addException(final DependencyNodeImpl node, Exception e)
    {
       @SuppressWarnings("unchecked")
       Collection<Exception> exceptions = (Collection<Exception>) node.getData().get("exceptions");
@@ -298,11 +301,11 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return null;
    }
 
-   private ArtifactDescriptorResult readArtifactDescriptor(final DependencyNodeContext context, Artifact artifact,
-      boolean noDescriptor) throws ArtifactDescriptorException
+   private ArtifactDescriptorResult readArtifactDescriptor(final DependencyNodeContext context, Artifact artifact)
+      throws ArtifactDescriptorException
    {
-      return readArtifactDescriptor(noDescriptor, context.getSession(), context.getRequestContext(),
-         context.getRequestTrace(), context.getRepositories(), artifact);
+      return readArtifactDescriptor(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
+         context.getRepositories(), artifact);
    }
 
    private boolean isLackingDescriptor(Artifact artifact)
@@ -318,9 +321,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          context.getRepositories(), node.getDependency());
    }
 
-   private ArtifactDescriptorResult readArtifactDescriptor(boolean noDescriptor, RepositorySystemSession session,
-      String requestContext, RequestTrace trace, List<RemoteRepository> repositories, Artifact artifact)
-      throws ArtifactDescriptorException
+   private ArtifactDescriptorResult readArtifactDescriptor(RepositorySystemSession session, String requestContext,
+      RequestTrace trace, List<RemoteRepository> repositories, Artifact artifact) throws ArtifactDescriptorException
    {
       ArtifactDescriptorResult descriptorResult;
       ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
@@ -329,7 +331,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       descriptorRequest.setRequestContext(requestContext);
       descriptorRequest.setTrace(trace);
 
-      if (noDescriptor)
+      if (isLackingDescriptor(artifact))
       {
          descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
       }

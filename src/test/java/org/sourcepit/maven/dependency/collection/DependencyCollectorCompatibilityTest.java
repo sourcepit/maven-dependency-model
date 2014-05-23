@@ -9,6 +9,7 @@ package org.sourcepit.maven.dependency.collection;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.Collection;
@@ -23,7 +24,10 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Relocation;
+import org.apache.maven.model.superpom.SuperPomProvider;
 import org.apache.maven.plugin.LegacySupport;
+import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
@@ -32,6 +36,8 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
+import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,8 +51,39 @@ import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.maven.dependency.model.poc.TestHarness;
 
+import com.google.inject.Binder;
+
 public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironmentTest
 {
+   private final static class RepositorySystemSessionImpl extends AbstractForwardingRepositorySystemSession
+   {
+      private final RepositorySystemSession session;
+
+      private ArtifactDescriptorPolicy artifactDescriptorPolicy;
+
+      private RepositorySystemSessionImpl(RepositorySystemSession session)
+      {
+         this.session = session;
+      }
+
+      @Override
+      protected RepositorySystemSession getSession()
+      {
+         return session;
+      }
+
+      public void setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy)
+      {
+         this.artifactDescriptorPolicy = artifactDescriptorPolicy;
+      }
+
+      @Override
+      public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
+      {
+         return artifactDescriptorPolicy == null ? super.getArtifactDescriptorPolicy() : artifactDescriptorPolicy;
+      }
+   }
+
    @Inject
    private ArtifactRepositoryFacade repositoryFacade;
 
@@ -80,6 +117,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
 
       final MavenSession session = buildStubProject(getLocalRepositoryPath()).getSession();
       buildContext.setSession(session);
+   }
+
+   @Override
+   protected void configureCustomBindings(Binder binder)
+   {
+      super.configureCustomBindings(binder);
+      // avoid requests to central (that will fail on system behind proxies and without permission to get out)
+      binder.bind(SuperPomProvider.class).to(FilterCentralFromSuperPom.class);
    }
 
    @Override
@@ -159,6 +204,109 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
    }
 
    @Test
+   public void testDependency_Unresolvable() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      testDependency(a, buildContext.getRepositorySession(), false);
+   }
+
+   @Test
+   public void testDependency_Unresolvable2() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+
+      addDependency(a, b);
+
+      repositoryFacade.deploy(a);
+
+      RepositorySystemSessionImpl session = new RepositorySystemSessionImpl(buildContext.getRepositorySession());
+      session.setArtifactDescriptorPolicy(new SimpleArtifactDescriptorPolicy(true, true));
+      testDependency(a, session, false);
+   }
+
+   @Test
+   public void testDependency_Unresolvable3() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+
+      addDependency(a, b);
+
+      repositoryFacade.deploy(a);
+
+      RepositorySystemSessionImpl session = new RepositorySystemSessionImpl(buildContext.getRepositorySession());
+      session.setArtifactDescriptorPolicy(new SimpleArtifactDescriptorPolicy(false, false));
+      testDependency(a, session, true);
+   }
+
+   private void testDependency(final Model dependency, RepositorySystemSession session, boolean expectEx)
+   {
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(session);
+      CollectResult maven = null;
+      DependencyCollectionException mavenEx = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(dependency));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+
+         if (expectEx)
+         {
+            fail();
+         }
+      }
+      catch (DependencyCollectionException e)
+      {
+         mavenEx = e;
+         maven = e.getResult();
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(session);
+      CollectResult srcpit = null;
+      DependencyCollectionException srcpitEx = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(dependency));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+
+         if (expectEx)
+         {
+            fail();
+         }
+      }
+      catch (DependencyCollectionException e)
+      {
+         srcpitEx = e;
+         srcpit = e.getResult();
+      }
+
+      Assert.assertEquals(mavenEx == null, srcpitEx == null);
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+      assertCollectionExceptions(maven.getExceptions(), srcpit.getExceptions());
+   }
+
+   private static void assertCollectionExceptions(List<Exception> expected, List<Exception> actual)
+   {
+      if (expected == null)
+      {
+         assertNull(actual);
+         return;
+      }
+      assertNotNull(actual);
+
+      Assert.assertEquals(expected.size(), actual.size());
+
+
+   }
+
+   @Test
    public void testDependency() throws DependencyCollectionException
    {
       final Model a = newPom("a");
@@ -190,7 +338,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependency_Cycle1() throws DependencyCollectionException
    {
@@ -225,7 +373,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependency_Cycle2() throws DependencyCollectionException
    {
@@ -301,7 +449,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       assertEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependency_ScopeTest_Depth0() throws DependencyCollectionException
    {

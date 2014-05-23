@@ -53,10 +53,10 @@ public class SrcpitDependencyCollector implements DependencyCollector
    {
       final DependencyNodeContext rootContext = newRootContext(session, request);
 
-      final TreeTraversal<DependencyNodeRequest> treeTraversal = newTreeTraversal();
-      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider();
-
       final CollectResult result = new CollectResult(request);
+
+      final TreeTraversal<DependencyNodeRequest> treeTraversal = newTreeTraversal();
+      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result);
 
       if (isRootRequest(request))
       {
@@ -117,6 +117,11 @@ public class SrcpitDependencyCollector implements DependencyCollector
          result.addException(e);
       }
 
+      if (!result.getExceptions().isEmpty())
+      {
+         throw new DependencyCollectionException(result);
+      }
+
       return result;
    }
 
@@ -130,9 +135,17 @@ public class SrcpitDependencyCollector implements DependencyCollector
       return new NearestNodesFirstTreeTraversal<DependencyNodeRequest>();
    }
 
-   private DependencyTreeProvider newTreeProvider()
+   private DependencyTreeProvider newTreeProvider(final CollectResult result)
    {
-      return new DependencyTreeProvider(descriptorReader, versionRangeResolver);
+      return new DependencyTreeProvider(descriptorReader, versionRangeResolver)
+      {
+         @Override
+         protected void addException(DependencyNodeImpl node, Exception e)
+         {
+            super.addException(node, e);
+            result.addException(e);
+         }
+      };
    }
 
    private DependencyNodeContext newRootContext(final RepositorySystemSession session, final CollectRequest request)

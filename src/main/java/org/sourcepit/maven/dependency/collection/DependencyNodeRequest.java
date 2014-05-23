@@ -14,7 +14,9 @@ public class DependencyNodeRequest
    private DependencyNodeContext context;
 
    private Dependency dependency;
-
+   
+   private DependencyNodeExceptionHandler exceptionHandler;
+   
    private DependencyNode dependencyNode;
 
    public void setContext(DependencyNodeContext context)
@@ -37,6 +39,16 @@ public class DependencyNodeRequest
       return dependency;
    }
 
+   public void setExceptionHandler(DependencyNodeExceptionHandler exceptionHandler)
+   {
+      this.exceptionHandler = exceptionHandler;
+   }
+   
+   public DependencyNodeExceptionHandler getExceptionHandler()
+   {
+      return exceptionHandler;
+   }
+   
    public void setDependencyNode(DependencyNode dependencyNode)
    {
       this.dependencyNode = dependencyNode;
