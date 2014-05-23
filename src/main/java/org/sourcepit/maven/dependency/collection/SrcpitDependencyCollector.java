@@ -85,26 +85,29 @@ public class SrcpitDependencyCollector implements DependencyCollector
             }
          };
 
-         final DependencyNodeContext childContext = rootContext.deriveChildContext(node,
-            Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
-
          final List<Dependency> dependencies = request.getDependencies();
-         final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
-         for (Dependency dependency : dependencies)
+         if (!dependencies.isEmpty())
          {
-            if (childContext.getDependencySelector().selectDependency(dependency))
+            final DependencyNodeContext childContext = rootContext.deriveChildContext(node,
+               Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
+
+            final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
+            for (Dependency dependency : dependencies)
             {
-               final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
-               nodeRequest.setContext(childContext);
-               nodeRequest.setDependency(dependency);
-               requests.add(nodeRequest);
+               if (childContext.getDependencySelector().selectDependency(dependency))
+               {
+                  final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
+                  nodeRequest.setContext(childContext);
+                  nodeRequest.setDependency(dependency);
+                  requests.add(nodeRequest);
+               }
             }
+            treeTraversal.traverse(treeProvider, requests);
          }
-         treeTraversal.traverse(treeProvider, requests);
 
          result.setRoot(node);
       }
-      
+
       if (!result.getExceptions().isEmpty())
       {
          throw new DependencyCollectionException(result);
