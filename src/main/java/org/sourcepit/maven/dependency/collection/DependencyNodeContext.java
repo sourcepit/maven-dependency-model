@@ -160,6 +160,7 @@ public class DependencyNodeContext
          parentNode.getDependency(), managedDependencies);
 
       final DependencyNodeContext childContext = new DependencyNodeContext(session, remoteRepositoryManager);
+      childContext.getParentNodes().addAll(this.getParentNodes());
       childContext.getParentNodes().add(parentNode);
 
       childContext.setSavePremanagedState(this.isSavePremanagedState());
