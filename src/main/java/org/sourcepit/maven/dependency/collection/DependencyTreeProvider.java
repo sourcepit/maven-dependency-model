@@ -119,6 +119,10 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
       final Dependency managedDependency = node.getDependency();
 
+      final boolean noDescriptor = isLackingDescriptor(node.getArtifact());
+      final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
+      node.setData("traverse", Boolean.valueOf(traverse));
+
       // resolve version range
       final VersionRangeResult rangeResult;
       try
@@ -131,13 +135,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          addException(node, e);
          return null;
       }
-
-      final Artifact artifact = node.getDependency().getArtifact();
-
-      final boolean noDescriptor = isLackingDescriptor(artifact);
-      final boolean traverse = !noDescriptor
-         && context.getDependencyTraverser().traverseDependency(node.getDependency());
-      node.setData("traverse", Boolean.valueOf(traverse));
 
       // resolved, cyclic
       final ArtifactDescriptorResult descriptorResult = resolveAndApplyArtifactDescriptor(context, node, rangeResult);

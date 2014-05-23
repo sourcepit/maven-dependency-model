@@ -37,6 +37,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
 import org.junit.After;
 import org.junit.Assert;
@@ -333,6 +334,161 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+
+   @Test
+   public void testDependency_VersionRangeEx_Depth0() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      Dependency d = toDependency(a);
+      d = d.setArtifact(d.getArtifact().setVersion("[6,9)"));
+
+      CollectResult maven = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(d);
+
+         defaultDependencyCollector.collectDependencies(mavenSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         maven = e.getResult();
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult srcpit = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(d);
+
+         srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         srcpit = e.getResult();
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      
+      // inconsistency in aether
+      srcpitSession.getTraverseDependencyCalls().clear();
+      
+      assertSession(mavenSession, srcpitSession);
+   }
+   
+   @Test
+   public void testDependency_VersionRangeEx_Depth1() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+      
+      addDependency(a, b).setVersion("[6,9");
+
+      repositoryFacade.deploy(a);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult maven = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+
+         defaultDependencyCollector.collectDependencies(mavenSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         maven = e.getResult();
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult srcpit = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+
+         srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         srcpit = e.getResult();
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+   
+   @Test
+   public void testDependency_VersionRangeEx_Depth2() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+      final Model c = newPom("c");
+      
+      addDependency(a, b);
+      addDependency(b, c).setVersion("[6,9");
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult maven = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+
+         defaultDependencyCollector.collectDependencies(mavenSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         maven = e.getResult();
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult srcpit = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.setRoot(toDependency(a));
+
+         srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         srcpit = e.getResult();
       }
 
       assertEquals(maven.getRoot(), srcpit.getRoot());
@@ -1387,6 +1543,113 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          request.addDependency(dependency);
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+   
+   @Test
+   public void testDependencies_VersionRangeEx_Depth1() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+      
+      addDependency(a, b).setVersion("[6,9");
+
+      repositoryFacade.deploy(a);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult maven = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(a));
+
+         defaultDependencyCollector.collectDependencies(mavenSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         maven = e.getResult();
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult srcpit = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(a));
+
+         srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         srcpit = e.getResult();
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+   
+   @Test
+   public void testDependencies_VersionRangeEx_Depth2() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b = newPom("b");
+      final Model c = newPom("c");
+      
+      addDependency(a, b);
+      addDependency(b, c).setVersion("[6,9");
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult maven = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(a));
+
+         defaultDependencyCollector.collectDependencies(mavenSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         maven = e.getResult();
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+
+      CollectResult srcpit = null;
+      try
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(a));
+
+         srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         fail();
+      }
+      catch (DependencyCollectionException e)
+      {
+         assertTrue(e.getCause() instanceof VersionRangeResolutionException);
+         srcpit = e.getResult();
          System.out.println(TestHarness.toString(srcpit));
       }
 

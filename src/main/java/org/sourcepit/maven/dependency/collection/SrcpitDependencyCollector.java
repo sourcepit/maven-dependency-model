@@ -104,6 +104,11 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
          result.setRoot(node);
       }
+      
+      if (!result.getExceptions().isEmpty())
+      {
+         throw new DependencyCollectionException(result);
+      }
 
       final DependencyNode node = result.getRoot();
 
