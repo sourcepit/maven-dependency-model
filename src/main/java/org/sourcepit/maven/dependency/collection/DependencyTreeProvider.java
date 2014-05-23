@@ -145,6 +145,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          // handle relocation
          if (!isCyclic && !node.getRelocations().isEmpty())
          {
+            if (node.getRelocations().contains(node.getArtifact()))
+            {
+               node.setData("cycleNode", node);
+               return node;
+            }
+
             final Artifact originalArtifact = managedDependency.getArtifact();
             final Artifact currentArtifact = node.getArtifact();
 
