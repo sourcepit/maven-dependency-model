@@ -47,7 +47,18 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    }
 
    @Override
-   public Collection<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
+   public List<DependencyNodeRequest> enter(List<DependencyNodeRequest> nodes)
+   {
+      return nodes;
+   }
+
+   @Override
+   public void leave(List<DependencyNodeRequest> nodes)
+   {
+   }
+
+   @Override
+   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
       final DependencyNodeContext context = request.getContext();
       final Dependency dependency = request.getDependency();

@@ -7,7 +7,7 @@
 package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 class NearestNodesFirstTreeTraversal<Node> implements TreeTraversal<Node>
@@ -15,23 +15,22 @@ class NearestNodesFirstTreeTraversal<Node> implements TreeTraversal<Node>
    @Override
    public void traverse(TreeProvider<Node> tree, Node node)
    {
-      traverse(tree, tree.getChildren(node));
+      traverse(tree, Collections.singletonList(node));
    }
 
    @Override
-   public void traverse(TreeProvider<Node> tree, Collection<Node> nodes)
+   public void traverse(TreeProvider<Node> tree, List<Node> nodes)
    {
       if (nodes != null && !nodes.isEmpty())
       {
-         final List<Collection<Node>> childrens = new ArrayList<Collection<Node>>(nodes.size());
-         for (Node node : nodes)
+         final List<Node> childrens = new ArrayList<Node>();
+         for (Node node : tree.enter(nodes))
          {
-            childrens.add(tree.getChildren(node));
+            childrens.addAll(tree.getChildren(node));
          }
-         for (Collection<Node> children : childrens)
-         {
-            traverse(tree, children);
-         }
+         traverse(tree, childrens);
+         tree.leave(nodes);
       }
    }
+
 }

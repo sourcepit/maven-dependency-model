@@ -6,9 +6,13 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.Collection;
+import java.util.List;
 
 interface TreeProvider<Node>
 {
-   Collection<Node> getChildren(Node parent);
+   List<Node> enter(List<Node> nodes);
+
+   List<Node> getChildren(Node parent);
+   
+   void leave(List<Node> nodes);
 }

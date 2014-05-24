@@ -9,7 +9,6 @@ package org.sourcepit.maven.dependency.collection;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
@@ -64,19 +63,78 @@ public class NearestNodesFirstTreeTraversalTest
       c.getChildren().add(f);
       c.getChildren().add(g);
 
+      String result = travers(a);
+      
+      assertEquals(">a,>b,c,>d,e,f,g,<<<", result);
+   }
+
+   private String travers(Node a)
+   {
       final StringBuilder sb = new StringBuilder();
 
       new NearestNodesFirstTreeTraversal<Node>().traverse(new TreeProvider<Node>()
       {
          @Override
-         public Collection<Node> getChildren(Node parent)
+         public List<Node> getChildren(Node parent)
          {
             sb.append(parent.getName());
+            sb.append(',');
             return parent.getChildren();
+         }
+
+         @Override
+         public List<Node> enter(List<Node> nodes)
+         {
+            sb.append('>');
+            
+            return nodes;
+         }
+
+         @Override
+         public void leave(List<Node> nodes)
+         {
+            sb.append('<');
          }
       }, a);
 
-      assertEquals("abcdefg", sb.toString());
+      String result = sb.toString();
+      return result;
+   }
+
+   @Test
+   public void test2()
+   {
+      Node x0y0 = new Node("x0y0");
+      Node x0y1 = new Node("x0y1");
+      Node x0y2 = new Node("x0y2");
+      
+      x0y0.getChildren().add(x0y1);
+      x0y1.getChildren().add(x0y2);
+      
+      Node x1y0 = new Node("x1y0");
+      Node x1y1 = new Node("x1y1");
+      Node x1y2 = new Node("x1y2");
+      
+      x1y0.getChildren().add(x1y1);
+      x1y1.getChildren().add(x1y2);
+      
+      Node x2y0 = new Node("x2y0");
+      Node x2y1 = new Node("x2y1");
+      Node x2y2 = new Node("x2y2");
+      
+      x2y0.getChildren().add(x2y1);
+      x2y1.getChildren().add(x2y2);
+      
+      Node root = new Node("root");
+      root.getChildren().add(x0y0);
+      root.getChildren().add(x1y0);
+      root.getChildren().add(x2y0);
+      
+      String result = travers(root);
+      
+      System.out.println(result);
+      
+      assertEquals(">root,>x0y0,x1y0,x2y0,>x0y1,x1y1,x2y1,>x0y2,x1y2,x2y2,<<<<", result);
    }
 
 }

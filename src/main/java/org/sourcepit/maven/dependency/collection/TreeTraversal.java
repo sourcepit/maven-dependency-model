@@ -6,13 +6,13 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.Collection;
+import java.util.List;
 
 
 interface TreeTraversal<Node>
 {
    void traverse(TreeProvider<Node> tree, Node node);
 
-   void traverse(TreeProvider<Node> tree, Collection<Node> nodes);
+   void traverse(TreeProvider<Node> tree, List<Node> nodes);
 
 }
