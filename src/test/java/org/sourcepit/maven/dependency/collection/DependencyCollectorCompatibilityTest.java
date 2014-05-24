@@ -33,10 +33,12 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
 import org.junit.After;
 import org.junit.Assert;
@@ -287,6 +289,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
 
       Assert.assertEquals(mavenEx == null, srcpitEx == null);
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      if (expectEx)
+      {
+         // we must not traverse uncollectable nodes
+         mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
+      }
+
       assertSession(mavenSession, srcpitSession);
       assertCollectionExceptions(maven.getExceptions(), srcpit.getExceptions());
    }
@@ -437,6 +446,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse uncollectable nodes
+      mavenSession.getTraverseDependencyCalls().remove(1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -490,6 +501,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse uncollectable nodes
+      mavenSession.getTraverseDependencyCalls().remove(2);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -525,6 +538,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse cyclic nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -563,6 +578,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse cyclic nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -601,6 +618,10 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      mavenSession.getSelectDependencyCalls().add(toDependency(artifactFactory, a));
+      mavenSession.getManageDependencyCalls().add(toDependency(artifactFactory, a));
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1104,11 +1125,6 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
-
-      // DefaultDependencyCollector doesn't call DependencyTraverser for a. Compared with
-      // testDependency_RelocationDepth1 I think this is an inconsistency in aether
-      mavenSession.getTraverseDependencyCalls().add(0, toDependency(artifactFactory, a));
-
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1149,6 +1165,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1192,6 +1210,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, c));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1232,11 +1252,6 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
-
-      // DefaultDependencyCollector doesn't call DependencyTraverser for a. Compared with
-      // testDependency_RelocationDepth1 I think this is an inconsistency in aether
-      mavenSession.getTraverseDependencyCalls().add(0, toDependency(artifactFactory, a));
-
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1280,6 +1295,9 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      // we must not ask if a relocated node should be traversed
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1641,7 +1659,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       repositoryFacade.deploy(b2);
 
       final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
-         buildContext.getRepositorySession());
+         buildContext.getRepositorySession())
+      {
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            return new NoopDependencyGraphTransformer();
+         }
+      };
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
@@ -1652,7 +1677,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
-         buildContext.getRepositorySession());
+         buildContext.getRepositorySession())
+      {
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            return new NoopDependencyGraphTransformer();
+         }
+      };
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
@@ -1663,6 +1695,82 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      Dependency d = toDependency(artifactFactory, b2);
+      d = d.setArtifact(d.getArtifact().setVersion("[1,2)"));
+      mavenSession.getTraverseDependencyCalls().add(d);
+      assertSession(mavenSession, srcpitSession);
+   }
+
+   @Test
+   public void testDependencies_ManagedRelocationWithRange() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b1 = newPom("b", "2.1");
+      final Model b2 = newPom("b", "2.2");
+      final Model c1 = newPom("c", "1.1");
+      final Model c2 = newPom("c", "1.2");
+      final Model c3 = newPom("c", "1.3");
+
+      addDependency(a, b1).setVersion("[2,3)");
+      setRelocation(b1, c1);
+
+      Dependency managedDependency = toDependency(artifactFactory, c1);
+      managedDependency = managedDependency.setArtifact(managedDependency.getArtifact().setVersion("[1,2)"));
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b1);
+      repositoryFacade.deploy(b2);
+      repositoryFacade.deploy(c1);
+      repositoryFacade.deploy(c2);
+      repositoryFacade.deploy(c3);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession())
+      {
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            return new NoopDependencyGraphTransformer();
+         }
+      };
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(managedDependency);
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession())
+      {
+         @Override
+         public DependencyGraphTransformer getDependencyGraphTransformer()
+         {
+            return new NoopDependencyGraphTransformer();
+         }
+      };
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(managedDependency);
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      Dependency d = toDependency(artifactFactory, c1);
+      d = d.setArtifact(d.getArtifact().setVersion("[1,2)"));
+      mavenSession.getTraverseDependencyCalls().clear();
+      mavenSession.getTraverseDependencyCalls().add(toDependency(artifactFactory, a));
+      mavenSession.getTraverseDependencyCalls().add(d);
+      mavenSession.getTraverseDependencyCalls().add(d);
+      mavenSession.getTraverseDependencyCalls().add(d);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1781,6 +1889,10 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      // we must not ask if a cyclic node should be traversed...
+      mavenSession.getTraverseDependencyCalls().remove(
+         mavenSession.getTraverseDependencyCalls().lastIndexOf(toDependency(artifactFactory, b)));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1833,6 +1945,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse uncollectable nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1888,6 +2002,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse uncollectable nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1923,6 +2039,9 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      // we must not traverse cyclic nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1961,6 +2080,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse cyclic nodes
+      mavenSession.getTraverseDependencyCalls().remove(mavenSession.getTraverseDependencyCalls().size() - 1);
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1999,6 +2120,11 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+
+      mavenSession.getSelectDependencyCalls().add(toDependency(artifactFactory, a));
+      mavenSession.getManageDependencyCalls().add(toDependency(artifactFactory, a));
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
+
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2330,6 +2456,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, a));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2370,6 +2498,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2412,6 +2542,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b1));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2456,6 +2588,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b1));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2496,6 +2630,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, a));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2539,6 +2675,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2771,6 +2909,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not traverse cyclic nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2821,6 +2961,9 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       Dependency d = srcpitSession.getSelectDependencyCalls().remove(1);
       srcpitSession.getSelectDependencyCalls().add(d);
 
+      // we must not ask if we have to traverse a dependency that is be relocated
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
+
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2865,6 +3008,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      // we must not ask if a relocated node should be traversed...
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2915,6 +3060,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       Dependency _c1 = srcpitSession.getSelectDependencyCalls().remove(2);
       srcpitSession.getSelectDependencyCalls().add(_c1);
 
+      // we must not traverse relocated nodes
+      mavenSession.getTraverseDependencyCalls().remove(toDependency(artifactFactory, b));
       assertSession(mavenSession, srcpitSession);
    }
 

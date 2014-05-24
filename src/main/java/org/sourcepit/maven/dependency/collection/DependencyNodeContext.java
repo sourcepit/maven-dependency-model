@@ -153,7 +153,7 @@ public class DependencyNodeContext
       return parentNodes;
    }
 
-   public DependencyNodeContext deriveChildContext(DependencyNodeImpl parentNode, List<Dependency> managedDependencies,
+   public DependencyNodeContext deriveChildContext(DependencyNode parentNode, List<Dependency> managedDependencies,
       List<RemoteRepository> repositories)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,

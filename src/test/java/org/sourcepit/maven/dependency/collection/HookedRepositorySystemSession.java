@@ -18,7 +18,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 
-public final class HookedRepositorySystemSession extends AbstractForwardingRepositorySystemSession
+public class HookedRepositorySystemSession extends AbstractForwardingRepositorySystemSession
 {
    private final List<Dependency> selectDependencyCalls = new ArrayList<Dependency>();
 

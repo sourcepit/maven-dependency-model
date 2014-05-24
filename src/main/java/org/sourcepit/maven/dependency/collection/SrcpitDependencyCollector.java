@@ -26,6 +26,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -165,9 +166,9 @@ public class SrcpitDependencyCollector implements DependencyCollector
       return new NearestNodesFirstTreeTraversal<DependencyNodeRequest>();
    }
 
-   private DependencyTreeProvider newTreeProvider(final CollectResult result)
+   private TreeProvider<DependencyNodeRequest> newTreeProvider(final CollectResult result)
    {
-      return new DependencyTreeProvider(descriptorReader, versionRangeResolver)
+      DependencyTreeProvider resolver = new DependencyTreeProvider(descriptorReader, versionRangeResolver)
       {
          @Override
          protected void addException(DependencyNodeImpl node, Exception e)
@@ -176,6 +177,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
             result.addException(e);
          }
       };
+      return new ConflictTreeProvider(resolver);
    }
 
    private DependencyNodeContext newRootContext(final RepositorySystemSession session, final CollectRequest request)
@@ -186,7 +188,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final DependencyNodeContext context = new DependencyNodeContext(session, remoteRepositoryManager)
       {
          @Override
-         public DependencyNodeContext deriveChildContext(DependencyNodeImpl parentNode,
+         public DependencyNodeContext deriveChildContext(DependencyNode parentNode,
             List<Dependency> managedDependencies, List<RemoteRepository> repositories)
          {
             return super.deriveChildContext(parentNode,

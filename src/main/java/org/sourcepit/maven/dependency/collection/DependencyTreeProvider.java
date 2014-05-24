@@ -7,7 +7,6 @@
 package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,7 +32,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 
 public class DependencyTreeProvider implements TreeProvider<DependencyNodeRequest>
@@ -52,7 +50,38 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    @Override
    public List<DependencyNodeRequest> enter(List<DependencyNodeRequest> nodes)
    {
-      return nodes;
+      final List<DependencyNodeRequest> bar = new ArrayList<DependencyNodeRequest>(nodes.size());
+      for (DependencyNodeRequest request : nodes)
+      {
+         final DependencyNodeContext context = request.getContext();
+         final Dependency dependency = request.getDependency();
+
+         final Result result = collect2(context, dependency, null, false);
+
+         final List<DependencyNodeImpl> foo = buildNodes(result, context);
+
+         if (foo.size() == 0)
+         {
+            bar.add(request);
+         }
+         else if (foo.size() == 1)
+         {
+            request.setDependencyNode(foo.get(0));
+            bar.add(request);
+         }
+         else
+         {
+            for (DependencyNodeImpl dependencyNodeImpl : foo)
+            {
+               DependencyNodeRequest r = new DependencyNodeRequest();
+               r.setContext(request.getContext());
+               r.setDependency(request.getDependency());
+               r.setDependencyNode(dependencyNodeImpl);
+               bar.add(r);
+            }
+         }
+      }
+      return bar;
    }
 
    @Override
@@ -64,30 +93,41 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
       final DependencyNodeContext context = request.getContext();
-      final Dependency dependency = request.getDependency();
 
-      final DependencyNodeImpl node = collect(context, dependency, null, false);
+      final DependencyNodeImpl node = (DependencyNodeImpl) request.getDependencyNode();
       if (node == null)
       {
          return Collections.emptyList();
       }
 
-      request.setDependencyNode(node);
-
       final LinkedList<DependencyNode> parentNodes = context.getParentNodes();
+
+      final DependencyNode cyclicNode = find(parentNodes, node.getArtifact());
+      if (cyclicNode != null)
+      {
+         node.setRepositories(cyclicNode.getRepositories());
+         node.setChildren(cyclicNode.getChildren());
+         node.setData("cycleNode", cyclicNode);
+         return Collections.emptyList();
+      }
+
       if (!parentNodes.isEmpty())
       {
          final DependencyNode parentNode = parentNodes.getLast();
          parentNode.getChildren().add(node);
       }
 
-      final ArtifactDescriptorResult descriptorResult = (ArtifactDescriptorResult) node.getData().get(
-         "descriptorResult");
+      final Dependency managedDependency = (Dependency) node.getData().get("managedDependency");
+      final boolean noDescriptor = isLackingDescriptor(managedDependency.getArtifact());
+      final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
 
-      if (Boolean.FALSE.equals(node.getData().get("traverse")))
+      if (!traverse)
       {
          return Collections.emptyList();
       }
+
+      final ArtifactDescriptorResult descriptorResult = (ArtifactDescriptorResult) node.getData().get(
+         "descriptorResult");
 
       // traverse children (if traverse dependencies)
       final List<Dependency> children = context.getDependenciesFilter().filterDependencies(node.getArtifact(),
@@ -121,12 +161,58 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return childRequests;
    }
 
+   private List<DependencyNodeImpl> buildNodes(final Result result, final DependencyNodeContext context)
+   {
+      List<DependencyNodeImpl> nodes = new ArrayList<DependencyNodeImpl>(result.getArtifactDescriptorResults().size());
+
+      final VersionRangeResult rangeResult = result.getVersionRangeResult();
+
+      final ManagedDependency managedDependency = result.getManagedDependency();
+
+      if (rangeResult.getVersions().isEmpty())
+      {
+         addException(null, new VersionRangeResolutionException(rangeResult, "No versions available for "
+            + managedDependency.getDependency().getArtifact() + " within specified range"));
+      }
+      else
+      {
+         for (Version version : rangeResult.getVersions())
+         {
+            final ArtifactDescriptorResult descriptorResult = result.getArtifactDescriptorResults().get(version);
+            if (descriptorResult.getExceptions().isEmpty())
+            {
+               final Dependency collectedDependency = managedDependency.getDependency().setArtifact(
+                  descriptorResult.getArtifact());
+
+               final DependencyNodeImpl node = new DependencyNodeImpl();
+               node.setAliases(descriptorResult.getAliases());
+               node.setDependency(collectedDependency);
+               node.setManagedBits(managedDependency.getManagedBits());
+               node.setRelocations(descriptorResult.getRelocations());
+               node
+                  .setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
+               node.setRequestContext(context.getRequestContext());
+               node.setVersion(version);
+               node.setVersionConstraint(rangeResult.getVersionConstraint());
+
+               node.setData("managedDependency", managedDependency.getDependency());
+               node.setData("descriptorResult", descriptorResult);
+
+               nodes.add(node);
+            }
+            else
+            {
+               addException(null, new ArtifactDescriptorException(descriptorResult));
+            }
+         }
+      }
+
+      return nodes;
+   }
+
    private static class Result
    {
-
       private ManagedDependency managedDependency;
-
-      private boolean traverse;
 
       private VersionRangeResult versionRangeResult;
 
@@ -142,16 +228,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          return managedDependency;
       }
 
-      public void setTraverse(boolean traverse)
-      {
-         this.traverse = traverse;
-      }
-
-      public boolean isTraverse()
-      {
-         return traverse;
-      }
-
       public void setVersionRangeResult(VersionRangeResult versionRangeResult)
       {
          this.versionRangeResult = versionRangeResult;
@@ -160,11 +236,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       public VersionRangeResult getVersionRangeResult()
       {
          return versionRangeResult;
-      }
-
-      public void setArtifactDescriptorResults(Map<Version, ArtifactDescriptorResult> artifactDescriptorResults)
-      {
-         this.artifactDescriptorResults = artifactDescriptorResults;
       }
 
       public Map<Version, ArtifactDescriptorResult> getArtifactDescriptorResults()
@@ -177,93 +248,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       }
    }
 
-   private DependencyNodeImpl collect(DependencyNodeContext context, Dependency dependency, List<Artifact> relocations,
-      boolean disableVersionManagement)
-   {
-      Result result = new Result();
-
-      final DependencyNodeImpl node = new DependencyNodeImpl();
-      node.setRequestContext(context.getRequestContext());
-      node.setDependency(dependency);
-
-      // apply dependency management
-      applyDependencyManagement(context, node, disableVersionManagement);
-
-      final Dependency managedDependency = node.getDependency();
-
-      final boolean noDescriptor = isLackingDescriptor(node.getArtifact());
-      final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
-      node.setData("traverse", Boolean.valueOf(traverse));
-
-      result.setTraverse(traverse);
-
-      // resolve version range
-      final VersionRangeResult rangeResult;
-      try
-      {
-         rangeResult = resolveVersionRange(context, node);
-         result.setVersionRangeResult(rangeResult);
-         node.setVersionConstraint(rangeResult.getVersionConstraint());
-      }
-      catch (VersionRangeResolutionException e)
-      {
-         addException(node, e);
-         return null;
-      }
-
-      // resolved, cyclic
-      final ArtifactDescriptorResult descriptorResult = resolveAndApplyArtifactDescriptor(result, context, node,
-         rangeResult);
-      if (descriptorResult != null)
-      {
-         final boolean isCyclic = isCyclic(node);
-
-         // handle relocation
-         if (!isCyclic && !node.getRelocations().isEmpty())
-         {
-            if (node.getRelocations().contains(node.getArtifact()))
-            {
-               node.setData("cycleNode", node);
-               return node;
-            }
-
-            final Artifact originalArtifact = managedDependency.getArtifact();
-            final Artifact currentArtifact = node.getArtifact();
-
-            disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
-               && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
-
-            final Dependency relocatedDependency = node.getDependency();
-            if (!context.getDependencySelector().selectDependency(relocatedDependency))
-            {
-               return null;
-            }
-
-            return collect(context, relocatedDependency, node.getRelocations(), disableVersionManagement);
-         }
-         node.setRelocations(relocations);
-         node.setData("collectionStatus", "ok");
-         return node;
-      }
-      return null;
-   }
-
-   private boolean isCyclic(final DependencyNodeImpl node)
-   {
-      return node.getData().get("cycleNode") != null;
-   }
-
-   private void applyDependencyManagement(DependencyNodeContext context, final DependencyNodeImpl node,
-      boolean disableVersionManagement)
-   {
-      final DependencyManagement dependencyManagement = context.getDependencyManager().manageDependency(
-         node.getDependency());
-      if (dependencyManagement != null)
-      {
-         applyDependencyManagement(node, dependencyManagement, context.isSavePremanagedState(),
-            disableVersionManagement);
-      }
-   }
 
    private ManagedDependency applyDependencyManagement2(Dependency dependency, DependencyManager dependencyManager,
       boolean disableVersionManagement)
@@ -318,7 +302,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       {
          final Artifact artifact = dependency.getArtifact();
          dependency = dependency.setArtifact(artifact.setVersion(managedVersion));
-         result.managedBits |= DependencyNode.MANAGED_VERSION;
+         managedBits |= DependencyNode.MANAGED_VERSION;
       }
 
       if (dependencyManagement.getProperties() != null)
@@ -352,55 +336,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return result;
    }
 
-   private ArtifactDescriptorResult resolveAndApplyArtifactDescriptor(Result result, DependencyNodeContext context,
-      DependencyNodeImpl node, VersionRangeResult rangeResult)
-   {
-      final Artifact artifact = node.getDependency().getArtifact();
-
-      for (final Version version : rangeResult.getVersions())
-      {
-         node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
-         node.setVersion(version);
-         node.setRelocations(null);
-         node.setAliases(null);
-         node.getData().remove("cycleNode");
-
-         // read artifact descriptor
-         ArtifactDescriptorResult descriptorResult = null;
-         try
-         {
-            descriptorResult = readArtifactDescriptor(context, artifact.setVersion(version.toString()));
-            node.setData("descriptorResult", descriptorResult);
-            node.setDependency(node.getDependency().setArtifact(descriptorResult.getArtifact()));
-            node.setRelocations(descriptorResult.getRelocations());
-            node.setAliases(descriptorResult.getAliases());
-
-            result.getArtifactDescriptorResults().put(version, descriptorResult);
-         }
-         catch (ArtifactDescriptorException e)
-         {
-            result.getArtifactDescriptorResults().put(version, e.getResult());
-
-            addException(node, e);
-            continue;
-         }
-
-         // handle cycle
-         final DependencyNode cycleNode = find(context.getParentNodes(), node.getArtifact());
-         if (cycleNode != null)
-         {
-            node.setRepositories(cycleNode.getRepositories());
-            node.setChildren(cycleNode.getChildren());
-            node.setData("cycleNode", cycleNode);
-            continue;
-         }
-
-         return descriptorResult;
-      }
-
-      return null;
-   }
-
    private Result collect2(DependencyNodeContext context, Dependency dependency, List<Artifact> relocations,
       boolean disableVersionManagement)
    {
@@ -412,23 +347,11 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
       final Dependency managedDependency = result.getManagedDependency().getDependency();
 
-      final boolean noDescriptor = isLackingDescriptor(managedDependency.getArtifact());
-      final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
-      result.setTraverse(traverse);
-
       // resolve version range
       final VersionRangeResult rangeResult;
-      try
-      {
-         rangeResult = resolveVersionRange(context.getSession(), context.getRequestContext(),
-            context.getRequestTrace(), context.getRepositories(), managedDependency);
-         result.setVersionRangeResult(rangeResult);
-      }
-      catch (VersionRangeResolutionException e)
-      {
-         result.setVersionRangeResult(e.getResult());
-         return null;
-      }
+      rangeResult = resolveVersionRange(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
+         context.getRepositories(), managedDependency);
+      result.setVersionRangeResult(rangeResult);
 
       for (final Version version : rangeResult.getVersions())
       {
@@ -437,14 +360,21 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
             ArtifactDescriptorResult descriptorResult = readArtifactDescriptor(context, managedDependency.getArtifact()
                .setVersion(version.toString()));
 
+            result.getArtifactDescriptorResults().put(version, descriptorResult);
+
             if (descriptorResult.getRelocations().isEmpty())
             {
-               result.getArtifactDescriptorResults().put(version, descriptorResult);
+               descriptorResult.setRelocations(relocations);
             }
             else
             {
                final Artifact originalArtifact = managedDependency.getArtifact();
                final Artifact currentArtifact = descriptorResult.getArtifact();
+
+               if (relocations != null && relocations.contains(currentArtifact))
+               {
+                  return result;
+               }
 
                disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
                   && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
@@ -462,7 +392,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
          catch (ArtifactDescriptorException e)
          {
             result.getArtifactDescriptorResults().put(version, e.getResult());
-            continue;
          }
       }
       return result;
@@ -485,14 +414,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
    protected void addException(final DependencyNodeImpl node, Exception e)
    {
-      @SuppressWarnings("unchecked")
-      Collection<Exception> exceptions = (Collection<Exception>) node.getData().get("exceptions");
-      if (exceptions == null)
-      {
-         exceptions = new ArrayList<Exception>(1);
-         node.setData("exceptions", exceptions);
-      }
-      exceptions.add(e);
    }
 
    public static DependencyNode find(List<DependencyNode> collection, Artifact artifact)
@@ -550,14 +471,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
    }
 
-   private VersionRangeResult resolveVersionRange(final DependencyNodeContext context, final DependencyNodeImpl node)
-      throws VersionRangeResolutionException
-   {
-      // TODO cache
-      return resolveVersionRange(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
-         context.getRepositories(), node.getDependency());
-   }
-
    private ArtifactDescriptorResult readArtifactDescriptor(RepositorySystemSession session, String requestContext,
       RequestTrace trace, List<RemoteRepository> repositories, Artifact artifact) throws ArtifactDescriptorException
    {
@@ -585,78 +498,21 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
    private VersionRangeResult resolveVersionRange(RepositorySystemSession session, String requestContext,
       RequestTrace trace, List<RemoteRepository> repositories, Dependency dependency)
-      throws VersionRangeResolutionException
    {
-      VersionRangeResult rangeResult;
-      VersionRangeRequest rangeRequest = new VersionRangeRequest();
+      final VersionRangeRequest rangeRequest = new VersionRangeRequest();
       rangeRequest.setArtifact(dependency.getArtifact());
       rangeRequest.setRepositories(repositories);
       rangeRequest.setRequestContext(requestContext);
       rangeRequest.setTrace(trace);
 
-      rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
-
-      if (rangeResult.getVersions().isEmpty())
+      try
       {
-         throw new VersionRangeResolutionException(rangeResult, "No versions available for " + dependency.getArtifact()
-            + " within specified range");
+         return versionRangeResolver.resolveVersionRange(session, rangeRequest);
       }
-      return rangeResult;
+      catch (VersionRangeResolutionException e)
+      {
+         return e.getResult();
+      }
    }
 
-
-   private static void applyDependencyManagement(DependencyNodeImpl node, DependencyManagement dependencyManagement,
-      boolean savePremanagedState, boolean disableVersionManagement)
-   {
-      Dependency dependency = node.getDependency();
-      int managedBits = node.getManagedBits();
-
-      final String managedVersion = dependencyManagement.getVersion();
-      if (managedVersion != null && !disableVersionManagement)
-      {
-         final Artifact artifact = dependency.getArtifact();
-         if (savePremanagedState)
-         {
-            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, artifact.getVersion());
-         }
-         dependency = dependency.setArtifact(artifact.setVersion(managedVersion));
-         managedBits |= DependencyNode.MANAGED_VERSION;
-      }
-
-      if (dependencyManagement.getProperties() != null)
-      {
-         Artifact artifact = dependency.getArtifact();
-         dependency = dependency.setArtifact(artifact.setProperties(dependencyManagement.getProperties()));
-         managedBits |= DependencyNode.MANAGED_PROPERTIES;
-      }
-
-      if (dependencyManagement.getScope() != null)
-      {
-         if (savePremanagedState)
-         {
-            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, dependency.getScope());
-         }
-         dependency = dependency.setScope(dependencyManagement.getScope());
-         managedBits |= DependencyNode.MANAGED_SCOPE;
-      }
-
-      if (dependencyManagement.getOptional() != null)
-      {
-         if (savePremanagedState)
-         {
-            node.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, dependency.isOptional());
-         }
-         dependency = dependency.setOptional(dependencyManagement.getOptional());
-         managedBits |= DependencyNode.MANAGED_OPTIONAL;
-      }
-
-      if (dependencyManagement.getExclusions() != null)
-      {
-         dependency = dependency.setExclusions(dependencyManagement.getExclusions());
-         managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
-      }
-
-      node.setDependency(dependency);
-      node.setManagedBits(managedBits);
-   }
 }
