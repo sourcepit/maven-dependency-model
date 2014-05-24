@@ -26,7 +26,6 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -51,86 +50,109 @@ public class SrcpitDependencyCollector implements DependencyCollector
    public CollectResult collectDependencies(final RepositorySystemSession session, final CollectRequest request)
       throws DependencyCollectionException
    {
-      final DependencyNodeContext rootContext = newRootContext(session, request);
-
-      final CollectResult result = new CollectResult(request);
-
-      final TreeTraversal<DependencyNodeRequest> treeTraversal = newTreeTraversal();
-      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result);
+      final CollectResult result;
 
       if (isRootRequest(request))
       {
-         final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
-         nodeRequest.setContext(rootContext);
-         nodeRequest.setDependency(request.getRoot());
-
-         treeTraversal.traverse(treeProvider, nodeRequest);
-         result.setRoot(nodeRequest.getDependencyNode());
+         result = collectDependencies(session, request.getRoot(), request);
       }
       else
       {
-         final Artifact rootArtifact = request.getRootArtifact();
-         final DependencyNodeImpl node = new DependencyNodeImpl()
+         result = collectDependencies(session, request.getRootArtifact(), request.getDependencies(), request);
+      }
+
+      throwOnErrors(result);
+      transformGraph(session, result);
+      throwOnErrors(result);
+
+      return result;
+   }
+
+   private CollectResult collectDependencies(RepositorySystemSession session, Dependency dependency,
+      CollectRequest request)
+   {
+      final CollectResult result = new CollectResult(request);
+      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result);
+
+      final DependencyNodeContext rootContext = newRootContext(session, request);
+      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
+      nodeRequest.setContext(rootContext);
+      nodeRequest.setDependency(request.getRoot());
+
+      newTreeTraversal().traverse(treeProvider, nodeRequest);
+      result.setRoot(nodeRequest.getDependencyNode());
+
+      return result;
+   }
+
+   private CollectResult collectDependencies(RepositorySystemSession session, final Artifact rootArtifact,
+      List<Dependency> dependencies, CollectRequest request)
+   {
+      final TreeTraversal<DependencyNodeRequest> treeTraversal = newTreeTraversal();
+
+      final CollectResult result = new CollectResult(request);
+      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result);
+
+      final DependencyNodeImpl node = new DependencyNodeImpl()
+      {
+         @Override
+         public void setDependency(Dependency dependency)
          {
-            @Override
-            public void setDependency(Dependency dependency)
-            {
-               throw new IllegalStateException();
-            }
-
-            @Override
-            public Artifact getArtifact()
-            {
-               return rootArtifact;
-            }
-         };
-
-         final List<Dependency> dependencies = request.getDependencies();
-         if (!dependencies.isEmpty())
-         {
-            final DependencyNodeContext childContext = rootContext.deriveChildContext(node,
-               Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
-
-            final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
-            for (Dependency dependency : dependencies)
-            {
-               if (childContext.getDependencySelector().selectDependency(dependency))
-               {
-                  final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
-                  nodeRequest.setContext(childContext);
-                  nodeRequest.setDependency(dependency);
-                  requests.add(nodeRequest);
-               }
-            }
-            treeTraversal.traverse(treeProvider, requests);
+            throw new IllegalStateException();
          }
 
-         result.setRoot(node);
-      }
+         @Override
+         public Artifact getArtifact()
+         {
+            return rootArtifact;
+         }
+      };
 
-      if (!result.getExceptions().isEmpty())
+      if (!dependencies.isEmpty())
       {
-         throw new DependencyCollectionException(result);
+         final DependencyNodeContext rootContext = newRootContext(session, request);
+         final DependencyNodeContext childContext = rootContext.deriveChildContext(node,
+            Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
+
+         final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
+         for (Dependency dependency : dependencies)
+         {
+            if (childContext.getDependencySelector().selectDependency(dependency))
+            {
+               final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
+               nodeRequest.setContext(childContext);
+               nodeRequest.setDependency(dependency);
+               requests.add(nodeRequest);
+            }
+         }
+         treeTraversal.traverse(treeProvider, requests);
       }
 
-      final DependencyNode node = result.getRoot();
+      result.setRoot(node);
 
+      return result;
+   }
+
+   private void transformGraph(RepositorySystemSession session, final CollectResult result)
+   {
       final DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
       try
       {
-         result.setRoot(transformer.transformGraph(node, new DefaultDependencyGraphTransformationContext(session)));
+         result.setRoot(transformer.transformGraph(result.getRoot(), new DefaultDependencyGraphTransformationContext(
+            session)));
       }
       catch (RepositoryException e)
       {
          result.addException(e);
       }
+   }
 
+   private static void throwOnErrors(final CollectResult result) throws DependencyCollectionException
+   {
       if (!result.getExceptions().isEmpty())
       {
          throw new DependencyCollectionException(result);
       }
-
-      return result;
    }
 
    private boolean isRootRequest(final CollectRequest request)
