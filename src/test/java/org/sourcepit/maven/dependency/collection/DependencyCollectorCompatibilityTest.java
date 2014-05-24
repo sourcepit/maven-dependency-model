@@ -10,32 +10,31 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.addDependency;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.assertDependenciesEquals;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.assertDependencyNodeEquals;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.newPom;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.setRelocation;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.toDependency;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.toSystemDependency;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.Relocation;
 import org.apache.maven.model.superpom.SuperPomProvider;
 import org.apache.maven.plugin.LegacySupport;
 import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DependencyCollector;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
@@ -46,7 +45,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.sourcepit.common.maven.artifact.ArtifactFactory;
-import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
@@ -168,7 +166,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(pom);
+         Dependency dependency = toDependency(artifactFactory, pom);
          request.addDependency(dependency);
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
@@ -180,14 +178,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(pom);
+         Dependency dependency = toDependency(artifactFactory, pom);
          request.addDependency(dependency);
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -249,7 +247,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(dependency));
+         request.setRoot(toDependency(artifactFactory, dependency));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -271,7 +269,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(dependency));
+         request.setRoot(toDependency(artifactFactory, dependency));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
@@ -288,7 +286,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       }
 
       Assert.assertEquals(mavenEx == null, srcpitEx == null);
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
       assertCollectionExceptions(maven.getExceptions(), srcpit.getExceptions());
    }
@@ -319,7 +317,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -330,13 +328,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -348,7 +346,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
          buildContext.getRepositorySession());
 
-      Dependency d = toDependency(a);
+      Dependency d = toDependency(artifactFactory, a);
       d = d.setArtifact(d.getArtifact().setVersion("[6,9)"));
 
       CollectResult maven = null;
@@ -384,7 +382,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          srcpit = e.getResult();
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // inconsistency in aether
       srcpitSession.getTraverseDependencyCalls().clear();
@@ -409,7 +407,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          defaultDependencyCollector.collectDependencies(mavenSession, request);
          fail();
@@ -427,7 +425,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          fail();
@@ -438,7 +436,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          srcpit = e.getResult();
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -462,7 +460,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          defaultDependencyCollector.collectDependencies(mavenSession, request);
          fail();
@@ -480,7 +478,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          fail();
@@ -491,7 +489,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          srcpit = e.getResult();
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -509,7 +507,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -520,13 +518,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -547,7 +545,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -558,13 +556,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -585,7 +583,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -596,13 +594,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -623,7 +621,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -634,13 +632,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -664,7 +662,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       // final CollectResult maven;
       // {
       // CollectRequest request = newCollectRequest();
-      // request.setRoot(toDependency(a));
+      // request.setRoot(toDependency(artifactFactory, a));
       //
       // maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
       // System.out.println(TestHarness.toString(maven));
@@ -675,7 +673,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
@@ -777,11 +775,11 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          CollectRequest request = newCollectRequest();
          if ("system".equals(scope))
          {
-            request.setRoot(toSystemDependency(a, ""));
+            request.setRoot(toSystemDependency(artifactFactory, a, ""));
          }
          else
          {
-            request.setRoot(toDependency(a).setScope(scope));
+            request.setRoot(toDependency(artifactFactory, a).setScope(scope));
          }
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
@@ -795,23 +793,23 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          CollectRequest request = newCollectRequest();
          if ("system".equals(scope))
          {
-            request.setRoot(toSystemDependency(a, ""));
+            request.setRoot(toSystemDependency(artifactFactory, a, ""));
          }
          else
          {
-            request.setRoot(toDependency(a).setScope(scope));
+            request.setRoot(toDependency(artifactFactory, a).setScope(scope));
          }
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // Inconsistency in aether. Never traverse system scope artifacts
       if ("system".equals(scope))
       {
-         srcpitSession.getTraverseDependencyCalls().add(toSystemDependency(a, ""));
+         srcpitSession.getTraverseDependencyCalls().add(toSystemDependency(artifactFactory, a, ""));
       }
 
       assertSession(mavenSession, srcpitSession);
@@ -841,7 +839,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -852,13 +850,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -886,7 +884,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -897,13 +895,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -926,7 +924,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -937,13 +935,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -969,7 +967,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -980,13 +978,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1009,7 +1007,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1020,13 +1018,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1052,7 +1050,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1063,13 +1061,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1088,7 +1086,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1099,17 +1097,17 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // DefaultDependencyCollector doesn't call DependencyTraverser for a. Compared with
       // testDependency_RelocationDepth1 I think this is an inconsistency in aether
-      mavenSession.getTraverseDependencyCalls().add(0, toDependency(a));
+      mavenSession.getTraverseDependencyCalls().add(0, toDependency(artifactFactory, a));
 
       assertSession(mavenSession, srcpitSession);
    }
@@ -1133,7 +1131,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1144,13 +1142,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1176,7 +1174,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1187,13 +1185,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1216,7 +1214,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1227,17 +1225,17 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // DefaultDependencyCollector doesn't call DependencyTraverser for a. Compared with
       // testDependency_RelocationDepth1 I think this is an inconsistency in aether
-      mavenSession.getTraverseDependencyCalls().add(0, toDependency(a));
+      mavenSession.getTraverseDependencyCalls().add(0, toDependency(artifactFactory, a));
 
       assertSession(mavenSession, srcpitSession);
    }
@@ -1264,7 +1262,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1275,13 +1273,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1297,7 +1295,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(pom).setOptional(Boolean.TRUE));
+         request.setRoot(toDependency(artifactFactory, pom).setOptional(Boolean.TRUE));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1308,13 +1306,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(pom).setOptional(Boolean.TRUE));
+         request.setRoot(toDependency(artifactFactory, pom).setOptional(Boolean.TRUE));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1334,7 +1332,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1345,13 +1343,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1373,7 +1371,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1384,13 +1382,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1411,7 +1409,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1422,13 +1420,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1450,8 +1448,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addDependency(toDependency(c));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addDependency(toDependency(artifactFactory, c));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1462,14 +1460,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addDependency(toDependency(c));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addDependency(toDependency(artifactFactory, c));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1486,8 +1484,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a1));
-         request.addManagedDependency(toDependency(a2));
+         request.setRoot(toDependency(artifactFactory, a1));
+         request.addManagedDependency(toDependency(artifactFactory, a2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1498,14 +1496,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a1));
-         request.addManagedDependency(toDependency(a2));
+         request.setRoot(toDependency(artifactFactory, a1));
+         request.addManagedDependency(toDependency(artifactFactory, a2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1527,8 +1525,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addManagedDependency(toDependency(b2));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1539,14 +1537,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addManagedDependency(toDependency(b2));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1571,8 +1569,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addManagedDependency(toDependency(b2));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1583,14 +1581,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
-         request.addManagedDependency(toDependency(b2));
+         request.setRoot(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1606,7 +1604,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
@@ -1618,17 +1616,17 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testRootArtifact() throws DependencyCollectionException
    {
@@ -1641,7 +1639,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1652,23 +1650,23 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testRootArtifact_WithDependencies() throws DependencyCollectionException
    {
       final Model a = newPom("a");
       final Model b = newPom("b");
       final Model c = newPom("c");
-      
+
       addDependency(a, b);
       addDependency(b, c);
 
@@ -1681,8 +1679,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
-         request.addDependency(toDependency(b));
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
+         request.addDependency(toDependency(artifactFactory, b));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1693,24 +1691,24 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
-         request.addDependency(toDependency(b));
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
+         request.addDependency(toDependency(artifactFactory, b));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testRootArtifact_CycleWithRootArtifact() throws DependencyCollectionException
    {
       final Model a = newPom("a");
       final Model b = newPom("b");
       final Model c = newPom("c");
-      
+
       addDependency(a, b);
       addDependency(b, c);
       addDependency(c, a);
@@ -1724,8 +1722,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
-         request.addDependency(toDependency(b));
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
+         request.addDependency(toDependency(artifactFactory, b));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1736,14 +1734,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRootArtifact(toDependency(a).getArtifact());
-         request.addDependency(toDependency(b));
+         request.setRootArtifact(toDependency(artifactFactory, a).getArtifact());
+         request.addDependency(toDependency(artifactFactory, b));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1764,7 +1762,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          defaultDependencyCollector.collectDependencies(mavenSession, request);
          fail();
@@ -1783,7 +1781,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          fail();
@@ -1795,7 +1793,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1819,7 +1817,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          defaultDependencyCollector.collectDependencies(mavenSession, request);
          fail();
@@ -1838,7 +1836,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       try
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          fail();
@@ -1850,7 +1848,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1868,7 +1866,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1879,13 +1877,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1906,7 +1904,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1917,13 +1915,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -1944,7 +1942,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -1955,13 +1953,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2031,11 +2029,11 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
 
          if ("system".equals(scope))
          {
-            request.addDependency(toSystemDependency(a, ""));
+            request.addDependency(toSystemDependency(artifactFactory, a, ""));
          }
          else
          {
-            request.addDependency(toDependency(a).setScope(scope));
+            request.addDependency(toDependency(artifactFactory, a).setScope(scope));
          }
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
@@ -2050,18 +2048,18 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
 
          if ("system".equals(scope))
          {
-            request.addDependency(toSystemDependency(a, ""));
+            request.addDependency(toSystemDependency(artifactFactory, a, ""));
          }
          else
          {
-            request.addDependency(toDependency(a).setScope(scope));
+            request.addDependency(toDependency(artifactFactory, a).setScope(scope));
          }
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2085,7 +2083,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2096,13 +2094,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2120,8 +2118,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a1));
-         request.addDependency(toDependency(a2));
+         request.addDependency(toDependency(artifactFactory, a1));
+         request.addDependency(toDependency(artifactFactory, a2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2132,14 +2130,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a1));
-         request.addDependency(toDependency(a2));
+         request.addDependency(toDependency(artifactFactory, a1));
+         request.addDependency(toDependency(artifactFactory, a2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2162,7 +2160,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2173,13 +2171,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2197,8 +2195,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a2));
-         request.addDependency(toDependency(a1));
+         request.addDependency(toDependency(artifactFactory, a2));
+         request.addDependency(toDependency(artifactFactory, a1));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2209,14 +2207,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a2));
-         request.addDependency(toDependency(a1));
+         request.addDependency(toDependency(artifactFactory, a2));
+         request.addDependency(toDependency(artifactFactory, a1));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2239,7 +2237,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2250,13 +2248,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2275,7 +2273,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2286,13 +2284,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2315,7 +2313,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2326,13 +2324,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2355,8 +2353,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
-         request.addManagedDependency(toDependency(b1));
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b1));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2367,17 +2365,17 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
-         request.addManagedDependency(toDependency(b1));
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, b1));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
-   
+
    @Test
    public void testDependencies_ManagedRelocation2() throws DependencyCollectionException
    {
@@ -2399,8 +2397,8 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
-         request.addManagedDependency(toDependency(c2));
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, c2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2411,14 +2409,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
-         request.addManagedDependency(toDependency(c2));
+         request.addDependency(toDependency(artifactFactory, a));
+         request.addManagedDependency(toDependency(artifactFactory, c2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2441,7 +2439,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2452,13 +2450,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2484,7 +2482,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2495,13 +2493,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2517,7 +2515,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a).setOptional(Boolean.TRUE));
+         request.addDependency(toDependency(artifactFactory, a).setOptional(Boolean.TRUE));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2528,13 +2526,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a).setOptional(Boolean.TRUE));
+         request.addDependency(toDependency(artifactFactory, a).setOptional(Boolean.TRUE));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2554,7 +2552,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2565,13 +2563,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2590,7 +2588,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
@@ -2602,14 +2600,14 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2626,9 +2624,9 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a1);
+         Dependency dependency = toDependency(artifactFactory, a1);
          request.addDependency(dependency);
-         request.addManagedDependency(toDependency(a2));
+         request.addManagedDependency(toDependency(artifactFactory, a2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2639,15 +2637,15 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a1);
+         Dependency dependency = toDependency(artifactFactory, a1);
          request.addDependency(dependency);
-         request.addManagedDependency(toDependency(a2));
+         request.addManagedDependency(toDependency(artifactFactory, a2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2668,9 +2666,9 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
-         request.addManagedDependency(toDependency(b2));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2681,15 +2679,15 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         Dependency dependency = toDependency(a);
+         Dependency dependency = toDependency(artifactFactory, a);
          request.addDependency(dependency);
-         request.addManagedDependency(toDependency(b2));
+         request.addManagedDependency(toDependency(artifactFactory, b2));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2716,7 +2714,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2727,13 +2725,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2760,7 +2758,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2771,13 +2769,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.setRoot(toDependency(a));
+         request.setRoot(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // we are more precise then aether and call selectDependency for dependencies before resolving the artifact
       // descriptor and for relocations after resolving
@@ -2810,7 +2808,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2821,13 +2819,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
       assertSession(mavenSession, srcpitSession);
    }
 
@@ -2854,7 +2852,7 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult maven;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
          System.out.println(TestHarness.toString(maven));
@@ -2865,13 +2863,13 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       final CollectResult srcpit;
       {
          CollectRequest request = newCollectRequest();
-         request.addDependency(toDependency(a));
+         request.addDependency(toDependency(artifactFactory, a));
 
          srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
          System.out.println(TestHarness.toString(srcpit));
       }
 
-      assertEquals(maven.getRoot(), srcpit.getRoot());
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
 
       // we are more precise then aether and call selectDependency for dependencies before resolving the artifact
       // descriptor and for relocations after resolving
@@ -2881,200 +2879,11 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
       assertSession(mavenSession, srcpitSession);
    }
 
-
-   private static void assertEquals(DependencyNode expected, DependencyNode actual)
-   {
-      if (expected == null)
-      {
-         assertNull(actual);
-         return;
-      }
-      assertNotNull(actual);
-
-      Assert.assertEquals(expected.getRequestContext(), actual.getRequestContext());
-      assertArtifactsEquals(expected.getAliases(), actual.getAliases());
-      assertEquals(expected.getArtifact(), actual.getArtifact());
-      assertEquals(expected.getDependency(), expected.getDependency());
-      Assert.assertEquals(expected.getManagedBits(), actual.getManagedBits());
-      assertArtifactsEquals(expected.getRelocations(), actual.getRelocations());
-      assertRemoteRepositoriesEquals(expected.getRepositories(), actual.getRepositories());
-      Assert.assertEquals(expected.getVersion(), actual.getVersion());
-      Assert.assertEquals(expected.getVersionConstraint(), actual.getVersionConstraint());
-
-      assertDependencyNodesEquals(expected.getChildren(), actual.getChildren());
-   }
-
-   private static void assertDependencyNodesEquals(List<DependencyNode> expected, List<DependencyNode> actual)
-   {
-      Assert.assertEquals(expected.size(), actual.size());
-      final Iterator<DependencyNode> expectedIt = expected.iterator();
-      final Iterator<DependencyNode> actualIt = actual.iterator();
-      while (expectedIt.hasNext())
-      {
-         assertEquals(expectedIt.next(), actualIt.next());
-      }
-   }
-
-   private static void assertDependenciesEquals(List<Dependency> expected, List<Dependency> actual)
-   {
-      Assert.assertEquals(expected.size(), actual.size());
-      final Iterator<Dependency> expectedIt = expected.iterator();
-      final Iterator<Dependency> actualIt = actual.iterator();
-      while (expectedIt.hasNext())
-      {
-         assertEquals(expectedIt.next(), actualIt.next());
-      }
-   }
-
-   private static void assertEquals(Dependency expected, Dependency actual)
-   {
-      if (expected == null)
-      {
-         assertNull(actual);
-         return;
-      }
-      assertNotNull(actual);
-
-      assertEquals(expected.getArtifact(), actual.getArtifact());
-      Assert.assertEquals(expected.getScope(), actual.getScope());
-      Assert.assertEquals(expected.getExclusions(), actual.getExclusions());
-      Assert.assertEquals(expected.getOptional(), actual.getOptional());
-   }
-
-   private static void assertRemoteRepositoriesEquals(List<RemoteRepository> expected, List<RemoteRepository> actual)
-   {
-      Assert.assertEquals(expected.size(), actual.size());
-      final Iterator<RemoteRepository> expectedIt = expected.iterator();
-      final Iterator<RemoteRepository> actualIt = actual.iterator();
-      while (expectedIt.hasNext())
-      {
-         assertEquals(expectedIt.next(), actualIt.next());
-      }
-   }
-
-   private static void assertEquals(RemoteRepository expected, RemoteRepository actual)
-   {
-      if (expected == null)
-      {
-         assertNull(actual);
-         return;
-      }
-      assertNotNull(actual);
-      Assert.assertEquals(expected.getContentType(), actual.getContentType());
-      Assert.assertEquals(expected.getHost(), actual.getHost());
-      Assert.assertEquals(expected.getId(), actual.getId());
-      Assert.assertEquals(expected.getProtocol(), actual.getProtocol());
-      Assert.assertEquals(expected.getUrl(), actual.getUrl());
-      Assert.assertEquals(expected.getAuthentication(), actual.getAuthentication());
-      assertRemoteRepositoriesEquals(expected.getMirroredRepositories(), actual.getMirroredRepositories());
-      Assert.assertEquals(expected.getProxy(), actual.getProxy());
-   }
-
-   private static void assertArtifactsEquals(Collection<Artifact> expected, Collection<Artifact> actual)
-   {
-      if (expected == null)
-      {
-         assertNull(actual);
-         return;
-      }
-      assertNotNull(actual);
-
-      if (expected instanceof Set)
-      {
-         assertArtifactsEquals(expected, actual);
-      }
-      else if (expected instanceof List)
-      {
-         assertTrue(actual instanceof List);
-         Assert.assertEquals(expected.size(), actual.size());
-         final Iterator<Artifact> expectedIt = expected.iterator();
-         final Iterator<Artifact> actualIt = actual.iterator();
-         while (expectedIt.hasNext())
-         {
-            assertEquals(expectedIt.next(), actualIt.next());
-         }
-      }
-      else
-      {
-         throw new IllegalArgumentException();
-      }
-   }
-
-   private static void assertEquals(Artifact expected, Artifact actual)
-   {
-      if (expected == null)
-      {
-         assertNull(actual);
-         return;
-      }
-      assertNotNull(actual);
-      Assert.assertEquals(expected.getGroupId(), actual.getGroupId());
-      Assert.assertEquals(expected.getArtifactId(), actual.getArtifactId());
-      Assert.assertEquals(expected.getVersion(), actual.getVersion());
-      Assert.assertEquals(expected.getExtension(), actual.getExtension());
-      Assert.assertEquals(expected.getClassifier(), actual.getClassifier());
-      Assert.assertEquals(expected.getFile(), actual.getFile());
-      Assert.assertEquals(expected.getProperties(), actual.getProperties());
-   }
-
-   private static org.apache.maven.model.Dependency addDependency(Model from, Model to)
-   {
-      final org.apache.maven.model.Dependency dep = new org.apache.maven.model.Dependency();
-      dep.setGroupId(to.getGroupId());
-      dep.setArtifactId(to.getArtifactId());
-      dep.setVersion(to.getVersion());
-      dep.setType(to.getPackaging());
-      from.addDependency(dep);
-      return dep;
-   }
-
-   private static Relocation setRelocation(Model from, Model to)
-   {
-      final Relocation relocation = new Relocation();
-      from.setDistributionManagement(new DistributionManagement());
-      from.getDistributionManagement().setRelocation(relocation);
-      from.getDistributionManagement().getRelocation().setGroupId(to.getGroupId());
-      from.getDistributionManagement().getRelocation().setArtifactId(to.getArtifactId());
-      from.getDistributionManagement().getRelocation().setVersion(to.getVersion());
-      return relocation;
-   }
-
-   private Model newPom(String id)
-   {
-      return newPom(id, "1");
-   }
-
-   private Model newPom(String id, String version)
-   {
-      final Model pom = new Model();
-      pom.setModelVersion("4.0.0");
-      pom.setGroupId(id);
-      pom.setArtifactId(id);
-      pom.setVersion(version);
-      return pom;
-   }
-
    private CollectRequest newCollectRequest()
    {
       CollectRequest request = new CollectRequest();
       request.addRepository(RepositoryUtils.toRepo(embeddedMaven.getRemoteRepository()));
       return request;
-   }
-
-   private Dependency toDependency(final Model pom)
-   {
-      final ArtifactKey key = new ArtifactKey(pom.getGroupId(), pom.getArtifactId(), pom.getVersion(),
-         pom.getPackaging(), null);
-      final Artifact artifact = artifactFactory.createArtifact(key);
-      return new Dependency(artifact, "compile");
-   }
-
-   private Dependency toSystemDependency(final Model pom, String localPath)
-   {
-      final ArtifactKey key = new ArtifactKey(pom.getGroupId(), pom.getArtifactId(), pom.getVersion(),
-         pom.getPackaging(), null);
-      final Artifact artifact = artifactFactory.createArtifact(key, localPath);
-      return new Dependency(artifact, "system");
    }
 
 }
