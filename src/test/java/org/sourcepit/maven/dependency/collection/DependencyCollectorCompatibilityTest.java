@@ -1628,6 +1628,45 @@ public class DependencyCollectorCompatibilityTest extends EmbeddedMavenEnvironme
    }
 
    @Test
+   public void testDependencies_UnambiguousRange() throws DependencyCollectionException
+   {
+      final Model a = newPom("a");
+      final Model b1 = newPom("b", "1.1");
+      final Model b2 = newPom("b", "1.2");
+
+      addDependency(a, b1).setVersion("[1,2)");
+
+      repositoryFacade.deploy(a);
+      repositoryFacade.deploy(b1);
+      repositoryFacade.deploy(b2);
+
+      final HookedRepositorySystemSession mavenSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult maven;
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(artifactFactory, a));
+
+         maven = defaultDependencyCollector.collectDependencies(mavenSession, request);
+         System.out.println(TestHarness.toString(maven));
+      }
+
+      final HookedRepositorySystemSession srcpitSession = new HookedRepositorySystemSession(
+         buildContext.getRepositorySession());
+      final CollectResult srcpit;
+      {
+         CollectRequest request = newCollectRequest();
+         request.addDependency(toDependency(artifactFactory, a));
+
+         srcpit = srcpitDependencyCollector.collectDependencies(srcpitSession, request);
+         System.out.println(TestHarness.toString(srcpit));
+      }
+
+      assertDependencyNodeEquals(maven.getRoot(), srcpit.getRoot());
+      assertSession(mavenSession, srcpitSession);
+   }
+
+   @Test
    public void testRootArtifact() throws DependencyCollectionException
    {
       final Model a = newPom("a");
