@@ -48,10 +48,11 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    }
 
    @Override
-   public List<DependencyNodeRequest> enter(List<DependencyNodeRequest> nodes)
+   public List<DependencyNodeRequest> visitChildren(DependencyNodeRequest parent, int depth,
+      List<DependencyNodeRequest> children)
    {
-      final List<DependencyNodeRequest> bar = new ArrayList<DependencyNodeRequest>(nodes.size());
-      for (DependencyNodeRequest request : nodes)
+      final List<DependencyNodeRequest> bar = new ArrayList<DependencyNodeRequest>(children.size());
+      for (DependencyNodeRequest request : children)
       {
          final DependencyNodeContext context = request.getContext();
          final Dependency dependency = request.getDependency();
@@ -85,7 +86,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
    }
 
    @Override
-   public void leave(List<DependencyNodeRequest> nodes)
+   public void leaveChildren(DependencyNodeRequest parent, int depth, List<DependencyNodeRequest> children)
    {
    }
 
