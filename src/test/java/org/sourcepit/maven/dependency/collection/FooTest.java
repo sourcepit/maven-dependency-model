@@ -6,8 +6,8 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import static org.junit.Assert.*;
-import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.*;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.addDependency;
+import static org.sourcepit.maven.dependency.collection.CollectionTestHarness.newPom;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,7 +21,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.superpom.SuperPomProvider;
 import org.apache.maven.plugin.LegacySupport;
 import org.eclipse.aether.AbstractForwardingRepositorySystemSession;
-import org.eclipse.aether.AbstractForwardingRepositorySystemSessionTest;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
@@ -34,7 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.sourcepit.common.maven.aether.ArtifactFactory;
+import org.sourcepit.common.maven.artifact.ArtifactFactory;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
