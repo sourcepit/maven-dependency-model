@@ -177,7 +177,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
             result.addException(e);
          }
       };
-      return resolver;
+      return new ConflictResolver(resolver);
+      // return resolver;
    }
 
    private DependencyNodeContext newRootContext(final RepositorySystemSession session, final CollectRequest request)
