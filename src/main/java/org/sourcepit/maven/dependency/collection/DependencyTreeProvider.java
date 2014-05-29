@@ -8,43 +8,29 @@ package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.collection.DependencyManagement;
-import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.ArtifactDescriptorReader;
-import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
-import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
 public class DependencyTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
+   private DescriptorResolver descriptorResolver;
 
-   private final ArtifactDescriptorReader descriptorReader;
-
-   private final VersionRangeResolver versionRangeResolver;
-
-   public DependencyTreeProvider(ArtifactDescriptorReader descriptorReader, VersionRangeResolver versionRangeResolver)
+   public DependencyTreeProvider(DescriptorResolver descriptorResolver)
    {
-      this.descriptorReader = descriptorReader;
-      this.versionRangeResolver = versionRangeResolver;
+      this.descriptorResolver = descriptorResolver;
    }
 
    @Override
@@ -55,9 +41,17 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       for (DependencyNodeRequest request : children)
       {
          final DependencyNodeContext context = request.getContext();
-         final Dependency dependency = request.getDependency();
 
-         final Result result = collect2(context, dependency, null, false);
+         final DescriptorResolutionRequest descriptorRequest = new DescriptorResolutionRequest();
+         descriptorRequest.setDependency(request.getDependency());
+         descriptorRequest.setSession(context.getSession());
+         descriptorRequest.setDependencyManager(context.getDependencyManager());
+         descriptorRequest.setDependencySelector(context.getDependencySelector());
+         descriptorRequest.setRequestContext(context.getRequestContext());
+         descriptorRequest.setRequestTrace(context.getRequestTrace());
+         descriptorRequest.setRepositories(context.getRepositories());
+
+         final DescriptorResolutionResult result = descriptorResolver.resolveDescriptors(descriptorRequest);
 
          final List<DependencyNodeImpl> foo = buildNodes(result, context);
 
@@ -162,7 +156,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return childRequests;
    }
 
-   private List<DependencyNodeImpl> buildNodes(final Result result, final DependencyNodeContext context)
+   private List<DependencyNodeImpl> buildNodes(final DescriptorResolutionResult result,
+      final DependencyNodeContext context)
    {
       List<DependencyNodeImpl> nodes = new ArrayList<DependencyNodeImpl>(result.getArtifactDescriptorResults().size());
 
@@ -210,194 +205,6 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
       return nodes;
    }
-
-   private static class Result
-   {
-      private ManagedDependency managedDependency;
-
-      private VersionRangeResult versionRangeResult;
-
-      private Map<Version, ArtifactDescriptorResult> artifactDescriptorResults;
-
-      public void setManagedDependency(ManagedDependency managedDependency)
-      {
-         this.managedDependency = managedDependency;
-      }
-
-      public ManagedDependency getManagedDependency()
-      {
-         return managedDependency;
-      }
-
-      public void setVersionRangeResult(VersionRangeResult versionRangeResult)
-      {
-         this.versionRangeResult = versionRangeResult;
-      }
-
-      public VersionRangeResult getVersionRangeResult()
-      {
-         return versionRangeResult;
-      }
-
-      public Map<Version, ArtifactDescriptorResult> getArtifactDescriptorResults()
-      {
-         if (artifactDescriptorResults == null)
-         {
-            artifactDescriptorResults = new HashMap<Version, ArtifactDescriptorResult>(1);
-         }
-         return artifactDescriptorResults;
-      }
-   }
-
-
-   private ManagedDependency applyDependencyManagement2(Dependency dependency, DependencyManager dependencyManager,
-      boolean disableVersionManagement)
-   {
-      final DependencyManagement dependencyManagement = dependencyManager.manageDependency(dependency);
-      if (dependencyManagement != null)
-      {
-         return applyDependencyManagement2(dependency, dependencyManagement, disableVersionManagement);
-      }
-
-      final ManagedDependency result = new ManagedDependency();
-      result.setDependency(dependency);
-      return result;
-   }
-
-   private static class ManagedDependency
-   {
-      private Dependency managedDependency;
-
-      private byte managedBits;
-
-      public void setDependency(Dependency managedDependency)
-      {
-         this.managedDependency = managedDependency;
-      }
-
-      public Dependency getDependency()
-      {
-         return managedDependency;
-      }
-
-      public int getManagedBits()
-      {
-         return managedBits;
-      }
-
-      public void setManagedBits(int managedBits)
-      {
-         this.managedBits = (byte) (managedBits & 0x1F);
-      }
-   }
-
-   private static ManagedDependency applyDependencyManagement2(Dependency dependency,
-      DependencyManagement dependencyManagement, boolean disableVersionManagement)
-   {
-      final ManagedDependency result = new ManagedDependency();
-
-      int managedBits = result.getManagedBits();
-
-      final String managedVersion = dependencyManagement.getVersion();
-      if (managedVersion != null && !disableVersionManagement)
-      {
-         final Artifact artifact = dependency.getArtifact();
-         dependency = dependency.setArtifact(artifact.setVersion(managedVersion));
-         managedBits |= DependencyNode.MANAGED_VERSION;
-      }
-
-      if (dependencyManagement.getProperties() != null)
-      {
-         Artifact artifact = dependency.getArtifact();
-         dependency = dependency.setArtifact(artifact.setProperties(dependencyManagement.getProperties()));
-         managedBits |= DependencyNode.MANAGED_PROPERTIES;
-      }
-
-      if (dependencyManagement.getScope() != null)
-      {
-         dependency = dependency.setScope(dependencyManagement.getScope());
-         managedBits |= DependencyNode.MANAGED_SCOPE;
-      }
-
-      if (dependencyManagement.getOptional() != null)
-      {
-         dependency = dependency.setOptional(dependencyManagement.getOptional());
-         managedBits |= DependencyNode.MANAGED_OPTIONAL;
-      }
-
-      if (dependencyManagement.getExclusions() != null)
-      {
-         dependency = dependency.setExclusions(dependencyManagement.getExclusions());
-         managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
-      }
-
-      result.setDependency(dependency);
-      result.setManagedBits(managedBits);
-
-      return result;
-   }
-
-   private Result collect2(DependencyNodeContext context, Dependency dependency, List<Artifact> relocations,
-      boolean disableVersionManagement)
-   {
-      Result result = new Result();
-
-      // apply dependency management
-      result.setManagedDependency(applyDependencyManagement2(dependency, context.getDependencyManager(),
-         disableVersionManagement));
-
-      final Dependency managedDependency = result.getManagedDependency().getDependency();
-
-      // resolve version range
-      final VersionRangeResult rangeResult;
-      rangeResult = resolveVersionRange(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
-         context.getRepositories(), managedDependency);
-      result.setVersionRangeResult(rangeResult);
-
-      for (final Version version : rangeResult.getVersions())
-      {
-         try
-         {
-            ArtifactDescriptorResult descriptorResult = readArtifactDescriptor(context, managedDependency.getArtifact()
-               .setVersion(version.toString()));
-
-            result.getArtifactDescriptorResults().put(version, descriptorResult);
-
-            if (descriptorResult.getRelocations().isEmpty())
-            {
-               descriptorResult.setRelocations(relocations);
-            }
-            else
-            {
-               final Artifact originalArtifact = managedDependency.getArtifact();
-               final Artifact currentArtifact = descriptorResult.getArtifact();
-
-               if (relocations != null && relocations.contains(currentArtifact))
-               {
-                  return result;
-               }
-
-               disableVersionManagement = originalArtifact.getGroupId().equals(currentArtifact.getGroupId())
-                  && originalArtifact.getArtifactId().equals(currentArtifact.getArtifactId());
-
-               final Dependency relocatedDependency = managedDependency.setArtifact(currentArtifact);
-               if (!context.getDependencySelector().selectDependency(relocatedDependency))
-               {
-                  return null;
-               }
-
-               return collect2(context, relocatedDependency, descriptorResult.getRelocations(),
-                  disableVersionManagement);
-            }
-         }
-         catch (ArtifactDescriptorException e)
-         {
-            result.getArtifactDescriptorResults().put(version, e.getResult());
-         }
-      }
-      return result;
-   }
-
 
    private List<RemoteRepository> getRemoteRepositories(ArtifactRepository repository,
       List<RemoteRepository> repositories)
@@ -460,60 +267,10 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return null;
    }
 
-   private ArtifactDescriptorResult readArtifactDescriptor(final DependencyNodeContext context, Artifact artifact)
-      throws ArtifactDescriptorException
-   {
-      return readArtifactDescriptor(context.getSession(), context.getRequestContext(), context.getRequestTrace(),
-         context.getRepositories(), artifact);
-   }
-
    private boolean isLackingDescriptor(Artifact artifact)
    {
       return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
    }
 
-   private ArtifactDescriptorResult readArtifactDescriptor(RepositorySystemSession session, String requestContext,
-      RequestTrace trace, List<RemoteRepository> repositories, Artifact artifact) throws ArtifactDescriptorException
-   {
-      ArtifactDescriptorResult descriptorResult;
-      ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-      descriptorRequest.setArtifact(artifact);
-      descriptorRequest.setRepositories(repositories);
-      descriptorRequest.setRequestContext(requestContext);
-      descriptorRequest.setTrace(trace);
-
-      if (isLackingDescriptor(artifact))
-      {
-         descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
-      }
-      else
-      {
-         // TODO cache
-         // TODO externalize
-
-         descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-
-      }
-      return descriptorResult;
-   }
-
-   private VersionRangeResult resolveVersionRange(RepositorySystemSession session, String requestContext,
-      RequestTrace trace, List<RemoteRepository> repositories, Dependency dependency)
-   {
-      final VersionRangeRequest rangeRequest = new VersionRangeRequest();
-      rangeRequest.setArtifact(dependency.getArtifact());
-      rangeRequest.setRepositories(repositories);
-      rangeRequest.setRequestContext(requestContext);
-      rangeRequest.setTrace(trace);
-
-      try
-      {
-         return versionRangeResolver.resolveVersionRange(session, rangeRequest);
-      }
-      catch (VersionRangeResolutionException e)
-      {
-         return e.getResult();
-      }
-   }
 
 }

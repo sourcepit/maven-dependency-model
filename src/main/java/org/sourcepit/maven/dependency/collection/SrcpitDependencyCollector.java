@@ -27,10 +27,8 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
-import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
@@ -38,14 +36,17 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
 {
-   @Inject
-   private RemoteRepositoryManager remoteRepositoryManager;
+   private final RemoteRepositoryManager remoteRepositoryManager;
+
+   private final DescriptorResolver descriptorResolver;
 
    @Inject
-   private ArtifactDescriptorReader descriptorReader;
-
-   @Inject
-   private VersionRangeResolver versionRangeResolver;
+   public SrcpitDependencyCollector(RemoteRepositoryManager remoteRepositoryManager,
+      DescriptorResolver descriptorResolver)
+   {
+      this.remoteRepositoryManager = remoteRepositoryManager;
+      this.descriptorResolver = descriptorResolver;
+   }
 
    @Override
    public CollectResult collectDependencies(final RepositorySystemSession session, final CollectRequest request)
@@ -168,7 +169,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private TreeProvider<DependencyNodeRequest> newTreeProvider(final CollectResult result)
    {
-      DependencyTreeProvider resolver = new DependencyTreeProvider(descriptorReader, versionRangeResolver)
+      DependencyTreeProvider resolver = new DependencyTreeProvider(descriptorResolver)
       {
          @Override
          protected void addException(DependencyNodeImpl node, Exception e)
