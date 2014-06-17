@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.sourcepit</groupId>
 		<artifactId>srcpit-parent</artifactId>
-		<version>12</version>
+		<version>13-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>maven-dependency-model</artifactId>
@@ -14,6 +15,10 @@
 		<connection>scm:git:git@github.com:sourcepit/maven-dependency-model.git</connection>
 		<tag>HEAD</tag>
 	</scm>
+
+	<properties>
+		<common-maven.version>0.18.0-SNAPSHOT</common-maven.version>
+	</properties>
 
 	<!-- repo to resolve parent pom from -->
 	<repositories>
@@ -26,8 +31,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
-			<artifactId>common-maven-core</artifactId>
-			<version>0.17.0</version>
+			<artifactId>common-maven-artifact</artifactId>
+			<version>${common-maven.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
@@ -41,14 +46,17 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-core</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.eclipse.aether</groupId>
 			<artifactId>aether-api</artifactId>
-			<version>0.9.0.M2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
 			<artifactId>aether-util</artifactId>
-			<version>0.9.0.M2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -74,7 +82,12 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.sourcepit.common</groupId>
+			<artifactId>common-maven-core</artifactId>
+			<version>${common-maven.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-compat</artifactId>
@@ -88,13 +101,11 @@
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
 			<artifactId>aether-test-util</artifactId>
-			<version>0.9.0.M2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
 			<artifactId>aether-connector-wagon</artifactId>
-			<version>0.9.0.M2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

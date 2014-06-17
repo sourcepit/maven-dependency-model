@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toArtifactKey;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +25,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
-import org.sourcepit.common.maven.aether.ArtifactFactory;
+import org.sourcepit.common.maven.artifact.ArtifactFactory;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;

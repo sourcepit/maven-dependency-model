@@ -29,7 +29,7 @@ import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransform
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.sourcepit.common.maven.aether.ArtifactFactory;
+import org.sourcepit.common.maven.artifact.ArtifactFactory;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;

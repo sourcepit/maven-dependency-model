@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toArtifactKey;
 
 import java.util.Collections;
 import java.util.List;

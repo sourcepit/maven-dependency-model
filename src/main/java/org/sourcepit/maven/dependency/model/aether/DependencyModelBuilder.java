@@ -7,9 +7,9 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toMavenArtifact;
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toMavenDependecy;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toArtifactKey;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toMavenArtifact;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toMavenDependecy;
 
 import java.util.ArrayList;
 import java.util.HashMap;

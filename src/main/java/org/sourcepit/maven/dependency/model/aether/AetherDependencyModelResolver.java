@@ -7,7 +7,7 @@
 package org.sourcepit.maven.dependency.model.aether;
 
 import static org.apache.maven.RepositoryUtils.toRepo;
-import static org.sourcepit.common.maven.core.MavenCoreUtils.toArtifactKey;
+import static org.sourcepit.common.maven.artifact.MavenArtifactUtils.toArtifactKey;
 import static org.sourcepit.common.utils.lang.Exceptions.pipe;
 
 import java.io.ByteArrayInputStream;
@@ -58,7 +58,7 @@ import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.emf.common.util.EList;
 import org.sourcepit.common.constraints.NotNull;
-import org.sourcepit.common.maven.aether.ArtifactFactory;
+import org.sourcepit.common.maven.artifact.ArtifactFactory;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.common.utils.lang.Exceptions;
