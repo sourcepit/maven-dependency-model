@@ -8,11 +8,11 @@
 	</parent>
 
 	<artifactId>maven-dependency-model</artifactId>
-	<version>0.8.0</version>
+	<version>0.9.0-SNAPSHOT</version>
 
 	<scm>
 		<connection>scm:git:git@github.com:sourcepit/maven-dependency-model.git</connection>
-		<tag>maven-dependency-model-0.8.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<properties>
