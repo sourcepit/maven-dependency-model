@@ -26,11 +26,11 @@ import org.eclipse.aether.version.Version;
 
 public class DependencyTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
-   private DescriptorResolver descriptorResolver;
+   private DependencyResolver dependencyResolver;
 
-   public DependencyTreeProvider(DescriptorResolver descriptorResolver)
+   public DependencyTreeProvider(DependencyResolver dependencyResolver)
    {
-      this.descriptorResolver = descriptorResolver;
+      this.dependencyResolver = dependencyResolver;
    }
 
    @Override
@@ -42,18 +42,18 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       {
          final DependencyNodeContext context = request.getContext();
 
-         final DescriptorResolutionRequest descriptorRequest = new DescriptorResolutionRequest();
-         descriptorRequest.setDependency(request.getDependency());
-         descriptorRequest.setSession(context.getSession());
-         descriptorRequest.setDependencyManager(context.getDependencyManager());
-         descriptorRequest.setDependencySelector(context.getDependencySelector());
-         descriptorRequest.setRequestContext(context.getRequestContext());
-         descriptorRequest.setRequestTrace(context.getRequestTrace());
-         descriptorRequest.setRepositories(context.getRepositories());
+         final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
+         resolutionRequest.setDependency(request.getDependency());
+         resolutionRequest.setSession(context.getSession());
+         resolutionRequest.setDependencyManager(context.getDependencyManager());
+         resolutionRequest.setDependencySelector(context.getDependencySelector());
+         resolutionRequest.setRequestContext(context.getRequestContext());
+         resolutionRequest.setRequestTrace(context.getRequestTrace());
+         resolutionRequest.setRepositories(context.getRepositories());
 
-         final DescriptorResolutionResult result = descriptorResolver.resolveDescriptors(descriptorRequest);
+         final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
 
-         final List<DependencyNodeImpl> foo = buildNodes(result, context);
+         final List<DependencyNodeImpl> foo = buildNodes(resolutionResult, context);
 
          if (foo.size() == 0)
          {
@@ -156,7 +156,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       return childRequests;
    }
 
-   private List<DependencyNodeImpl> buildNodes(final DescriptorResolutionResult result,
+   private List<DependencyNodeImpl> buildNodes(final DependencyResolutionResult result,
       final DependencyNodeContext context)
    {
       List<DependencyNodeImpl> nodes = new ArrayList<DependencyNodeImpl>(result.getArtifactDescriptorResults().size());

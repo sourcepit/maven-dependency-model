@@ -13,7 +13,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class DescriptorResolutionResult
+public class DependencyResolutionResult
 {
    private ManagedDependency managedDependency;
 

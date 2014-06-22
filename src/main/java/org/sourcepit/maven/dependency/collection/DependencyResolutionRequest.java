@@ -16,7 +16,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 
-public class DescriptorResolutionRequest
+public class DependencyResolutionRequest
 {
    private Dependency dependency;
    private RepositorySystemSession session;

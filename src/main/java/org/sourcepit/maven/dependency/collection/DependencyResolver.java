@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-public interface DescriptorResolver
+public interface DependencyResolver
 {
-   DescriptorResolutionResult resolveDescriptors(DescriptorResolutionRequest request);
+   DependencyResolutionResult resolveDependency(DependencyResolutionRequest request);
 }

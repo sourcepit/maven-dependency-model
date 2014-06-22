@@ -32,7 +32,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
 @Named
-public class DescriptorResolverImpl implements DescriptorResolver
+public class DescriptorResolverImpl implements DependencyResolver
 {
    private final VersionRangeResolver versionRangeResolver;
 
@@ -46,19 +46,19 @@ public class DescriptorResolverImpl implements DescriptorResolver
    }
 
    @Override
-   public DescriptorResolutionResult resolveDescriptors(DescriptorResolutionRequest request)
+   public DependencyResolutionResult resolveDependency(DependencyResolutionRequest request)
    {
       return resolveDependency(request.getDependency(), null, false, request.getSession(),
          request.getDependencyManager(), request.getDependencySelector(), request.getRequestContext(),
          request.getRequestTrace(), request.getRepositories());
    }
 
-   private DescriptorResolutionResult resolveDependency(Dependency dependency, List<Artifact> relocations,
+   private DependencyResolutionResult resolveDependency(Dependency dependency, List<Artifact> relocations,
       boolean disableVersionManagement, RepositorySystemSession session, DependencyManager dependencyManager,
       DependencySelector dependencySelector, String requestContext, RequestTrace trace,
       List<RemoteRepository> repositories)
    {
-      DescriptorResolutionResult result = new DescriptorResolutionResult();
+      DependencyResolutionResult result = new DependencyResolutionResult();
 
       // apply dependency management
       result.setManagedDependency(applyDependencyManagement2(dependency, dependencyManager, disableVersionManagement));

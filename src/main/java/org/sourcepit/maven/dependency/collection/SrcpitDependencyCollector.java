@@ -38,14 +38,14 @@ public class SrcpitDependencyCollector implements DependencyCollector
 {
    private final RemoteRepositoryManager remoteRepositoryManager;
 
-   private final DescriptorResolver descriptorResolver;
+   private final DependencyResolver dependencyResolver;
 
    @Inject
    public SrcpitDependencyCollector(RemoteRepositoryManager remoteRepositoryManager,
-      DescriptorResolver descriptorResolver)
+      DependencyResolver descriptorResolver)
    {
       this.remoteRepositoryManager = remoteRepositoryManager;
-      this.descriptorResolver = descriptorResolver;
+      this.dependencyResolver = descriptorResolver;
    }
 
    @Override
@@ -169,7 +169,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private TreeProvider<DependencyNodeRequest> newTreeProvider(final CollectResult result)
    {
-      DependencyTreeProvider resolver = new DependencyTreeProvider(descriptorResolver)
+      DependencyTreeProvider resolver = new DependencyTreeProvider(dependencyResolver)
       {
          @Override
          protected void addException(DependencyNodeImpl node, Exception e)
