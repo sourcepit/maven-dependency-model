@@ -42,7 +42,7 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
 
       try
       {
-         parent.setDependencyNode(buildNode(parent));
+         setDependencyNode(parent, buildNode(parent));
       }
       catch (VersionRangeResolutionException e)
       {
@@ -54,6 +54,11 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
       }
 
       return children;
+   }
+
+   static void setDependencyNode(DependencyResolutionNode resolutionNode, DependencyNodeImpl dependencyNode)
+   {
+      resolutionNode.getData().put(DependencyNode.class, dependencyNode);
    }
 
    @Override
@@ -98,7 +103,7 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
          final DependencyResolutionNode cyclicParent = resolutionNode.getCyclicParent();
          if (cyclicParent != null)
          {
-            final DependencyNode cyclicNode = cyclicParent.getDependencyNode();
+            final DependencyNode cyclicNode = getDependencyNode(cyclicParent);
             node.setRepositories(cyclicNode.getRepositories());
             node.setChildren(cyclicNode.getChildren());
             node.setData("cycleNode", cyclicNode);
@@ -107,7 +112,7 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
          final DependencyResolutionNode parent = resolutionNode.getParent();
          if (parent != null)
          {
-            parent.getDependencyNode().getChildren().add(node);
+            getDependencyNode(parent).getChildren().add(node);
          }
 
          return node;
@@ -116,6 +121,11 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
       {
          throw new ArtifactDescriptorException(descriptorResult);
       }
+   }
+
+   static DependencyNode getDependencyNode(DependencyResolutionNode resolutionNode)
+   {
+      return (DependencyNode) resolutionNode.getData().get(DependencyNode.class);
    }
 
    protected void handleException(Exception e)

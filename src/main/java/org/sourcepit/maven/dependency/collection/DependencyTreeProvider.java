@@ -110,8 +110,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
             continue;
          }
 
-         final DependencyResolutionNode childRequest = new DependencyResolutionNode(request, child);
-         childRequest.setContext(childContext);
+         final DependencyResolutionNode childRequest = new DependencyResolutionNode(childContext, request, child);
          childRequests.add(childRequest);
       }
 

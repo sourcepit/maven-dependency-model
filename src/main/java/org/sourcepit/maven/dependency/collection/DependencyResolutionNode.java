@@ -10,13 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
 public class DependencyResolutionNode
 {
+   private final DependencyNodeContext context;
+
    private final DependencyResolutionNode parent;
 
    private final Dependency dependency;
@@ -33,10 +34,16 @@ public class DependencyResolutionNode
 
    private DependencyResolutionNode cyclicParent;
 
-   public DependencyResolutionNode(DependencyResolutionNode parent, Dependency dependency)
+   public DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent, Dependency dependency)
    {
+      this.context = context;
       this.parent = parent;
       this.dependency = dependency;
+   }
+
+   public DependencyNodeContext getContext()
+   {
+      return context;
    }
 
    public DependencyResolutionNode getParent()
@@ -103,29 +110,5 @@ public class DependencyResolutionNode
    public DependencyResolutionNode getCyclicParent()
    {
       return cyclicParent;
-   }
-
-   private DependencyNodeContext context;
-
-   private DependencyNode dependencyNode;
-
-   public void setContext(DependencyNodeContext context)
-   {
-      this.context = context;
-   }
-
-   public DependencyNodeContext getContext()
-   {
-      return context;
-   }
-
-   public void setDependencyNode(DependencyNode dependencyNode)
-   {
-      this.dependencyNode = dependencyNode;
-   }
-
-   public DependencyNode getDependencyNode()
-   {
-      return dependencyNode;
    }
 }

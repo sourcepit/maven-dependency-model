@@ -6,6 +6,9 @@
 
 package org.sourcepit.maven.dependency.collection;
 
+import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuilder.getDependencyNode;
+import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuilder.setDependencyNode;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,11 +82,10 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeProvider<DependencyResolutionNode> treeProvider = newTreeProvider(result);
 
       final DependencyNodeContext rootContext = newRootContext(session, request);
-      final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(null, dependency);
-      nodeRequest.setContext(rootContext);
+      final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(rootContext, null, dependency);
 
       newTreeTraversal().traverse(treeProvider, nodeRequest);
-      result.setRoot(nodeRequest.getDependencyNode());
+      result.setRoot(getDependencyNode(nodeRequest));
 
       return result;
    }
@@ -117,9 +119,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
          final DependencyNodeContext childContext = rootContext.deriveChildContext(null,
             Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
 
-         final DependencyResolutionNode parentNode = new DependencyResolutionNode(null, null);
-         parentNode.setContext(rootContext);
-         parentNode.setDependencyNode(node);
+         final DependencyResolutionNode parentNode = new DependencyResolutionNode(rootContext, null, null);
+         setDependencyNode(parentNode, node);
          parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
 
          final List<DependencyResolutionNode> requests = new ArrayList<DependencyResolutionNode>(dependencies.size());
@@ -127,8 +128,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
          {
             if (childContext.getDependencySelector().selectDependency(dependency))
             {
-               final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(parentNode, dependency);
-               nodeRequest.setContext(childContext);
+               final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(childContext, parentNode,
+                  dependency);
                requests.add(nodeRequest);
             }
          }
