@@ -76,10 +76,12 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final CollectResult result = new CollectResult(request);
       final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result);
 
+
       final DependencyNodeContext rootContext = newRootContext(session, request);
       final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
       nodeRequest.setContext(rootContext);
-      nodeRequest.setDependency(request.getRoot());
+      nodeRequest.setDependencyResolutionRequest(DependencyTreeProvider.newDependencyResolutionRequest(rootContext,
+         request.getRoot()));
 
       newTreeTraversal().traverse(treeProvider, nodeRequest);
       result.setRoot(nodeRequest.getDependencyNode());
@@ -123,7 +125,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
             {
                final DependencyNodeRequest nodeRequest = new DependencyNodeRequest();
                nodeRequest.setContext(childContext);
-               nodeRequest.setDependency(dependency);
+               nodeRequest.setDependencyResolutionRequest(DependencyTreeProvider.newDependencyResolutionRequest(
+                  childContext, dependency));
                requests.add(nodeRequest);
             }
          }

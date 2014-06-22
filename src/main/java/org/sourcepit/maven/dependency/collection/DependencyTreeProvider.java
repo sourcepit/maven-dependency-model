@@ -42,14 +42,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
       {
          final DependencyNodeContext context = request.getContext();
 
-         final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
-         resolutionRequest.setDependency(request.getDependency());
-         resolutionRequest.setSession(context.getSession());
-         resolutionRequest.setDependencyManager(context.getDependencyManager());
-         resolutionRequest.setDependencySelector(context.getDependencySelector());
-         resolutionRequest.setRequestContext(context.getRequestContext());
-         resolutionRequest.setRequestTrace(context.getRequestTrace());
-         resolutionRequest.setRepositories(context.getRepositories());
+         final DependencyResolutionRequest resolutionRequest = request.getDependencyResolutionRequest();
 
          final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
 
@@ -70,13 +63,26 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
             {
                DependencyNodeRequest r = new DependencyNodeRequest();
                r.setContext(request.getContext());
-               r.setDependency(request.getDependency());
                r.setDependencyNode(dependencyNodeImpl);
                bar.add(r);
             }
          }
       }
       return bar;
+   }
+
+   static DependencyResolutionRequest newDependencyResolutionRequest(final DependencyNodeContext context,
+      final Dependency dependency)
+   {
+      final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
+      resolutionRequest.setDependency(dependency);
+      resolutionRequest.setSession(context.getSession());
+      resolutionRequest.setDependencyManager(context.getDependencyManager());
+      resolutionRequest.setDependencySelector(context.getDependencySelector());
+      resolutionRequest.setRequestContext(context.getRequestContext());
+      resolutionRequest.setRequestTrace(context.getRequestTrace());
+      resolutionRequest.setRepositories(context.getRepositories());
+      return resolutionRequest;
    }
 
    @Override
@@ -147,9 +153,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
             continue;
          }
 
+
          final DependencyNodeRequest childRequest = new DependencyNodeRequest();
          childRequest.setContext(childContext);
-         childRequest.setDependency(child);
+
+         childRequest.setDependencyResolutionRequest(newDependencyResolutionRequest(childContext, child));
+
          childRequests.add(childRequest);
       }
 

@@ -6,15 +6,24 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 public class DependencyNodeRequest
 {
+   private DependencyResolutionRequest dependencyResolutionRequest;
+
+   public void setDependencyResolutionRequest(DependencyResolutionRequest dependencyResolutionRequest)
+   {
+      this.dependencyResolutionRequest = dependencyResolutionRequest;
+   }
+
+   public DependencyResolutionRequest getDependencyResolutionRequest()
+   {
+      return dependencyResolutionRequest;
+   }
+
    private DependencyNodeContext context;
 
-   private Dependency dependency;
-   
    private DependencyNode dependencyNode;
 
    public void setContext(DependencyNodeContext context)
@@ -27,16 +36,6 @@ public class DependencyNodeRequest
       return context;
    }
 
-   public void setDependency(Dependency dependency)
-   {
-      this.dependency = dependency;
-   }
-
-   public Dependency getDependency()
-   {
-      return dependency;
-   }
-   
    public void setDependencyNode(DependencyNode dependencyNode)
    {
       this.dependencyNode = dependencyNode;
