@@ -30,14 +30,24 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
    public List<DependencyResolutionNode> visitChildren(DependencyResolutionNode parent, int depth,
       List<DependencyResolutionNode> children)
    {
-      for (DependencyResolutionNode request : children)
+      for (DependencyResolutionNode node : children)
       {
-         final DependencyResolutionRequest resolutionRequest = request.getDependencyResolutionRequest();
-         final DependencyResolutionResult dependencyResolutionResult = dependencyResolver
-            .resolveDependency(resolutionRequest);
-         request.setDependencyResolutionResult(dependencyResolutionResult);
+         resolve(node);
       }
       return children;
+   }
+
+   private void resolve(DependencyResolutionNode node)
+   {
+      final DependencyNodeContext context = node.getContext();
+      final Dependency dependency = node.getDependency();
+
+      final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(context, dependency);
+      final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
+
+      node.setManagedDependency(resolutionResult.getManagedDependency());
+      node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
+      node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
    }
 
    @Override
@@ -56,9 +66,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
          return Collections.emptyList();
       }
 
-      final DependencyResolutionResult resolutionResult = request.getDependencyResolutionResult();
-
-      final ArtifactDescriptorResult descriptorResult = resolutionResult.getVersionToArtifactDescriptorResultMap().get(
+      final ArtifactDescriptorResult descriptorResult = request.getVersionToArtifactDescriptorResultMap().get(
          resolvedVersion);
 
       if (!descriptorResult.getExceptions().isEmpty())
@@ -66,14 +74,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
          return Collections.emptyList();
       }
 
-      final DependencyResolutionNode cyclicParent = findCycle(request);
-      if (cyclicParent != null)
-      {
-         request.setCyclicParent(cyclicParent);
-         return Collections.emptyList();
-      }
-
-      final Dependency managedDependency = resolutionResult.getManagedDependency().getDependency();
+      final Dependency managedDependency = request.getManagedDependency().getDependency();
       final boolean noDescriptor = isLackingDescriptor(managedDependency.getArtifact());
       final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
 
@@ -109,25 +110,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
             continue;
          }
 
-         final DependencyResolutionNode childRequest = new DependencyResolutionNode(request);
+         final DependencyResolutionNode childRequest = new DependencyResolutionNode(request, child);
          childRequest.setContext(childContext);
-
-         childRequest.setDependencyResolutionRequest(newDependencyResolutionRequest(childContext, child));
-
          childRequests.add(childRequest);
       }
 
       return childRequests;
-   }
-
-   private static DependencyResolutionNode findCycle(DependencyResolutionNode node)
-   {
-      DependencyResolutionNode parent = node.getParent();
-      while (parent != null && !ConflictResolver.contains(parent.getConflictKeys(), node.getConflictKeys()))
-      {
-         parent = parent.getParent();
-      }
-      return parent;
    }
 
    private boolean isLackingDescriptor(Artifact artifact)

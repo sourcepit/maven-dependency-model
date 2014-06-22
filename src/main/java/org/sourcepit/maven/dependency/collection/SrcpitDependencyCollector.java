@@ -8,7 +8,7 @@ package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -30,9 +30,10 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
-import org.sourcepit.common.maven.model.VersionConflictKey;
+import org.eclipse.aether.version.Version;
 
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
@@ -78,10 +79,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeProvider<DependencyResolutionNode> treeProvider = newTreeProvider(result);
 
       final DependencyNodeContext rootContext = newRootContext(session, request);
-      final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(null);
+      final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(null, dependency);
       nodeRequest.setContext(rootContext);
-      nodeRequest.setDependencyResolutionRequest(DependencyTreeProvider.newDependencyResolutionRequest(rootContext,
-         request.getRoot()));
 
       newTreeTraversal().traverse(treeProvider, nodeRequest);
       result.setRoot(nodeRequest.getDependencyNode());
@@ -117,21 +116,19 @@ public class SrcpitDependencyCollector implements DependencyCollector
          final DependencyNodeContext rootContext = newRootContext(session, request);
          final DependencyNodeContext childContext = rootContext.deriveChildContext(null,
             Collections.<Dependency> emptyList(), Collections.<RemoteRepository> emptyList());
-         
-         final DependencyResolutionNode parentNode = new DependencyResolutionNode(null);
+
+         final DependencyResolutionNode parentNode = new DependencyResolutionNode(null, null);
          parentNode.setContext(rootContext);
-         parentNode.setConflictKeys(new HashSet<VersionConflictKey>());
          parentNode.setDependencyNode(node);
+         parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
 
          final List<DependencyResolutionNode> requests = new ArrayList<DependencyResolutionNode>(dependencies.size());
          for (Dependency dependency : dependencies)
          {
             if (childContext.getDependencySelector().selectDependency(dependency))
             {
-               final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(parentNode);
+               final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(parentNode, dependency);
                nodeRequest.setContext(childContext);
-               nodeRequest.setDependencyResolutionRequest(DependencyTreeProvider.newDependencyResolutionRequest(
-                  childContext, dependency));
                requests.add(nodeRequest);
             }
          }

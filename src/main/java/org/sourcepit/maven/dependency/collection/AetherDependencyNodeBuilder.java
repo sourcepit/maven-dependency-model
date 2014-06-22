@@ -39,7 +39,7 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
    public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
    {
       final List<DependencyResolutionNode> children = target.getChildren(parent);
-      
+
       try
       {
          parent.setDependencyNode(buildNode(parent));
@@ -66,11 +66,10 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
       throws VersionRangeResolutionException, ArtifactDescriptorException
    {
       final DependencyNodeContext context = resolutionNode.getContext();
-      final DependencyResolutionResult result = resolutionNode.getDependencyResolutionResult();
 
-      final VersionRangeResult rangeResult = result.getVersionRangeResult();
+      final VersionRangeResult rangeResult = resolutionNode.getVersionRangeResult();
 
-      final ManagedDependency managedDependency = result.getManagedDependency();
+      final ManagedDependency managedDependency = resolutionNode.getManagedDependency();
 
       if (rangeResult.getVersions().isEmpty())
       {
@@ -79,7 +78,8 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
       }
 
       Version version = resolutionNode.getResolvedVersion();
-      final ArtifactDescriptorResult descriptorResult = result.getVersionToArtifactDescriptorResultMap().get(version);
+      final ArtifactDescriptorResult descriptorResult = resolutionNode.getVersionToArtifactDescriptorResultMap().get(
+         version);
       if (descriptorResult.getExceptions().isEmpty())
       {
          final Dependency collectedDependency = managedDependency.getDependency().setArtifact(
@@ -103,7 +103,7 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
             node.setChildren(cyclicNode.getChildren());
             node.setData("cycleNode", cyclicNode);
          }
-         
+
          final DependencyResolutionNode parent = resolutionNode.getParent();
          if (parent != null)
          {

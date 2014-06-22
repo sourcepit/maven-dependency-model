@@ -6,29 +6,37 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
-import org.sourcepit.common.maven.model.VersionConflictKey;
 
 public class DependencyResolutionNode
 {
-   private DependencyResolutionNode parent;
+   private final DependencyResolutionNode parent;
 
-   private DependencyResolutionRequest dependencyResolutionRequest;
+   private final Dependency dependency;
 
-   private DependencyResolutionResult dependencyResolutionResult;
+   private final Map<Object, Object> data = new HashMap<Object, Object>();
 
-   private Set<VersionConflictKey> conflictKeys;
+   private ManagedDependency managedDependency;
+
+   private VersionRangeResult versionRangeResult;
+
+   private Map<Version, ArtifactDescriptorResult> versionToArtifactDescriptorResultMap;
 
    private Version resolvedVersion;
 
    private DependencyResolutionNode cyclicParent;
 
-   public DependencyResolutionNode(DependencyResolutionNode parent)
+   public DependencyResolutionNode(DependencyResolutionNode parent, Dependency dependency)
    {
-      this.parent = parent; 
+      this.parent = parent;
+      this.dependency = dependency;
    }
 
    public DependencyResolutionNode getParent()
@@ -36,39 +44,45 @@ public class DependencyResolutionNode
       return parent;
    }
 
-   public void setParent(DependencyResolutionNode parent)
+   public Dependency getDependency()
    {
-      this.parent = parent;
+      return dependency;
    }
 
-   public void setDependencyResolutionRequest(DependencyResolutionRequest dependencyResolutionRequest)
+   public Map<Object, Object> getData()
    {
-      this.dependencyResolutionRequest = dependencyResolutionRequest;
+      return data;
    }
 
-   public DependencyResolutionRequest getDependencyResolutionRequest()
+   public void setManagedDependency(ManagedDependency managedDependency)
    {
-      return dependencyResolutionRequest;
+      this.managedDependency = managedDependency;
    }
 
-   public void setDependencyResolutionResult(DependencyResolutionResult dependencyResolutionResult)
+   public ManagedDependency getManagedDependency()
    {
-      this.dependencyResolutionResult = dependencyResolutionResult;
+      return managedDependency;
    }
 
-   public DependencyResolutionResult getDependencyResolutionResult()
+   public void setVersionRangeResult(VersionRangeResult versionRangeResult)
    {
-      return dependencyResolutionResult;
+      this.versionRangeResult = versionRangeResult;
    }
 
-   public void setConflictKeys(Set<VersionConflictKey> conflictKeys)
+   public VersionRangeResult getVersionRangeResult()
    {
-      this.conflictKeys = conflictKeys;
+      return versionRangeResult;
    }
 
-   public Set<VersionConflictKey> getConflictKeys()
+   public void setVersionToArtifactDescriptorResultMap(
+      Map<Version, ArtifactDescriptorResult> versionToArtifactDescriptorResultMap)
    {
-      return conflictKeys;
+      this.versionToArtifactDescriptorResultMap = versionToArtifactDescriptorResultMap;
+   }
+
+   public Map<Version, ArtifactDescriptorResult> getVersionToArtifactDescriptorResultMap()
+   {
+      return versionToArtifactDescriptorResultMap;
    }
 
    public void setResolvedVersion(Version resolvedVersion)
