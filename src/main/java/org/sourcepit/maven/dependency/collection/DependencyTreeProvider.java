@@ -44,9 +44,11 @@ public class DependencyTreeProvider implements TreeProvider<DependencyNodeReques
 
          final DependencyResolutionRequest resolutionRequest = request.getDependencyResolutionRequest();
 
-         final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
+         final DependencyResolutionResult dependencyResolutionResult = dependencyResolver
+            .resolveDependency(resolutionRequest);
+         request.setDependencyResolutionResult(dependencyResolutionResult);
 
-         final List<DependencyNodeImpl> foo = buildNodes(resolutionResult, context);
+         final List<DependencyNodeImpl> foo = buildNodes(dependencyResolutionResult, context);
 
          if (foo.size() == 0)
          {

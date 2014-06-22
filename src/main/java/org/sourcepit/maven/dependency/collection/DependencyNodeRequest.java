@@ -12,6 +12,8 @@ public class DependencyNodeRequest
 {
    private DependencyResolutionRequest dependencyResolutionRequest;
 
+   private DependencyResolutionResult dependencyResolutionResult;
+
    public void setDependencyResolutionRequest(DependencyResolutionRequest dependencyResolutionRequest)
    {
       this.dependencyResolutionRequest = dependencyResolutionRequest;
@@ -20,6 +22,16 @@ public class DependencyNodeRequest
    public DependencyResolutionRequest getDependencyResolutionRequest()
    {
       return dependencyResolutionRequest;
+   }
+
+   public void setDependencyResolutionResult(DependencyResolutionResult dependencyResolutionResult)
+   {
+      this.dependencyResolutionResult = dependencyResolutionResult;
+   }
+
+   public DependencyResolutionResult getDependencyResolutionResult()
+   {
+      return dependencyResolutionResult;
    }
 
    private DependencyNodeContext context;
