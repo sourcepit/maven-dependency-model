@@ -15,11 +15,23 @@ import org.eclipse.aether.version.Version;
 
 public class DependencyResolutionResult
 {
+   private final DependencyResolutionRequest request;
+
    private ManagedDependency managedDependency;
 
    private VersionRangeResult versionRangeResult;
 
    private Map<Version, ArtifactDescriptorResult> artifactDescriptorResults;
+
+   public DependencyResolutionResult(DependencyResolutionRequest request)
+   {
+      this.request = request;
+   }
+
+   public DependencyResolutionRequest getRequest()
+   {
+      return request;
+   }
 
    public void setManagedDependency(ManagedDependency managedDependency)
    {

@@ -48,17 +48,17 @@ public class DescriptorResolverImpl implements DependencyResolver
    @Override
    public DependencyResolutionResult resolveDependency(DependencyResolutionRequest request)
    {
-      return resolveDependency(request.getDependency(), null, false, request.getSession(),
+      return resolveDependency(request, request.getDependency(), null, false, request.getSession(),
          request.getDependencyManager(), request.getDependencySelector(), request.getRequestContext(),
          request.getRequestTrace(), request.getRepositories());
    }
 
-   private DependencyResolutionResult resolveDependency(Dependency dependency, List<Artifact> relocations,
-      boolean disableVersionManagement, RepositorySystemSession session, DependencyManager dependencyManager,
-      DependencySelector dependencySelector, String requestContext, RequestTrace trace,
-      List<RemoteRepository> repositories)
+   private DependencyResolutionResult resolveDependency(DependencyResolutionRequest request, Dependency dependency,
+      List<Artifact> relocations, boolean disableVersionManagement, RepositorySystemSession session,
+      DependencyManager dependencyManager, DependencySelector dependencySelector, String requestContext,
+      RequestTrace trace, List<RemoteRepository> repositories)
    {
-      DependencyResolutionResult result = new DependencyResolutionResult();
+      final DependencyResolutionResult result = new DependencyResolutionResult(request);
 
       // apply dependency management
       result.setManagedDependency(applyDependencyManagement2(dependency, dependencyManager, disableVersionManagement));
@@ -102,7 +102,7 @@ public class DescriptorResolverImpl implements DependencyResolver
                   return null;
                }
 
-               return resolveDependency(relocatedDependency, descriptorResult.getRelocations(),
+               return resolveDependency(request, relocatedDependency, descriptorResult.getRelocations(),
                   disableVersionManagement, session, dependencyManager, dependencySelector, requestContext, trace,
                   repositories);
             }
