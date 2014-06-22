@@ -33,6 +33,8 @@ public class DependencyResolutionNode
    private Version resolvedVersion;
 
    private DependencyResolutionNode cyclicParent;
+   
+   private DependencyResolutionNode conflictNode;
 
    public DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent, Dependency dependency)
    {
@@ -110,5 +112,15 @@ public class DependencyResolutionNode
    public DependencyResolutionNode getCyclicParent()
    {
       return cyclicParent;
+   }
+
+   public void setConflictNode(DependencyResolutionNode conflictNode)
+   {
+      this.conflictNode = conflictNode;
+   }
+   
+   public DependencyResolutionNode getConflictNode()
+   {
+      return conflictNode;
    }
 }

@@ -42,7 +42,10 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
 
       try
       {
-         setDependencyNode(parent, buildNode(parent));
+         if (parent.getConflictNode() == null)
+         {
+            setDependencyNode(parent, buildNode(parent));
+         }
       }
       catch (VersionRangeResolutionException e)
       {

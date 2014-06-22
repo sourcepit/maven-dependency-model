@@ -47,9 +47,9 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
 
       for (DependencyResolutionNode request : children)
       {
-         final Set<VersionConflictKey> conflictKeys = getConflictKeys(request);
-
          request.setResolvedVersion(determineResolvedVersion(request));
+
+         final Set<VersionConflictKey> conflictKeys = getConflictKeys(request);
 
          if (!conflictKeys.isEmpty())
          {
@@ -57,7 +57,6 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
          }
       }
 
-      final Set<DependencyResolutionNode> losers = new HashSet<DependencyResolutionNode>();
       for (Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> entry : conflictGroupMap.entrySet())
       {
          final Set<VersionConflictKey> conflictKeys = entry.getKey();
@@ -79,16 +78,10 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
             // remember merged conflict keys, so we won't loose any keys from aliases or relocations of loser nodes
             getConflictKeys(winner).addAll(conflictKeys);
 
-            losers.addAll(conflictGroup);
-         }
-      }
-
-      for (Iterator<DependencyResolutionNode> it = children.iterator(); it.hasNext();)
-      {
-         final DependencyResolutionNode request = (DependencyResolutionNode) it.next();
-         if (losers.contains(request))
-         {
-            it.remove();
+            for (DependencyResolutionNode loser : conflictGroup)
+            {
+               loser.setConflictNode(winner);
+            }
          }
       }
 
@@ -153,18 +146,32 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
    @Override
    public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
    {
+      if (parent.getConflictNode() != null)
+      {
+         return Collections.emptyList();
+      }
+
       final DependencyResolutionNode cyclicParent = findCycle(parent);
       if (cyclicParent != null)
       {
          parent.setCyclicParent(cyclicParent);
          return Collections.emptyList();
       }
+
       final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
          conflictGroups, getConflictKeys(parent), parent);
+
       if (conflictGroup.getValue().size() > 1)
       {
+         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
+         final DependencyResolutionNode winner = it.next();
+         while (it.hasNext())
+         {
+            it.next().setConflictNode(winner);
+         }
          return Collections.emptyList();
       }
+
       return target.getChildren(parent);
    }
 
@@ -241,7 +248,7 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
       return false;
    }
 
-   public static Set<VersionConflictKey> getConflictKeys(ArtifactDescriptorResult descriptorResult)
+   private static Set<VersionConflictKey> getConflictKeys(ArtifactDescriptorResult descriptorResult)
    {
       final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
       final Artifact artifact = descriptorResult.getArtifact();
