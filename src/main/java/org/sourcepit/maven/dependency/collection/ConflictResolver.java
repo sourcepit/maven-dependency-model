@@ -20,70 +20,72 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
-public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
+public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
 {
-   private final Map<Set<VersionConflictKey>, List<DependencyNode>> conflictGroups = new HashMap<Set<VersionConflictKey>, List<DependencyNode>>();
+   private final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroups = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>();
 
-   private final TreeProvider<DependencyNodeRequest> target;
+   private final TreeProvider<DependencyResolutionNode> target;
 
-   public ConflictResolver(TreeProvider<DependencyNodeRequest> target)
+   public ConflictResolver(TreeProvider<DependencyResolutionNode> target)
    {
       this.target = target;
    }
 
    @Override
-   public List<DependencyNodeRequest> visitChildren(DependencyNodeRequest parent, int depth,
-      List<DependencyNodeRequest> children)
+   public List<DependencyResolutionNode> visitChildren(DependencyResolutionNode parent, int depth,
+      List<DependencyResolutionNode> children)
    {
       children = target.visitChildren(parent, depth, children);
 
-      final Map<Set<VersionConflictKey>, List<DependencyNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyNode>>(
+      final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>(
          children.size());
 
-      for (DependencyNodeRequest request : children)
+      for (DependencyResolutionNode request : children)
       {
-         final DependencyNode node = request.getDependencyNode();
-         if (node != null)
+         request.setConflictKeys(determineConflictKeys(request));
+         request.setResolvedVersion(determineResolvedVersion(request));
+
+         if (!request.getConflictKeys().isEmpty())
          {
-            addItemToConflictGroup(conflictGroupMap, getConflictKeys(node), node);
+            addItemToConflictGroup(conflictGroupMap, request.getConflictKeys(), request);
          }
       }
 
-      final Set<DependencyNode> losers = new HashSet<DependencyNode>();
-      for (Entry<Set<VersionConflictKey>, List<DependencyNode>> entry : conflictGroupMap.entrySet())
+      final Set<DependencyResolutionNode> losers = new HashSet<DependencyResolutionNode>();
+      for (Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> entry : conflictGroupMap.entrySet())
       {
          final Set<VersionConflictKey> conflictKeys = entry.getKey();
-         final List<DependencyNode> conflictGroup = entry.getValue();
+         final List<DependencyResolutionNode> conflictGroup = entry.getValue();
          if (conflictGroup.size() > 1)
          {
-            Collections.sort(conflictGroup, new Comparator<DependencyNode>()
+            Collections.sort(conflictGroup, new Comparator<DependencyResolutionNode>()
             {
                @Override
-               public int compare(DependencyNode n1, DependencyNode n2)
+               public int compare(DependencyResolutionNode n1, DependencyResolutionNode n2)
                {
-                  return -1 * n1.getVersion().compareTo(n2.getVersion());
+                  return -1 * n1.getResolvedVersion().compareTo(n2.getResolvedVersion());
                }
             });
 
             // remove winner
-            final DependencyNode winner = conflictGroup.remove(0);
+            final DependencyResolutionNode winner = conflictGroup.remove(0);
 
             // remember merged conflict keys, so we won't loose any keys from aliases or relocations of loser nodes
-            setConflictKeys(winner, conflictKeys);
+            winner.getConflictKeys().addAll(conflictKeys);
 
             losers.addAll(conflictGroup);
          }
       }
 
-      for (Iterator<DependencyNodeRequest> it = children.iterator(); it.hasNext();)
+      for (Iterator<DependencyResolutionNode> it = children.iterator(); it.hasNext();)
       {
-         final DependencyNodeRequest request = (DependencyNodeRequest) it.next();
-         if (losers.contains(request.getDependencyNode()))
+         final DependencyResolutionNode request = (DependencyResolutionNode) it.next();
+         if (losers.contains(request))
          {
             it.remove();
          }
@@ -92,26 +94,62 @@ public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
       return children;
    }
 
+   private static Version determineResolvedVersion(DependencyResolutionNode request)
+   {
+      final DependencyResolutionResult resolutionResult = request.getDependencyResolutionResult();
+      return getHighestVersion(resolutionResult.getVersionRangeResult().getVersions());
+   }
+
+   private static Set<VersionConflictKey> determineConflictKeys(DependencyResolutionNode request)
+   {
+      final DependencyResolutionResult resolutionResult = request.getDependencyResolutionResult();
+
+      final Map<Version, ArtifactDescriptorResult> versionToDescriptorResultMap = resolutionResult
+         .getVersionToArtifactDescriptorResultMap();
+      final Collection<ArtifactDescriptorResult> artifactDescriptorResults = versionToDescriptorResultMap.values();
+      final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
+      for (ArtifactDescriptorResult descriptorResult : artifactDescriptorResults)
+      {
+         conflictKeys.addAll(getConflictKeys(descriptorResult));
+      }
+
+      return conflictKeys;
+   }
+
+   private static Version getHighestVersion(Collection<Version> versions)
+   {
+      if (versions.isEmpty())
+      {
+         return null;
+      }
+      final Iterator<Version> it = versions.iterator();
+      Version max = it.next();
+      while (it.hasNext())
+      {
+         final Version version = (Version) it.next();
+         if (max.compareTo(version) < 0)
+         {
+            max = version;
+         }
+      }
+      return max;
+   }
+
    @Override
-   public void leaveChildren(DependencyNodeRequest parent, int depth, List<DependencyNodeRequest> children)
+   public void leaveChildren(DependencyResolutionNode parent, int depth, List<DependencyResolutionNode> children)
    {
    }
 
    @Override
-   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest parent)
+   public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
    {
-      final DependencyNode node = parent.getDependencyNode();
-      if (node != null)
+      final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
+         conflictGroups, parent.getConflictKeys(), parent);
+      if (conflictGroup.getValue().size() > 1)
       {
-         final Entry<Set<VersionConflictKey>, List<DependencyNode>> conflictGroup = addItemToConflictGroup(
-            conflictGroups, getConflictKeys(node), node);
-         if (conflictGroup.getValue().size() > 1)
-         {
-            return Collections.emptyList();
-         }
+         return Collections.emptyList();
       }
       return target.getChildren(parent);
-
    }
 
    private static <T> Entry<Set<VersionConflictKey>, List<T>> addItemToConflictGroup(
@@ -165,7 +203,7 @@ public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
       return conflictGroups;
    }
 
-   private static boolean contains(Set<VersionConflictKey> conflictGroup, Set<VersionConflictKey> conflictKeys)
+   static boolean contains(Set<VersionConflictKey> conflictGroup, Set<VersionConflictKey> conflictKeys)
    {
       for (VersionConflictKey conflictKey : conflictKeys)
       {
@@ -177,21 +215,18 @@ public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
       return false;
    }
 
-   public static Set<VersionConflictKey> getConflictKeys(DependencyNode dependencyNode)
+   public static Set<VersionConflictKey> getConflictKeys(ArtifactDescriptorResult descriptorResult)
    {
-      @SuppressWarnings("unchecked")
-      Set<VersionConflictKey> conflictKeys = (Set<VersionConflictKey>) dependencyNode.getData().get("conflictKeys");
-      if (conflictKeys == null)
+      final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
+      final Artifact artifact = descriptorResult.getArtifact();
+      if (artifact != null)
       {
-         conflictKeys = new HashSet<VersionConflictKey>();
-         setConflictKeys(dependencyNode, conflictKeys);
-
-         final VersionConflictKey targetGroupKey = getArtifactConflictKey(dependencyNode);
+         final VersionConflictKey targetGroupKey = toVersionConflictKey(artifact);
          if (targetGroupKey != null)
          {
             conflictKeys.add(targetGroupKey);
 
-            final Collection<Artifact> aliases = dependencyNode.getAliases();
+            final Collection<Artifact> aliases = descriptorResult.getAliases();
             if (aliases != null)
             {
                for (Artifact alias : aliases)
@@ -200,7 +235,7 @@ public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
                }
             }
 
-            final List<Artifact> relocations = dependencyNode.getRelocations();
+            final List<Artifact> relocations = descriptorResult.getRelocations();
             if (relocations != null)
             {
                for (Artifact relocation : relocations)
@@ -211,22 +246,6 @@ public class ConflictResolver implements TreeProvider<DependencyNodeRequest>
          }
       }
       return conflictKeys;
-   }
-
-   private static void setConflictKeys(DependencyNode dependencyNode, Set<VersionConflictKey> conflictKeys)
-   {
-      dependencyNode.setData("conflictKeys", conflictKeys);
-   }
-
-   public static VersionConflictKey getArtifactConflictKey(DependencyNode dependencyNode)
-   {
-      final Dependency dependency = dependencyNode.getDependency();
-      return getArtifactConflictKey(dependency);
-   }
-
-   private static VersionConflictKey getArtifactConflictKey(final Dependency dependency)
-   {
-      return dependency == null ? null : toVersionConflictKey(dependency.getArtifact());
    }
 
    private static VersionConflictKey toVersionConflictKey(final Artifact artifact)

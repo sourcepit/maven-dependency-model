@@ -6,7 +6,7 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -21,7 +21,7 @@ public class DependencyResolutionResult
 
    private VersionRangeResult versionRangeResult;
 
-   private Map<Version, ArtifactDescriptorResult> artifactDescriptorResults;
+   private Map<Version, ArtifactDescriptorResult> versionToArtifactDescriptorResultMap;
 
    public DependencyResolutionResult(DependencyResolutionRequest request)
    {
@@ -53,12 +53,12 @@ public class DependencyResolutionResult
       return versionRangeResult;
    }
 
-   public Map<Version, ArtifactDescriptorResult> getArtifactDescriptorResults()
+   public Map<Version, ArtifactDescriptorResult> getVersionToArtifactDescriptorResultMap()
    {
-      if (artifactDescriptorResults == null)
+      if (versionToArtifactDescriptorResultMap == null)
       {
-         artifactDescriptorResults = new HashMap<Version, ArtifactDescriptorResult>(1);
+         versionToArtifactDescriptorResultMap = new LinkedHashMap<Version, ArtifactDescriptorResult>(1);
       }
-      return artifactDescriptorResults;
+      return versionToArtifactDescriptorResultMap;
    }
 }

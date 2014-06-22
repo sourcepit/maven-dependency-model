@@ -7,7 +7,6 @@
 package org.sourcepit.maven.dependency.collection;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -16,7 +15,6 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -42,14 +40,12 @@ public class DependencyNodeContext
 
    private List<RemoteRepository> repositories;
 
-   private LinkedList<DependencyNode> parentNodes;
-
    public DependencyNodeContext(RepositorySystemSession session, RemoteRepositoryManager remoteRepositoryManager)
    {
       this.session = session;
       this.remoteRepositoryManager = remoteRepositoryManager;
    }
-   
+
    public RepositorySystemSession getSession()
    {
       return session;
@@ -139,29 +135,13 @@ public class DependencyNodeContext
       this.repositories = repositories;
    }
 
-   public void setParentNodes(LinkedList<DependencyNode> parentNodes)
-   {
-      this.parentNodes = parentNodes;
-   }
-
-   public LinkedList<DependencyNode> getParentNodes()
-   {
-      if (parentNodes == null)
-      {
-         parentNodes = new LinkedList<DependencyNode>();
-      }
-      return parentNodes;
-   }
-
-   public DependencyNodeContext deriveChildContext(DependencyNode parentNode, List<Dependency> managedDependencies,
+   public DependencyNodeContext deriveChildContext(Dependency parent, List<Dependency> managedDependencies,
       List<RemoteRepository> repositories)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
-         parentNode.getDependency(), managedDependencies);
+         parent, managedDependencies);
 
       final DependencyNodeContext childContext = new DependencyNodeContext(session, remoteRepositoryManager);
-      childContext.getParentNodes().addAll(this.getParentNodes());
-      childContext.getParentNodes().add(parentNode);
 
       childContext.setSavePremanagedState(this.isSavePremanagedState());
 

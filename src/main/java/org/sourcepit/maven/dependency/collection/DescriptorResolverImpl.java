@@ -77,7 +77,7 @@ public class DescriptorResolverImpl implements DependencyResolver
             final ArtifactDescriptorResult descriptorResult = readArtifactDescriptor(session, requestContext, trace,
                repositories, managedDependency.getArtifact().setVersion(version.toString()));
 
-            result.getArtifactDescriptorResults().put(version, descriptorResult);
+            result.getVersionToArtifactDescriptorResultMap().put(version, descriptorResult);
 
             if (descriptorResult.getRelocations().isEmpty())
             {
@@ -109,7 +109,7 @@ public class DescriptorResolverImpl implements DependencyResolver
          }
          catch (ArtifactDescriptorException e)
          {
-            result.getArtifactDescriptorResults().put(version, e.getResult());
+            result.getVersionToArtifactDescriptorResultMap().put(version, e.getResult());
          }
       }
       return result;

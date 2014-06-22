@@ -6,13 +6,40 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import org.eclipse.aether.graph.DependencyNode;
+import java.util.Set;
 
-public class DependencyNodeRequest
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.version.Version;
+import org.sourcepit.common.maven.model.VersionConflictKey;
+
+public class DependencyResolutionNode
 {
+   private DependencyResolutionNode parent;
+
    private DependencyResolutionRequest dependencyResolutionRequest;
 
    private DependencyResolutionResult dependencyResolutionResult;
+
+   private Set<VersionConflictKey> conflictKeys;
+
+   private Version resolvedVersion;
+
+   private DependencyResolutionNode cyclicParent;
+
+   public DependencyResolutionNode(DependencyResolutionNode parent)
+   {
+      this.parent = parent; 
+   }
+
+   public DependencyResolutionNode getParent()
+   {
+      return parent;
+   }
+
+   public void setParent(DependencyResolutionNode parent)
+   {
+      this.parent = parent;
+   }
 
    public void setDependencyResolutionRequest(DependencyResolutionRequest dependencyResolutionRequest)
    {
@@ -32,6 +59,36 @@ public class DependencyNodeRequest
    public DependencyResolutionResult getDependencyResolutionResult()
    {
       return dependencyResolutionResult;
+   }
+
+   public void setConflictKeys(Set<VersionConflictKey> conflictKeys)
+   {
+      this.conflictKeys = conflictKeys;
+   }
+
+   public Set<VersionConflictKey> getConflictKeys()
+   {
+      return conflictKeys;
+   }
+
+   public void setResolvedVersion(Version resolvedVersion)
+   {
+      this.resolvedVersion = resolvedVersion;
+   }
+
+   public Version getResolvedVersion()
+   {
+      return resolvedVersion;
+   }
+
+   public void setCyclicParent(DependencyResolutionNode cyclicParent)
+   {
+      this.cyclicParent = cyclicParent;
+   }
+
+   public DependencyResolutionNode getCyclicParent()
+   {
+      return cyclicParent;
    }
 
    private DependencyNodeContext context;
