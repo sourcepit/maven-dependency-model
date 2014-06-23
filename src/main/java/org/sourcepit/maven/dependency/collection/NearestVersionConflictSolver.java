@@ -6,7 +6,6 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,8 +15,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Map.Entry;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -25,35 +25,68 @@ import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
-public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
+public class NearestVersionConflictSolver implements ConflictSolver
 {
    private final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroups = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>();
-
-   private final TreeProvider<DependencyResolutionNode> target;
-
-   public ConflictResolver(TreeProvider<DependencyResolutionNode> target)
+   
+   @Override
+   public Version determineResolvedVersion(DependencyResolutionNode request)
    {
-      this.target = target;
+      return getHighestVersion(request.getVersionRangeResult().getVersions());
    }
 
    @Override
-   public List<DependencyResolutionNode> visitChildren(DependencyResolutionNode parent, int depth,
-      List<DependencyResolutionNode> children)
+   public DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node)
    {
-      children = target.visitChildren(parent, depth, children);
-
-      final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>(
-         children.size());
-
-      for (DependencyResolutionNode request : children)
+      DependencyResolutionNode parent = node.getParent();
+      while (parent != null && !contains(getConflictKeys(parent), getConflictKeys(node)))
       {
-         request.setResolvedVersion(determineResolvedVersion(request));
+         parent = parent.getParent();
+      }
+      return parent;
+   }
 
-         final Set<VersionConflictKey> conflictKeys = getConflictKeys(request);
+   @Override
+   public void solveConflicts(DependencyResolutionNode parent, List<DependencyResolutionNode> children)
+   {
+      solveSiblingConflicts(children);
 
+      for (DependencyResolutionNode node : children)
+      {
+         if (node.getConflictNode() == null)
+         {
+            solveTreeConflicts(node);
+         }
+      }
+   }
+
+   private void solveTreeConflicts(DependencyResolutionNode node)
+   {
+      final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
+         conflictGroups, getConflictKeys(node), node);
+
+      if (conflictGroup.getValue().size() > 1)
+      {
+         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
+         final DependencyResolutionNode winner = it.next();
+         while (it.hasNext())
+         {
+            it.next().setConflictNode(winner);
+         }
+      }
+   }
+
+   private static void solveSiblingConflicts(List<DependencyResolutionNode> siblings)
+   {
+      final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>(
+         siblings.size());
+
+      for (DependencyResolutionNode node : siblings)
+      {
+         final Set<VersionConflictKey> conflictKeys = getConflictKeys(node);
          if (!conflictKeys.isEmpty())
          {
-            addItemToConflictGroup(conflictGroupMap, conflictKeys, request);
+            addItemToConflictGroup(conflictGroupMap, conflictKeys, node);
          }
       }
 
@@ -84,8 +117,6 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
             }
          }
       }
-
-      return children;
    }
 
    private static Set<VersionConflictKey> getConflictKeys(DependencyResolutionNode request)
@@ -98,11 +129,6 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
          request.getData().put("conflictKeys", conflictKeys);
       }
       return conflictKeys;
-   }
-
-   private static Version determineResolvedVersion(DependencyResolutionNode request)
-   {
-      return getHighestVersion(request.getVersionRangeResult().getVersions());
    }
 
    private static Set<VersionConflictKey> determineConflictKeys(DependencyResolutionNode request)
@@ -136,53 +162,6 @@ public class ConflictResolver implements TreeProvider<DependencyResolutionNode>
          }
       }
       return max;
-   }
-
-   @Override
-   public void leaveChildren(DependencyResolutionNode parent, int depth, List<DependencyResolutionNode> children)
-   {
-   }
-
-   @Override
-   public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
-   {
-      if (parent.getConflictNode() != null)
-      {
-         return Collections.emptyList();
-      }
-
-      final DependencyResolutionNode cyclicParent = findCycle(parent);
-      if (cyclicParent != null)
-      {
-         parent.setCyclicParent(cyclicParent);
-         return Collections.emptyList();
-      }
-
-      final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
-         conflictGroups, getConflictKeys(parent), parent);
-
-      if (conflictGroup.getValue().size() > 1)
-      {
-         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
-         final DependencyResolutionNode winner = it.next();
-         while (it.hasNext())
-         {
-            it.next().setConflictNode(winner);
-         }
-         return Collections.emptyList();
-      }
-
-      return target.getChildren(parent);
-   }
-
-   private static DependencyResolutionNode findCycle(DependencyResolutionNode node)
-   {
-      DependencyResolutionNode parent = node.getParent();
-      while (parent != null && !contains(getConflictKeys(parent), getConflictKeys(node)))
-      {
-         parent = parent.getParent();
-      }
-      return parent;
    }
 
    private static <T> Entry<Set<VersionConflictKey>, List<T>> addItemToConflictGroup(

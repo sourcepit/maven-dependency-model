@@ -21,9 +21,12 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
 {
    private DependencyResolver dependencyResolver;
 
-   public DependencyTreeProvider(DependencyResolver dependencyResolver)
+   private ConflictSolver conflictSolver;
+
+   public DependencyTreeProvider(DependencyResolver dependencyResolver, ConflictSolver conflictSolver)
    {
       this.dependencyResolver = dependencyResolver;
+      this.conflictSolver = conflictSolver;
    }
 
    @Override
@@ -33,7 +36,11 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
       for (DependencyResolutionNode node : children)
       {
          resolve(node);
+         node.setCyclicParent(conflictSolver.detectCyclicParent(node));
       }
+
+      conflictSolver.solveConflicts(parent, children);
+
       return children;
    }
 
@@ -48,6 +55,8 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
       node.setManagedDependency(resolutionResult.getManagedDependency());
       node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
       node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
+
+      node.setResolvedVersion(conflictSolver.determineResolvedVersion(node));
    }
 
    @Override
@@ -58,6 +67,16 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
    @Override
    public List<DependencyResolutionNode> getChildren(DependencyResolutionNode request)
    {
+      if (request.getConflictNode() != null)
+      {
+         return Collections.emptyList();
+      }
+
+      if (request.getCyclicParent() != null)
+      {
+         return Collections.emptyList();
+      }
+      
       final DependencyNodeContext context = request.getContext();
 
       final Version resolvedVersion = request.getResolvedVersion();

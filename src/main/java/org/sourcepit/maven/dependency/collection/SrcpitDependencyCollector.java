@@ -175,7 +175,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private TreeProvider<DependencyResolutionNode> newTreeProvider(final CollectResult result)
    {
-      return new AetherDependencyNodeBuilder(new ConflictResolver(new DependencyTreeProvider(dependencyResolver)))
+      return new AetherDependencyNodeBuilder(new DependencyTreeProvider(dependencyResolver,
+         new NearestVersionConflictSolver()))
       {
          @Override
          protected void handleException(Exception e)
