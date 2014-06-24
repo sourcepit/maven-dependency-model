@@ -61,21 +61,14 @@ public class NearestNodesFirstTreeTraversalTest
       String result = travers(a);
 
       StringBuilder sb = new StringBuilder();
-      sb.append("visitChildren(null, 0, [a])\n");
+      sb.append("getRoots([a])\n");
       sb.append("getChildren(a)\n");
-      sb.append("visitChildren(a, 1, [b, c])\n");
       sb.append("getChildren(b)\n");
       sb.append("getChildren(c)\n");
-      sb.append("visitChildren(b, 2, [d, e])\n");
       sb.append("getChildren(d)\n");
       sb.append("getChildren(e)\n");
-      sb.append("visitChildren(c, 2, [f, g])\n");
       sb.append("getChildren(f)\n");
       sb.append("getChildren(g)\n");
-      sb.append("leaveChildren(c, 2, [f, g])\n");
-      sb.append("leaveChildren(b, 2, [d, e])\n");
-      sb.append("leaveChildren(a, 1, [b, c])\n");
-      sb.append("leaveChildren(null, 0, [a])\n");
 
       assertEquals(sb.toString(), result);
    }
@@ -87,10 +80,24 @@ public class NearestNodesFirstTreeTraversalTest
       new NearestNodesFirstTreeTraversal<Node>().traverse(new TreeProvider<Node>()
       {
          @Override
-         public List<Node> visitChildren(Node parent, int depth, List<Node> children)
+         public List<Node> getRoots(List<Node> roots)
          {
-            enterOrLeave("visitChildren", parent, depth, children);
-            return children;
+            sb.append("getRoots");
+            sb.append("([");
+            for (Node child : roots)
+            {
+               sb.append(child);
+               sb.append(", ");
+            }
+            if (!roots.isEmpty())
+            {
+               sb.deleteCharAt(sb.length() - 1);
+               sb.deleteCharAt(sb.length() - 1);
+            }
+            sb.append("])");
+            sb.append("\n");
+
+            return roots;
          }
 
          @Override
@@ -101,34 +108,6 @@ public class NearestNodesFirstTreeTraversalTest
             sb.append(")");
             sb.append("\n");
             return parent.getChildren();
-         }
-
-         @Override
-         public void leaveChildren(Node parent, int depth, List<Node> children)
-         {
-            enterOrLeave("leaveChildren", parent, depth, children);
-         }
-
-         private void enterOrLeave(String method, Node parent, int depth, List<Node> children)
-         {
-            sb.append(method);
-            sb.append("(");
-            sb.append(parent == null ? "null" : parent.toString());
-            sb.append(", ");
-            sb.append(depth);
-            sb.append(", [");
-            for (Node child : children)
-            {
-               sb.append(child);
-               sb.append(", ");
-            }
-            if (!children.isEmpty())
-            {
-               sb.deleteCharAt(sb.length() - 1);
-               sb.deleteCharAt(sb.length() - 1);
-            }
-            sb.append("])");
-            sb.append("\n");
          }
       }, a);
 
@@ -167,32 +146,17 @@ public class NearestNodesFirstTreeTraversalTest
 
       String result = travers(root);
       StringBuilder sb = new StringBuilder();
-      sb.append("visitChildren(null, 0, [root])\n");
+      sb.append("getRoots([root])\n");
       sb.append("getChildren(root)\n");
-      sb.append("visitChildren(root, 1, [x0y0, x1y0, x2y0])\n");
       sb.append("getChildren(x0y0)\n");
       sb.append("getChildren(x1y0)\n");
       sb.append("getChildren(x2y0)\n");
-      sb.append("visitChildren(x0y0, 2, [x0y1])\n");
       sb.append("getChildren(x0y1)\n");
-      sb.append("visitChildren(x1y0, 2, [x1y1])\n");
       sb.append("getChildren(x1y1)\n");
-      sb.append("visitChildren(x2y0, 2, [x2y1])\n");
       sb.append("getChildren(x2y1)\n");
-      sb.append("visitChildren(x0y1, 3, [x0y2])\n");
       sb.append("getChildren(x0y2)\n");
-      sb.append("visitChildren(x1y1, 3, [x1y2])\n");
       sb.append("getChildren(x1y2)\n");
-      sb.append("visitChildren(x2y1, 3, [x2y2])\n");
       sb.append("getChildren(x2y2)\n");
-      sb.append("leaveChildren(x2y1, 3, [x2y2])\n");
-      sb.append("leaveChildren(x1y1, 3, [x1y2])\n");
-      sb.append("leaveChildren(x0y1, 3, [x0y2])\n");
-      sb.append("leaveChildren(x2y0, 2, [x2y1])\n");
-      sb.append("leaveChildren(x1y0, 2, [x1y1])\n");
-      sb.append("leaveChildren(x0y0, 2, [x0y1])\n");
-      sb.append("leaveChildren(root, 1, [x0y0, x1y0, x2y0])\n");
-      sb.append("leaveChildren(null, 0, [root])\n");
 
       assertEquals(sb.toString(), result);
    }

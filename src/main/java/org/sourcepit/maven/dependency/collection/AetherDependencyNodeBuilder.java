@@ -29,45 +29,46 @@ public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResol
    }
 
    @Override
-   public List<DependencyResolutionNode> visitChildren(DependencyResolutionNode parent, int depth,
-      List<DependencyResolutionNode> children)
+   public List<DependencyResolutionNode> getRoots(List<DependencyResolutionNode> roots)
    {
-      return target.visitChildren(parent, depth, children);
+      final List<DependencyResolutionNode> children = target.getRoots(roots);
+      build(children);
+      return children;
+   }
+
+   private void build(final List<DependencyResolutionNode> children)
+   {
+      for (DependencyResolutionNode node : children)
+      {
+         try
+         {
+            if (node.getConflictNode() == null)
+            {
+               setDependencyNode(node, buildNode(node));
+            }
+         }
+         catch (VersionRangeResolutionException e)
+         {
+            handleException(e);
+         }
+         catch (ArtifactDescriptorException e)
+         {
+            handleException(e);
+         }
+      }
    }
 
    @Override
    public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
    {
       final List<DependencyResolutionNode> children = target.getChildren(parent);
-
-      try
-      {
-         if (parent.getConflictNode() == null)
-         {
-            setDependencyNode(parent, buildNode(parent));
-         }
-      }
-      catch (VersionRangeResolutionException e)
-      {
-         handleException(e);
-      }
-      catch (ArtifactDescriptorException e)
-      {
-         handleException(e);
-      }
-
+      build(children);
       return children;
    }
 
    static void setDependencyNode(DependencyResolutionNode resolutionNode, DependencyNodeImpl dependencyNode)
    {
       resolutionNode.getData().put(DependencyNode.class, dependencyNode);
-   }
-
-   @Override
-   public void leaveChildren(DependencyResolutionNode parent, int depth, List<DependencyResolutionNode> children)
-   {
-      target.leaveChildren(parent, depth, children);
    }
 
    private DependencyNodeImpl buildNode(DependencyResolutionNode resolutionNode)

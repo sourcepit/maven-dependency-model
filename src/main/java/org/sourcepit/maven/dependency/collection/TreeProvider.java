@@ -10,9 +10,7 @@ import java.util.List;
 
 interface TreeProvider<Node>
 {
-   List<Node> visitChildren(Node parent, int depth, List<Node> children);
+   List<Node> getRoots(List<Node> roots);
 
-   List<Node> getChildren(Node parent);
-
-   void leaveChildren(Node parent, int depth, List<Node> children);
+   List<Node> getChildren(Node node);
 }

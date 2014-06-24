@@ -17,51 +17,22 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.version.Version;
 
-public class DependencyTreeProvider implements TreeProvider<DependencyResolutionNode>
+public class DependencyResolutionNodeTreeProvider implements TreeProvider<DependencyResolutionNode>
 {
    private DependencyResolver dependencyResolver;
 
    private ConflictSolver conflictSolver;
 
-   public DependencyTreeProvider(DependencyResolver dependencyResolver, ConflictSolver conflictSolver)
+   public DependencyResolutionNodeTreeProvider(DependencyResolver dependencyResolver, ConflictSolver conflictSolver)
    {
       this.dependencyResolver = dependencyResolver;
       this.conflictSolver = conflictSolver;
    }
 
    @Override
-   public List<DependencyResolutionNode> visitChildren(DependencyResolutionNode parent, int depth,
-      List<DependencyResolutionNode> children)
+   public List<DependencyResolutionNode> getRoots(List<DependencyResolutionNode> roots)
    {
-      for (DependencyResolutionNode node : children)
-      {
-         resolve(node);
-         node.setCyclicParent(conflictSolver.detectCyclicParent(node));
-      }
-
-      conflictSolver.solveConflicts(parent, children);
-
-      return children;
-   }
-
-   private void resolve(DependencyResolutionNode node)
-   {
-      final DependencyNodeContext context = node.getContext();
-      final Dependency dependency = node.getDependency();
-
-      final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(context, dependency);
-      final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
-
-      node.setManagedDependency(resolutionResult.getManagedDependency());
-      node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
-      node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
-
-      node.setResolvedVersion(conflictSolver.determineResolvedVersion(node));
-   }
-
-   @Override
-   public void leaveChildren(DependencyResolutionNode parent, int depth, List<DependencyResolutionNode> children)
-   {
+      return resolve(roots);
    }
 
    @Override
@@ -76,7 +47,7 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
       {
          return Collections.emptyList();
       }
-      
+
       final DependencyNodeContext context = request.getContext();
 
       final Version resolvedVersion = request.getResolvedVersion();
@@ -133,12 +104,33 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
          childRequests.add(childRequest);
       }
 
-      return childRequests;
+      return resolve(childRequests);
    }
 
-   private boolean isLackingDescriptor(Artifact artifact)
+   private List<DependencyResolutionNode> resolve(List<DependencyResolutionNode> nodes)
    {
-      return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
+      for (DependencyResolutionNode node : nodes)
+      {
+         resolve(node);
+         node.setCyclicParent(conflictSolver.detectCyclicParent(node));
+      }
+      conflictSolver.solveConflicts(null, nodes);
+      return nodes;
+   }
+
+   private void resolve(DependencyResolutionNode node)
+   {
+      final DependencyNodeContext context = node.getContext();
+      final Dependency dependency = node.getDependency();
+
+      final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(context, dependency);
+      final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
+
+      node.setManagedDependency(resolutionResult.getManagedDependency());
+      node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
+      node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
+
+      node.setResolvedVersion(conflictSolver.determineResolvedVersion(node));
    }
 
    static DependencyResolutionRequest newDependencyResolutionRequest(final DependencyNodeContext context,
@@ -155,5 +147,9 @@ public class DependencyTreeProvider implements TreeProvider<DependencyResolution
       return resolutionRequest;
    }
 
+   private boolean isLackingDescriptor(Artifact artifact)
+   {
+      return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
+   }
 
 }

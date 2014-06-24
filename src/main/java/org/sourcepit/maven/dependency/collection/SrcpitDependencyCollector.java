@@ -79,12 +79,12 @@ public class SrcpitDependencyCollector implements DependencyCollector
       CollectRequest request)
    {
       final CollectResult result = new CollectResult(request);
-      final TreeProvider<DependencyResolutionNode> treeProvider = newTreeProvider(result);
+      final TreeProvider<DependencyResolutionNode> CopyOfTreeProvider = newTreeProvider(result);
 
       final DependencyNodeContext rootContext = newRootContext(session, request);
       final DependencyResolutionNode nodeRequest = new DependencyResolutionNode(rootContext, null, dependency);
 
-      newTreeTraversal().traverse(treeProvider, nodeRequest);
+      newTreeTraversal().traverse(CopyOfTreeProvider, nodeRequest);
       result.setRoot(getDependencyNode(nodeRequest));
 
       return result;
@@ -96,7 +96,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeTraversal<DependencyResolutionNode> treeTraversal = newTreeTraversal();
 
       final CollectResult result = new CollectResult(request);
-      final TreeProvider<DependencyResolutionNode> treeProvider = newTreeProvider(result);
+      final TreeProvider<DependencyResolutionNode> CopyOfTreeProvider = newTreeProvider(result);
 
       final DependencyNodeImpl node = new DependencyNodeImpl()
       {
@@ -133,7 +133,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
                requests.add(nodeRequest);
             }
          }
-         treeTraversal.traverse(treeProvider, requests);
+         treeTraversal.traverse(CopyOfTreeProvider, requests);
       }
 
       result.setRoot(node);
@@ -175,7 +175,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private TreeProvider<DependencyResolutionNode> newTreeProvider(final CollectResult result)
    {
-      return new AetherDependencyNodeBuilder(new DependencyTreeProvider(dependencyResolver,
+      return new AetherDependencyNodeBuilder(new DependencyResolutionNodeTreeProvider(dependencyResolver,
          new NearestVersionConflictSolver()))
       {
          @Override
