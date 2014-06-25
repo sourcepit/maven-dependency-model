@@ -32,14 +32,14 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
 @Named
-public class DescriptorResolverImpl implements DependencyResolver
+public class DependencyResolverImpl implements DependencyResolver
 {
    private final VersionRangeResolver versionRangeResolver;
 
    private final ArtifactDescriptorReader descriptorReader;
 
    @Inject
-   public DescriptorResolverImpl(VersionRangeResolver versionRangeResolver, ArtifactDescriptorReader descriptorReader)
+   public DependencyResolverImpl(VersionRangeResolver versionRangeResolver, ArtifactDescriptorReader descriptorReader)
    {
       this.descriptorReader = descriptorReader;
       this.versionRangeResolver = versionRangeResolver;

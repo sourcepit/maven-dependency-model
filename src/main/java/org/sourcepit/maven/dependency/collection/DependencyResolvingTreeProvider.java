@@ -15,18 +15,19 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class DependencyResolutionNodeTreeProvider implements TreeProvider<DependencyResolutionNode>
+public class DependencyResolvingTreeProvider implements TreeProvider<DependencyResolutionNode>
 {
    private DependencyResolver dependencyResolver;
 
-   private ConflictSolver conflictSolver;
+   private VersionChooser versionChooser;
 
-   public DependencyResolutionNodeTreeProvider(DependencyResolver dependencyResolver, ConflictSolver conflictSolver)
+   public DependencyResolvingTreeProvider(DependencyResolver dependencyResolver, VersionChooser versionChooser)
    {
       this.dependencyResolver = dependencyResolver;
-      this.conflictSolver = conflictSolver;
+      this.versionChooser = versionChooser;
    }
 
    @Override
@@ -38,16 +39,6 @@ public class DependencyResolutionNodeTreeProvider implements TreeProvider<Depend
    @Override
    public List<DependencyResolutionNode> getChildren(DependencyResolutionNode request)
    {
-      if (request.getConflictNode() != null)
-      {
-         return Collections.emptyList();
-      }
-
-      if (request.getCyclicParent() != null)
-      {
-         return Collections.emptyList();
-      }
-
       final DependencyNodeContext context = request.getContext();
 
       final Version resolvedVersion = request.getResolvedVersion();
@@ -112,9 +103,7 @@ public class DependencyResolutionNodeTreeProvider implements TreeProvider<Depend
       for (DependencyResolutionNode node : nodes)
       {
          resolve(node);
-         node.setCyclicParent(conflictSolver.detectCyclicParent(node));
       }
-      conflictSolver.solveConflicts(null, nodes);
       return nodes;
    }
 
@@ -130,7 +119,11 @@ public class DependencyResolutionNodeTreeProvider implements TreeProvider<Depend
       node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
       node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
 
-      node.setResolvedVersion(conflictSolver.determineResolvedVersion(node));
+      final VersionRangeResult versionRangeResult = resolutionResult.getVersionRangeResult();
+      if (versionRangeResult != null)
+      {
+         node.setResolvedVersion(versionChooser.chooseVersion(versionRangeResult));
+      }
    }
 
    static DependencyResolutionRequest newDependencyResolutionRequest(final DependencyNodeContext context,

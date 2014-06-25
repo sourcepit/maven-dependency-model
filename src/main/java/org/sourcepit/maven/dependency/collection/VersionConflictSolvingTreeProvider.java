@@ -25,18 +25,17 @@ import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
-public class NearestVersionConflictSolver implements ConflictSolver
+public class VersionConflictSolvingTreeProvider extends AbstractConflictSolvingTreeProvider
 {
    private final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroups = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>();
-   
-   @Override
-   public Version determineResolvedVersion(DependencyResolutionNode request)
+
+   public VersionConflictSolvingTreeProvider(TreeProvider<DependencyResolutionNode> target)
    {
-      return getHighestVersion(request.getVersionRangeResult().getVersions());
+      super(target);
    }
 
    @Override
-   public DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node)
+   protected DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node)
    {
       DependencyResolutionNode parent = node.getParent();
       while (parent != null && !contains(getConflictKeys(parent), getConflictKeys(node)))
@@ -47,36 +46,7 @@ public class NearestVersionConflictSolver implements ConflictSolver
    }
 
    @Override
-   public void solveConflicts(DependencyResolutionNode parent, List<DependencyResolutionNode> children)
-   {
-      solveSiblingConflicts(children);
-
-      for (DependencyResolutionNode node : children)
-      {
-         if (node.getConflictNode() == null)
-         {
-            solveTreeConflicts(node);
-         }
-      }
-   }
-
-   private void solveTreeConflicts(DependencyResolutionNode node)
-   {
-      final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
-         conflictGroups, getConflictKeys(node), node);
-
-      if (conflictGroup.getValue().size() > 1)
-      {
-         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
-         final DependencyResolutionNode winner = it.next();
-         while (it.hasNext())
-         {
-            it.next().setConflictNode(winner);
-         }
-      }
-   }
-
-   private static void solveSiblingConflicts(List<DependencyResolutionNode> siblings)
+   protected List<DependencyResolutionNode> solveSiblingConflicts(List<DependencyResolutionNode> siblings)
    {
       final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>(
          siblings.size());
@@ -117,51 +87,25 @@ public class NearestVersionConflictSolver implements ConflictSolver
             }
          }
       }
+
+      return siblings;
    }
 
-   private static Set<VersionConflictKey> getConflictKeys(DependencyResolutionNode request)
+   @Override
+   protected void updateTreeConflicts(DependencyResolutionNode node)
    {
-      @SuppressWarnings("unchecked")
-      Set<VersionConflictKey> conflictKeys = (Set<VersionConflictKey>) request.getData().get("conflictKeys");
-      if (conflictKeys == null)
-      {
-         conflictKeys = determineConflictKeys(request);
-         request.getData().put("conflictKeys", conflictKeys);
-      }
-      return conflictKeys;
-   }
+      final Entry<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(
+         conflictGroups, getConflictKeys(node), node);
 
-   private static Set<VersionConflictKey> determineConflictKeys(DependencyResolutionNode request)
-   {
-      final Map<Version, ArtifactDescriptorResult> versionToDescriptorResultMap = request
-         .getVersionToArtifactDescriptorResultMap();
-      final Collection<ArtifactDescriptorResult> artifactDescriptorResults = versionToDescriptorResultMap.values();
-      final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
-      for (ArtifactDescriptorResult descriptorResult : artifactDescriptorResults)
+      if (conflictGroup.getValue().size() > 1)
       {
-         conflictKeys.addAll(getConflictKeys(descriptorResult));
-      }
-
-      return conflictKeys;
-   }
-
-   private static Version getHighestVersion(Collection<Version> versions)
-   {
-      if (versions.isEmpty())
-      {
-         return null;
-      }
-      final Iterator<Version> it = versions.iterator();
-      Version max = it.next();
-      while (it.hasNext())
-      {
-         final Version version = (Version) it.next();
-         if (max.compareTo(version) < 0)
+         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
+         final DependencyResolutionNode winner = it.next();
+         while (it.hasNext())
          {
-            max = version;
+            it.next().setConflictNode(winner);
          }
       }
-      return max;
    }
 
    private static <T> Entry<Set<VersionConflictKey>, List<T>> addItemToConflictGroup(
@@ -215,16 +159,30 @@ public class NearestVersionConflictSolver implements ConflictSolver
       return conflictGroups;
    }
 
-   private static boolean contains(Set<VersionConflictKey> conflictGroup, Set<VersionConflictKey> conflictKeys)
+   private static Set<VersionConflictKey> getConflictKeys(DependencyResolutionNode request)
    {
-      for (VersionConflictKey conflictKey : conflictKeys)
+      @SuppressWarnings("unchecked")
+      Set<VersionConflictKey> conflictKeys = (Set<VersionConflictKey>) request.getData().get("conflictKeys");
+      if (conflictKeys == null)
       {
-         if (conflictGroup.contains(conflictKey))
-         {
-            return true;
-         }
+         conflictKeys = determineConflictKeys(request);
+         request.getData().put("conflictKeys", conflictKeys);
       }
-      return false;
+      return conflictKeys;
+   }
+
+   private static Set<VersionConflictKey> determineConflictKeys(DependencyResolutionNode request)
+   {
+      final Map<Version, ArtifactDescriptorResult> versionToDescriptorResultMap = request
+         .getVersionToArtifactDescriptorResultMap();
+      final Collection<ArtifactDescriptorResult> artifactDescriptorResults = versionToDescriptorResultMap.values();
+      final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
+      for (ArtifactDescriptorResult descriptorResult : artifactDescriptorResults)
+      {
+         conflictKeys.addAll(getConflictKeys(descriptorResult));
+      }
+
+      return conflictKeys;
    }
 
    private static Set<VersionConflictKey> getConflictKeys(ArtifactDescriptorResult descriptorResult)
@@ -266,4 +224,15 @@ public class NearestVersionConflictSolver implements ConflictSolver
          artifact.getExtension(), artifact.getClassifier());
    }
 
+   private static boolean contains(Set<VersionConflictKey> conflictGroup, Set<VersionConflictKey> conflictKeys)
+   {
+      for (VersionConflictKey conflictKey : conflictKeys)
+      {
+         if (conflictGroup.contains(conflictKey))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
 }

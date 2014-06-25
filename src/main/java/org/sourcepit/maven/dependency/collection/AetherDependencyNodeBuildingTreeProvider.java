@@ -19,11 +19,11 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class AetherDependencyNodeBuilder implements TreeProvider<DependencyResolutionNode>
+public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<DependencyResolutionNode>
 {
    private final TreeProvider<DependencyResolutionNode> target;
 
-   public AetherDependencyNodeBuilder(TreeProvider<DependencyResolutionNode> target)
+   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyResolutionNode> target)
    {
       this.target = target;
    }

@@ -6,15 +6,10 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.List;
-
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public interface ConflictSolver
+public interface VersionChooser
 {
-   Version determineResolvedVersion(DependencyResolutionNode request);
-   
-   DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node);
-   
-   void solveConflicts(DependencyResolutionNode parent, List<DependencyResolutionNode> children);
+   Version chooseVersion(VersionRangeResult versionRangeResult);
 }

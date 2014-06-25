@@ -6,8 +6,8 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuilder.getDependencyNode;
-import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuilder.setDependencyNode;
+import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuildingTreeProvider.getDependencyNode;
+import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuildingTreeProvider.setDependencyNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -175,8 +175,14 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private TreeProvider<DependencyResolutionNode> newTreeProvider(final CollectResult result)
    {
-      return new AetherDependencyNodeBuilder(new DependencyResolutionNodeTreeProvider(dependencyResolver,
-         new NearestVersionConflictSolver()))
+      final VersionChooser versionChooser = new HighestVersionChooser();
+
+      final TreeProvider<DependencyResolutionNode> nodeResolver = new DependencyResolvingTreeProvider(
+         dependencyResolver, versionChooser);
+
+      final TreeProvider<DependencyResolutionNode> conflictSolver = new VersionConflictSolvingTreeProvider(nodeResolver);
+
+      return new AetherDependencyNodeBuildingTreeProvider(conflictSolver)
       {
          @Override
          protected void handleException(Exception e)
