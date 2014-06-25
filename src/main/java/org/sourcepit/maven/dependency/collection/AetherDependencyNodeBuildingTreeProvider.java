@@ -23,9 +23,14 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
 {
    private final TreeProvider<DependencyResolutionNode> target;
 
-   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyResolutionNode> target)
+   private final boolean savePremanagedState;
+
+   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyResolutionNode> target,
+      boolean savePremanagedState)
    {
       this.target = target;
+      this.savePremanagedState = savePremanagedState;
+
    }
 
    @Override
@@ -74,8 +79,6 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
    private DependencyNodeImpl buildNode(DependencyResolutionNode resolutionNode)
       throws VersionRangeResolutionException, ArtifactDescriptorException
    {
-      final DependencyNodeContext context = resolutionNode.getContext();
-
       final VersionRangeResult rangeResult = resolutionNode.getVersionRangeResult();
 
       final ManagedDependency managedDependency = resolutionNode.getManagedDependency();
@@ -99,8 +102,9 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
          node.setDependency(collectedDependency);
          node.setManagedBits(managedDependency.getManagedBits());
          node.setRelocations(descriptorResult.getRelocations());
-         node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version), context.getRepositories()));
-         node.setRequestContext(context.getRequestContext());
+         node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version),
+            resolutionNode.getRepositories()));
+         node.setRequestContext(resolutionNode.getRequestContext());
          node.setVersion(version);
          node.setVersionConstraint(rangeResult.getVersionConstraint());
 

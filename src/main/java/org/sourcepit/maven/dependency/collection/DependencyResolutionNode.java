@@ -7,9 +7,11 @@
 package org.sourcepit.maven.dependency.collection;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
@@ -19,6 +21,10 @@ public class DependencyResolutionNode
    private final DependencyNodeContext context;
 
    private final DependencyResolutionNode parent;
+
+   private String requestContext;
+
+   private List<RemoteRepository> repositories;
 
    private final Dependency dependency;
 
@@ -33,13 +39,28 @@ public class DependencyResolutionNode
    private Version resolvedVersion;
 
    private DependencyResolutionNode cyclicParent;
-   
+
    private DependencyResolutionNode conflictNode;
 
-   public DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent, Dependency dependency)
+   public DependencyResolutionNode(DependencyNodeContext context, String requestContext,
+      List<RemoteRepository> repositories, Dependency dependency)
+   {
+      this(context, null, requestContext, repositories, dependency);
+   }
+
+   public DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent,
+      List<RemoteRepository> repositories, Dependency dependency)
+   {
+      this(context, parent, parent.getRequestContext(), repositories, dependency);
+   }
+
+   private DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent,
+      String requestContext, List<RemoteRepository> repositories, Dependency dependency)
    {
       this.context = context;
       this.parent = parent;
+      this.requestContext = requestContext;
+      this.repositories = repositories;
       this.dependency = dependency;
    }
 
@@ -56,6 +77,16 @@ public class DependencyResolutionNode
    public Dependency getDependency()
    {
       return dependency;
+   }
+
+   public String getRequestContext()
+   {
+      return requestContext;
+   }
+
+   public List<RemoteRepository> getRepositories()
+   {
+      return repositories;
    }
 
    public Map<Object, Object> getData()
@@ -118,7 +149,7 @@ public class DependencyResolutionNode
    {
       this.conflictNode = conflictNode;
    }
-   
+
    public DependencyResolutionNode getConflictNode()
    {
       return conflictNode;

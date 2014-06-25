@@ -6,7 +6,6 @@
 
 package org.sourcepit.maven.dependency.collection;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -15,14 +14,10 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.impl.RemoteRepositoryManager;
-import org.eclipse.aether.repository.RemoteRepository;
 
 public class DependencyNodeContext
 {
    private final RepositorySystemSession session;
-
-   private final RemoteRepositoryManager remoteRepositoryManager;
 
    private DependencySelector dependencySelector;
 
@@ -31,19 +26,12 @@ public class DependencyNodeContext
    private DependencyTraverser dependencyTraverser;
 
    private DependenciesFilter dependenciesFilter;
-
-   private boolean savePremanagedState;
-
-   private String requestContext;
-
+   
    private RequestTrace requestTrace;
 
-   private List<RemoteRepository> repositories;
-
-   public DependencyNodeContext(RepositorySystemSession session, RemoteRepositoryManager remoteRepositoryManager)
+   public DependencyNodeContext(RepositorySystemSession session)
    {
       this.session = session;
-      this.remoteRepositoryManager = remoteRepositoryManager;
    }
 
    public RepositorySystemSession getSession()
@@ -91,82 +79,29 @@ public class DependencyNodeContext
       return dependenciesFilter;
    }
 
-   public void setSavePremanagedState(boolean savePremanagedState)
+   public void setRequestTrace(RequestTrace requestTrace)
    {
-      this.savePremanagedState = savePremanagedState;
+      this.requestTrace = requestTrace;
    }
-
-   public boolean isSavePremanagedState()
-   {
-      return savePremanagedState;
-   }
-
-   public void setRequestContext(String requestContext)
-   {
-      this.requestContext = requestContext;
-   }
-
-   public String getRequestContext()
-   {
-      return requestContext;
-   }
-
+   
    public RequestTrace getRequestTrace()
    {
       return requestTrace;
    }
 
-   public void setRequestTrace(RequestTrace requestTrace)
-   {
-      this.requestTrace = requestTrace;
-   }
-
-   public List<RemoteRepository> getRepositories()
-   {
-      if (repositories == null)
-      {
-         repositories = new ArrayList<RemoteRepository>(0);
-      }
-      return repositories;
-   }
-
-   public void setRepositories(List<RemoteRepository> repositories)
-   {
-      this.repositories = repositories;
-   }
-
-   public DependencyNodeContext deriveChildContext(Dependency parent, List<Dependency> managedDependencies,
-      List<RemoteRepository> repositories)
+   public DependencyNodeContext deriveChildContext(Dependency parent, List<Dependency> managedDependencies)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
          parent, managedDependencies);
 
-      final DependencyNodeContext childContext = new DependencyNodeContext(session, remoteRepositoryManager);
-
-      childContext.setSavePremanagedState(this.isSavePremanagedState());
+      final DependencyNodeContext childContext = new DependencyNodeContext(session);
 
       childContext.setDependencySelector(this.getDependencySelector().deriveChildSelector(collectionContext));
       childContext.setDependencyManager(this.getDependencyManager().deriveChildManager(collectionContext));
       childContext.setDependencyTraverser(this.getDependencyTraverser().deriveChildTraverser(collectionContext));
-
       childContext.setDependenciesFilter(this.getDependenciesFilter().deriveChildFilter(collectionContext));
-
-      childContext.setRequestContext(this.getRequestContext());
+      
       childContext.setRequestTrace(this.getRequestTrace());
-
-
-      final List<RemoteRepository> childRepos;
-      if (session.isIgnoreArtifactDescriptorRepositories())
-      {
-         childRepos = this.getRepositories();
-      }
-      else
-      {
-         childRepos = remoteRepositoryManager
-            .aggregateRepositories(session, this.getRepositories(), repositories, true);
-      }
-
-      childContext.setRepositories(childRepos);
 
       return childContext;
    }
