@@ -83,13 +83,13 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final CollectResult result = new CollectResult(request);
       final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
 
-      final DependencyNodeContext rootContext = newRootContext(session, request);
-      final DependencyResolutionNode rootNode = new DependencyResolutionNode(request.getRequestContext(),
+      final DependencyNodeManager nodeManager = newRootContext(session, request);
+      final DependencyResolutionNode node = new DependencyResolutionNode(request.getRequestContext(),
          request.getRepositories(), dependency);
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-      final DependencyNodeRequest rootRequest = new DependencyNodeRequest(session, trace, rootContext, rootNode);
-      newTreeTraversal().traverse(treeProvider, rootRequest);
-      result.setRoot(getDependencyNode(rootNode));
+      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, nodeManager, node);
+      newTreeTraversal().traverse(treeProvider, nodeRequest);
+      result.setRoot(getDependencyNode(node));
 
       return result;
    }
@@ -122,8 +122,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
       if (!dependencies.isEmpty())
       {
-         final DependencyNodeContext rootContext = newRootContext(session, request);
-         final DependencyNodeContext childContext = rootContext.deriveChildContext(session, null,
+         final DependencyNodeManager rootManager = newRootContext(session, request);
+         final DependencyNodeManager childManager = rootManager.deriveChildManager(session, null,
             Collections.<Dependency> emptyList());
 
          final DependencyResolutionNode parentNode = new DependencyResolutionNode(request.getRequestContext(),
@@ -136,11 +136,11 @@ public class SrcpitDependencyCollector implements DependencyCollector
          final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
          for (Dependency dependency : dependencies)
          {
-            if (childContext.getDependencySelector().selectDependency(dependency))
+            if (childManager.selectDependency(dependency))
             {
                final DependencyResolutionNode childNode = new DependencyResolutionNode(parentNode,
                   request.getRepositories(), dependency);
-               requests.add(new DependencyNodeRequest(session, trace, childContext, childNode));
+               requests.add(new DependencyNodeRequest(session, trace, childManager, childNode));
             }
          }
          treeTraversal.traverse(treeProvider, requests);
@@ -203,15 +203,15 @@ public class SrcpitDependencyCollector implements DependencyCollector
       };
    }
 
-   private DependencyNodeContext newRootContext(final RepositorySystemSession session, final CollectRequest request)
+   private DependencyNodeManager newRootContext(final RepositorySystemSession session, final CollectRequest request)
    {
-      final DependencyNodeContext context = new DependencyNodeContext()
+      final DependencyNodeManager context = new DependencyNodeManager()
       {
          @Override
-         public DependencyNodeContext deriveChildContext(RepositorySystemSession session, Dependency parent,
+         public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
             List<Dependency> managedDependencies)
          {
-            return super.deriveChildContext(session, parent,
+            return super.deriveChildManager(session, parent,
                AdditionalDependenciesFilter.mergeDeps(request.getManagedDependencies(), managedDependencies));
          }
       };

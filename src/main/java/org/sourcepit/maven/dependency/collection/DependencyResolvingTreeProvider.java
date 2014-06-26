@@ -14,7 +14,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -47,7 +46,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
    @Override
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final DependencyNodeContext context = request.getContext();
+      final DependencyNodeManager nodeManager = request.getNodeManager();
       final DependencyResolutionNode node = request.getNode();
 
       final Version resolvedVersion = node.getResolvedVersion();
@@ -66,7 +65,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
 
       final Dependency managedDependency = node.getManagedDependency().getDependency();
       final boolean noDescriptor = isLackingDescriptor(managedDependency.getArtifact());
-      final boolean traverse = !noDescriptor && context.getDependencyTraverser().traverseDependency(managedDependency);
+      final boolean traverse = !noDescriptor && nodeManager.traverseDependency(managedDependency);
 
       if (!traverse)
       {
@@ -76,8 +75,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       final Artifact artifact = descriptorResult.getArtifact();
 
       // traverse children (if traverse dependencies)
-      final List<Dependency> children = context.getDependenciesFilter().filterDependencies(artifact,
-         descriptorResult.getDependencies());
+      final List<Dependency> children = nodeManager.filterDependencies(artifact, descriptorResult.getDependencies());
 
       if (children.isEmpty())
       {
@@ -88,26 +86,24 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
 
       final RepositorySystemSession session = request.getSession();
 
-      final DependencyNodeContext childContext = context.deriveChildContext(session, resolvedDependency,
+      final DependencyNodeManager childManager = nodeManager.deriveChildManager(session, resolvedDependency,
          descriptorResult.getManagedDependencies());
 
       final List<RemoteRepository> childRepositories = aggregateRepositories(session, node.getRepositories(),
          descriptorResult.getRepositories());
 
-      final DependencySelector dependencySelector = childContext.getDependencySelector();
-
       final List<DependencyNodeRequest> childRequests = new ArrayList<DependencyNodeRequest>(children.size());
       for (Dependency child : children)
       {
          // if selectDependency
-         if (!dependencySelector.selectDependency(child))
+         if (!childManager.selectDependency(child))
          {
             continue;
          }
 
          final RequestTrace trace = request.getTrace();
          final DependencyResolutionNode childNode = new DependencyResolutionNode(node, childRepositories, child);
-         childRequests.add(new DependencyNodeRequest(session, trace, childContext, childNode));
+         childRequests.add(new DependencyNodeRequest(session, trace, childManager, childNode));
       }
 
       return resolve(childRequests);
@@ -161,15 +157,15 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       resolutionRequest.setSession(request.getSession());
       resolutionRequest.setRequestTrace(request.getTrace());
 
-      final DependencyNodeContext context = request.getContext();
-      resolutionRequest.setDependencyManager(context.getDependencyManager());
-      resolutionRequest.setDependencySelector(context.getDependencySelector());
+      final DependencyNodeManager nodeManager = request.getNodeManager();
+      resolutionRequest.setDependencyManager(nodeManager);
+      resolutionRequest.setDependencySelector(nodeManager);
 
       final DependencyResolutionNode node = request.getNode();
       resolutionRequest.setRequestContext(node.getRequestContext());
       resolutionRequest.setRepositories(node.getRepositories());
       resolutionRequest.setDependency(node.getDependency());
-      
+
       return resolutionRequest;
    }
 
