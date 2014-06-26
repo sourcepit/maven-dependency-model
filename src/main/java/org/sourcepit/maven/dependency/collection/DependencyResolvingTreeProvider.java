@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencySelector;
@@ -21,7 +22,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class DependencyResolvingTreeProvider implements TreeProvider<DependencyResolutionNode>
+public class DependencyResolvingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
    private final RemoteRepositoryManager remoteRepositoryManager;
 
@@ -38,15 +39,16 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyR
    }
 
    @Override
-   public List<DependencyResolutionNode> getRoots(List<DependencyResolutionNode> roots)
+   public List<DependencyNodeRequest> getRoots(List<DependencyNodeRequest> requests)
    {
-      return resolve(roots);
+      return resolve(requests);
    }
 
    @Override
-   public List<DependencyResolutionNode> getChildren(DependencyResolutionNode node)
+   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final DependencyNodeContext context = node.getContext();
+      final DependencyNodeContext context = request.getContext();
+      final DependencyResolutionNode node = request.getNode();
 
       final Version resolvedVersion = node.getResolvedVersion();
       if (resolvedVersion == null)
@@ -84,15 +86,17 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyR
 
       final Dependency resolvedDependency = managedDependency.setArtifact(descriptorResult.getArtifact());
 
-      final DependencyNodeContext childContext = context.deriveChildContext(resolvedDependency,
+      final RepositorySystemSession session = request.getSession();
+
+      final DependencyNodeContext childContext = context.deriveChildContext(session, resolvedDependency,
          descriptorResult.getManagedDependencies());
 
-      final List<RemoteRepository> childRepositories = aggregateRepositories(childContext.getSession(),
-         node.getRepositories(), descriptorResult.getRepositories());
+      final List<RemoteRepository> childRepositories = aggregateRepositories(session, node.getRepositories(),
+         descriptorResult.getRepositories());
 
       final DependencySelector dependencySelector = childContext.getDependencySelector();
 
-      final List<DependencyResolutionNode> childRequests = new ArrayList<DependencyResolutionNode>(children.size());
+      final List<DependencyNodeRequest> childRequests = new ArrayList<DependencyNodeRequest>(children.size());
       for (Dependency child : children)
       {
          // if selectDependency
@@ -101,7 +105,9 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyR
             continue;
          }
 
-         childRequests.add(new DependencyResolutionNode(childContext, node, childRepositories, child));
+         final RequestTrace trace = request.getTrace();
+         final DependencyResolutionNode childNode = new DependencyResolutionNode(node, childRepositories, child);
+         childRequests.add(new DependencyNodeRequest(session, trace, childContext, childNode));
       }
 
       return resolve(childRequests);
@@ -123,22 +129,21 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyR
       return childRepos;
    }
 
-   private List<DependencyResolutionNode> resolve(List<DependencyResolutionNode> nodes)
+   private List<DependencyNodeRequest> resolve(List<DependencyNodeRequest> requests)
    {
-      for (DependencyResolutionNode node : nodes)
+      for (DependencyNodeRequest request : requests)
       {
-         resolve(node);
+         resolve(request);
       }
-      return nodes;
+      return requests;
    }
 
-   private void resolve(DependencyResolutionNode node)
+   private void resolve(DependencyNodeRequest request)
    {
-      final DependencyNodeContext context = node.getContext();
-
-      final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(context, node);
+      final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(request);
       final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
 
+      final DependencyResolutionNode node = request.getNode();
       node.setManagedDependency(resolutionResult.getManagedDependency());
       node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
       node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
@@ -150,17 +155,21 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyR
       }
    }
 
-   static DependencyResolutionRequest newDependencyResolutionRequest(final DependencyNodeContext context,
-      DependencyResolutionNode node)
+   private static DependencyResolutionRequest newDependencyResolutionRequest(DependencyNodeRequest request)
    {
       final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
-      resolutionRequest.setSession(context.getSession());
+      resolutionRequest.setSession(request.getSession());
+      resolutionRequest.setRequestTrace(request.getTrace());
+
+      final DependencyNodeContext context = request.getContext();
       resolutionRequest.setDependencyManager(context.getDependencyManager());
       resolutionRequest.setDependencySelector(context.getDependencySelector());
-      resolutionRequest.setRequestTrace(context.getRequestTrace());
+
+      final DependencyResolutionNode node = request.getNode();
       resolutionRequest.setRequestContext(node.getRequestContext());
       resolutionRequest.setRepositories(node.getRepositories());
       resolutionRequest.setDependency(node.getDependency());
+      
       return resolutionRequest;
    }
 

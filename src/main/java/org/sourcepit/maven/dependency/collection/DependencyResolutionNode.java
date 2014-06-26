@@ -18,8 +18,6 @@ import org.eclipse.aether.version.Version;
 
 public class DependencyResolutionNode
 {
-   private final DependencyNodeContext context;
-
    private final DependencyResolutionNode parent;
 
    private String requestContext;
@@ -42,31 +40,24 @@ public class DependencyResolutionNode
 
    private DependencyResolutionNode conflictNode;
 
-   public DependencyResolutionNode(DependencyNodeContext context, String requestContext,
-      List<RemoteRepository> repositories, Dependency dependency)
+   public DependencyResolutionNode(String requestContext, List<RemoteRepository> repositories, Dependency dependency)
    {
-      this(context, null, requestContext, repositories, dependency);
+      this(null, requestContext, repositories, dependency);
    }
 
-   public DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent,
-      List<RemoteRepository> repositories, Dependency dependency)
+   public DependencyResolutionNode(DependencyResolutionNode parent, List<RemoteRepository> repositories,
+      Dependency dependency)
    {
-      this(context, parent, parent.getRequestContext(), repositories, dependency);
+      this(parent, parent.getRequestContext(), repositories, dependency);
    }
 
-   private DependencyResolutionNode(DependencyNodeContext context, DependencyResolutionNode parent,
-      String requestContext, List<RemoteRepository> repositories, Dependency dependency)
+   private DependencyResolutionNode(DependencyResolutionNode parent, String requestContext,
+      List<RemoteRepository> repositories, Dependency dependency)
    {
-      this.context = context;
       this.parent = parent;
       this.requestContext = requestContext;
       this.repositories = repositories;
       this.dependency = dependency;
-   }
-
-   public DependencyNodeContext getContext()
-   {
-      return context;
    }
 
    public DependencyResolutionNode getParent()

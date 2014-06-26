@@ -9,24 +9,26 @@ package org.sourcepit.maven.dependency.collection;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AbstractConflictSolvingTreeProvider implements TreeProvider<DependencyResolutionNode>
+public abstract class AbstractConflictSolvingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
-   private final TreeProvider<DependencyResolutionNode> target;
+   private final TreeProvider<DependencyNodeRequest> target;
 
-   public AbstractConflictSolvingTreeProvider(TreeProvider<DependencyResolutionNode> target)
+   public AbstractConflictSolvingTreeProvider(TreeProvider<DependencyNodeRequest> target)
    {
       this.target = target;
    }
 
    @Override
-   public List<DependencyResolutionNode> getRoots(List<DependencyResolutionNode> roots)
+   public List<DependencyNodeRequest> getRoots(List<DependencyNodeRequest> requests)
    {
-      return solveSiblingConflicts(solveCycles(target.getRoots(roots)));
+      return solveSiblingConflicts(solveCycles(target.getRoots(requests)));
    }
 
    @Override
-   public List<DependencyResolutionNode> getChildren(DependencyResolutionNode node)
+   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
+      final DependencyResolutionNode node = request.getNode();
+
       if (node.getConflictNode() != null)
       {
          return Collections.emptyList();
@@ -36,32 +38,35 @@ public abstract class AbstractConflictSolvingTreeProvider implements TreeProvide
       {
          return Collections.emptyList();
       }
-      return solveTreeConflicts(solveSiblingConflicts(solveCycles(target.getChildren(node))));
+
+      return solveTreeConflicts(solveSiblingConflicts(solveCycles(target.getChildren(request))));
    }
 
-   protected List<DependencyResolutionNode> solveCycles(List<DependencyResolutionNode> nodes)
+   protected List<DependencyNodeRequest> solveCycles(List<DependencyNodeRequest> requests)
    {
-      for (DependencyResolutionNode node : nodes)
+      for (DependencyNodeRequest request : requests)
       {
+         final DependencyResolutionNode node = request.getNode();
          node.setCyclicParent(detectCyclicParent(node));
       }
-      return nodes;
+      return requests;
    }
 
    protected abstract DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node);
 
-   protected abstract List<DependencyResolutionNode> solveSiblingConflicts(List<DependencyResolutionNode> nodes);
+   protected abstract List<DependencyNodeRequest> solveSiblingConflicts(List<DependencyNodeRequest> requests);
 
-   protected List<DependencyResolutionNode> solveTreeConflicts(List<DependencyResolutionNode> nodes)
+   protected List<DependencyNodeRequest> solveTreeConflicts(List<DependencyNodeRequest> requests)
    {
-      for (DependencyResolutionNode node : nodes)
+      for (DependencyNodeRequest request : requests)
       {
+         final DependencyResolutionNode node = request.getNode();
          if (node.getConflictNode() == null) // no sibling conflicts
          {
             updateTreeConflicts(node);
          }
       }
-      return nodes;
+      return requests;
    }
 
    protected abstract void updateTreeConflicts(DependencyResolutionNode node);

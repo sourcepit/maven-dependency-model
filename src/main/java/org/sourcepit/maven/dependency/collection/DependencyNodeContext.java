@@ -9,7 +9,6 @@ package org.sourcepit.maven.dependency.collection;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
@@ -17,8 +16,6 @@ import org.eclipse.aether.graph.Dependency;
 
 public class DependencyNodeContext
 {
-   private final RepositorySystemSession session;
-
    private DependencySelector dependencySelector;
 
    private DependencyManager dependencyManager;
@@ -26,18 +23,6 @@ public class DependencyNodeContext
    private DependencyTraverser dependencyTraverser;
 
    private DependenciesFilter dependenciesFilter;
-   
-   private RequestTrace requestTrace;
-
-   public DependencyNodeContext(RepositorySystemSession session)
-   {
-      this.session = session;
-   }
-
-   public RepositorySystemSession getSession()
-   {
-      return session;
-   }
 
    public void setDependencySelector(DependencySelector dependencySelector)
    {
@@ -79,29 +64,18 @@ public class DependencyNodeContext
       return dependenciesFilter;
    }
 
-   public void setRequestTrace(RequestTrace requestTrace)
-   {
-      this.requestTrace = requestTrace;
-   }
-   
-   public RequestTrace getRequestTrace()
-   {
-      return requestTrace;
-   }
-
-   public DependencyNodeContext deriveChildContext(Dependency parent, List<Dependency> managedDependencies)
+   public DependencyNodeContext deriveChildContext(RepositorySystemSession session, Dependency parent,
+      List<Dependency> managedDependencies)
    {
       final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
          parent, managedDependencies);
 
-      final DependencyNodeContext childContext = new DependencyNodeContext(session);
+      final DependencyNodeContext childContext = new DependencyNodeContext();
 
       childContext.setDependencySelector(this.getDependencySelector().deriveChildSelector(collectionContext));
       childContext.setDependencyManager(this.getDependencyManager().deriveChildManager(collectionContext));
       childContext.setDependencyTraverser(this.getDependencyTraverser().deriveChildTraverser(collectionContext));
       childContext.setDependenciesFilter(this.getDependenciesFilter().deriveChildFilter(collectionContext));
-      
-      childContext.setRequestTrace(this.getRequestTrace());
 
       return childContext;
    }

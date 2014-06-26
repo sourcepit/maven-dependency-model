@@ -19,13 +19,13 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<DependencyResolutionNode>
+public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
-   private final TreeProvider<DependencyResolutionNode> target;
+   private final TreeProvider<DependencyNodeRequest> target;
 
    private final boolean savePremanagedState;
 
-   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyResolutionNode> target,
+   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyNodeRequest> target,
       boolean savePremanagedState)
    {
       this.target = target;
@@ -34,17 +34,18 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
    }
 
    @Override
-   public List<DependencyResolutionNode> getRoots(List<DependencyResolutionNode> roots)
+   public List<DependencyNodeRequest> getRoots(List<DependencyNodeRequest> requests)
    {
-      final List<DependencyResolutionNode> children = target.getRoots(roots);
+      final List<DependencyNodeRequest> children = target.getRoots(requests);
       build(children);
       return children;
    }
 
-   private void build(final List<DependencyResolutionNode> children)
+   private void build(List<DependencyNodeRequest> requests)
    {
-      for (DependencyResolutionNode node : children)
+      for (DependencyNodeRequest request : requests)
       {
+         final DependencyResolutionNode node = request.getNode();
          try
          {
             if (node.getConflictNode() == null)
@@ -64,9 +65,9 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
    }
 
    @Override
-   public List<DependencyResolutionNode> getChildren(DependencyResolutionNode parent)
+   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final List<DependencyResolutionNode> children = target.getChildren(parent);
+      final List<DependencyNodeRequest> children = target.getChildren(request);
       build(children);
       return children;
    }

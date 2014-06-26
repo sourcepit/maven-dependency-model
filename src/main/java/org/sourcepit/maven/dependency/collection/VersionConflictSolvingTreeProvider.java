@@ -29,7 +29,7 @@ public class VersionConflictSolvingTreeProvider extends AbstractConflictSolvingT
 {
    private final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroups = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>();
 
-   public VersionConflictSolvingTreeProvider(TreeProvider<DependencyResolutionNode> target)
+   public VersionConflictSolvingTreeProvider(TreeProvider<DependencyNodeRequest> target)
    {
       super(target);
    }
@@ -46,13 +46,14 @@ public class VersionConflictSolvingTreeProvider extends AbstractConflictSolvingT
    }
 
    @Override
-   protected List<DependencyResolutionNode> solveSiblingConflicts(List<DependencyResolutionNode> siblings)
+   protected List<DependencyNodeRequest> solveSiblingConflicts(List<DependencyNodeRequest> siblingRequests)
    {
       final Map<Set<VersionConflictKey>, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<Set<VersionConflictKey>, List<DependencyResolutionNode>>(
-         siblings.size());
+         siblingRequests.size());
 
-      for (DependencyResolutionNode node : siblings)
+      for (DependencyNodeRequest request : siblingRequests)
       {
+         final DependencyResolutionNode node = request.getNode();
          final Set<VersionConflictKey> conflictKeys = getConflictKeys(node);
          if (!conflictKeys.isEmpty())
          {
@@ -88,7 +89,7 @@ public class VersionConflictSolvingTreeProvider extends AbstractConflictSolvingT
          }
       }
 
-      return siblings;
+      return siblingRequests;
    }
 
    @Override
