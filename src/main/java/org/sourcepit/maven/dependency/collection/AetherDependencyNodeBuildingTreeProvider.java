@@ -50,7 +50,7 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
          {
             if (node.getConflictNode() == null)
             {
-               setDependencyNode(node, buildNode(node));
+               setDependencyNode(node, buildNode(request));
             }
          }
          catch (VersionRangeResolutionException e)
@@ -77,9 +77,11 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
       resolutionNode.getData().put(DependencyNode.class, dependencyNode);
    }
 
-   private DependencyNodeImpl buildNode(DependencyResolutionNode resolutionNode)
-      throws VersionRangeResolutionException, ArtifactDescriptorException
+   private DependencyNodeImpl buildNode(DependencyNodeRequest request) throws VersionRangeResolutionException,
+      ArtifactDescriptorException
    {
+      final DependencyResolutionNode resolutionNode = request.getNode();
+
       final VersionRangeResult rangeResult = resolutionNode.getVersionRangeResult();
 
       final ManagedDependency managedDependency = resolutionNode.getManagedDependency();
@@ -105,7 +107,7 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
          node.setRelocations(descriptorResult.getRelocations());
          node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version),
             resolutionNode.getRepositories()));
-         node.setRequestContext(resolutionNode.getRequestContext());
+         node.setRequestContext(request.getRequestContext());
          node.setVersion(version);
          node.setVersionConstraint(rangeResult.getVersionConstraint());
 

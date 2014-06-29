@@ -84,10 +84,11 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
 
       final DependencyNodeManager nodeManager = newRootContext(session, request);
-      final DependencyResolutionNode node = new DependencyResolutionNode(request.getRequestContext(),
-         request.getRepositories(), dependency);
+      final String requestContext = request.getRequestContext();
+      final DependencyResolutionNode node = new DependencyResolutionNode(request.getRepositories(), dependency);
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, nodeManager, node);
+      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, requestContext, nodeManager,
+         node);
       newTreeTraversal().traverse(treeProvider, nodeRequest);
       result.setRoot(getDependencyNode(node));
 
@@ -126,12 +127,12 @@ public class SrcpitDependencyCollector implements DependencyCollector
          final DependencyNodeManager childManager = rootManager.deriveChildManager(session, null,
             Collections.<Dependency> emptyList());
 
-         final DependencyResolutionNode parentNode = new DependencyResolutionNode(request.getRequestContext(),
-            request.getRepositories(), null);
+         final DependencyResolutionNode parentNode = new DependencyResolutionNode(request.getRepositories(), null);
          setDependencyNode(parentNode, node);
          parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
 
          final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+         final String requestContext = request.getRequestContext();
 
          final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
          for (Dependency dependency : dependencies)
@@ -140,7 +141,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
             {
                final DependencyResolutionNode childNode = new DependencyResolutionNode(parentNode,
                   request.getRepositories(), dependency);
-               requests.add(new DependencyNodeRequest(session, trace, childManager, childNode));
+               requests.add(new DependencyNodeRequest(session, trace, requestContext, childManager, childNode));
             }
          }
          treeTraversal.traverse(treeProvider, requests);

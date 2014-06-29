@@ -100,13 +100,21 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
          {
             continue;
          }
-
-         final RequestTrace trace = request.getTrace();
-         final DependencyResolutionNode childNode = new DependencyResolutionNode(node, childRepositories, child);
-         childRequests.add(new DependencyNodeRequest(session, trace, childManager, childNode));
+         childRequests.add(newDependencyNodeRequest(request, childManager, childRepositories, child));
       }
 
       return resolve(childRequests);
+   }
+
+   private static DependencyNodeRequest newDependencyNodeRequest(DependencyNodeRequest parentRequest,
+      DependencyNodeManager nodeManager, List<RemoteRepository> repositories, Dependency dependency)
+   {
+      final DependencyResolutionNode parentNode = parentRequest.getNode();
+      final RepositorySystemSession session = parentRequest.getSession();
+      final RequestTrace trace = parentRequest.getTrace();
+      final String requestContext = parentRequest.getRequestContext();
+      final DependencyResolutionNode node = new DependencyResolutionNode(parentNode, repositories, dependency);
+      return new DependencyNodeRequest(session, trace, requestContext, nodeManager, node);
    }
 
    private List<RemoteRepository> aggregateRepositories(RepositorySystemSession session,
@@ -156,13 +164,13 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
       resolutionRequest.setSession(request.getSession());
       resolutionRequest.setRequestTrace(request.getTrace());
+      resolutionRequest.setRequestContext(request.getRequestContext());
 
       final DependencyNodeManager nodeManager = request.getNodeManager();
       resolutionRequest.setDependencyManager(nodeManager);
       resolutionRequest.setDependencySelector(nodeManager);
 
       final DependencyResolutionNode node = request.getNode();
-      resolutionRequest.setRequestContext(node.getRequestContext());
       resolutionRequest.setRepositories(node.getRepositories());
       resolutionRequest.setDependency(node.getDependency());
 

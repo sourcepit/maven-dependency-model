@@ -20,8 +20,6 @@ public class DependencyResolutionNode
 {
    private final DependencyResolutionNode parent;
 
-   private String requestContext;
-
    private List<RemoteRepository> repositories;
 
    private final Dependency dependency;
@@ -40,22 +38,15 @@ public class DependencyResolutionNode
 
    private DependencyResolutionNode conflictNode;
 
-   public DependencyResolutionNode(String requestContext, List<RemoteRepository> repositories, Dependency dependency)
+   public DependencyResolutionNode(List<RemoteRepository> repositories, Dependency dependency)
    {
-      this(null, requestContext, repositories, dependency);
+      this(null, repositories, dependency);
    }
 
    public DependencyResolutionNode(DependencyResolutionNode parent, List<RemoteRepository> repositories,
       Dependency dependency)
    {
-      this(parent, parent.getRequestContext(), repositories, dependency);
-   }
-
-   private DependencyResolutionNode(DependencyResolutionNode parent, String requestContext,
-      List<RemoteRepository> repositories, Dependency dependency)
-   {
       this.parent = parent;
-      this.requestContext = requestContext;
       this.repositories = repositories;
       this.dependency = dependency;
    }
@@ -68,11 +59,6 @@ public class DependencyResolutionNode
    public Dependency getDependency()
    {
       return dependency;
-   }
-
-   public String getRequestContext()
-   {
-      return requestContext;
    }
 
    public List<RemoteRepository> getRepositories()
