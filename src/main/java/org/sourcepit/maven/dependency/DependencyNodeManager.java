@@ -25,116 +25,81 @@ public class DependencyNodeManager
       DependencyTraverser,
       DependenciesFilter
 {
-   private DependencySelector dependencySelector;
+   private final DependencySelector dependencySelector;
 
-   private DependencyManager dependencyManager;
+   private final DependencyManager dependencyManager;
 
-   private DependencyTraverser dependencyTraverser;
+   private final DependencyTraverser dependencyTraverser;
 
-   private DependenciesFilter dependenciesFilter;
+   private final DependenciesFilter dependenciesFilter;
 
-   public void setDependencySelector(DependencySelector dependencySelector)
+   public DependencyNodeManager(DependencySelector dependencySelector, DependencyManager dependencyManager,
+      DependencyTraverser dependencyTraverser, DependenciesFilter dependenciesFilter)
    {
       this.dependencySelector = dependencySelector;
-   }
-
-   private DependencySelector getDependencySelector()
-   {
-      return dependencySelector;
-   }
-
-   public void setDependencyManager(DependencyManager dependencyManager)
-   {
       this.dependencyManager = dependencyManager;
-   }
-
-   private DependencyManager getDependencyManager()
-   {
-      return dependencyManager;
-   }
-
-   public void setDependencyTraverser(DependencyTraverser dependencyTraverser)
-   {
       this.dependencyTraverser = dependencyTraverser;
-   }
-
-   private DependencyTraverser getDependencyTraverser()
-   {
-      return dependencyTraverser;
-   }
-
-   public void setDependenciesFilter(DependenciesFilter dependenciesFilter)
-   {
       this.dependenciesFilter = dependenciesFilter;
-   }
-
-   private DependenciesFilter getDependenciesFilter()
-   {
-      return dependenciesFilter;
    }
 
    public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
       List<Dependency> managedDependencies)
    {
-      final DependencyCollectionContextImpl collectionContext = new DependencyCollectionContextImpl(session,
-         parent, managedDependencies);
+      final DependencyCollectionContextImpl collectionContext = new DependencyCollectionContextImpl(session, parent,
+         managedDependencies);
 
-      final DependencyNodeManager childContext = new DependencyNodeManager();
-
-      childContext.setDependencySelector(this.getDependencySelector().deriveChildSelector(collectionContext));
-      childContext.setDependencyManager(this.getDependencyManager().deriveChildManager(collectionContext));
-      childContext.setDependencyTraverser(this.getDependencyTraverser().deriveChildTraverser(collectionContext));
-      childContext.setDependenciesFilter(this.getDependenciesFilter().deriveChildFilter(collectionContext));
-
-      return childContext;
+      return new DependencyNodeManager(dependencySelector.deriveChildSelector(collectionContext),
+         dependencyManager.deriveChildManager(collectionContext),
+         dependencyTraverser.deriveChildTraverser(collectionContext),
+         dependenciesFilter.deriveChildFilter(collectionContext));
    }
 
    @Override
    public List<Dependency> filterDependencies(Artifact artifact, List<Dependency> dependencies)
    {
-      return getDependenciesFilter().filterDependencies(artifact, dependencies);
+      return dependenciesFilter.filterDependencies(artifact, dependencies);
    }
 
    @Override
    public DependenciesFilter deriveChildFilter(DependencyCollectionContext context)
    {
-      return getDependenciesFilter().deriveChildFilter(context);
+      return dependenciesFilter.deriveChildFilter(context);
    }
 
    @Override
    public boolean traverseDependency(Dependency dependency)
    {
-      return getDependencyTraverser().traverseDependency(dependency);
+      return dependencyTraverser.traverseDependency(dependency);
    }
 
    @Override
    public DependencyTraverser deriveChildTraverser(DependencyCollectionContext context)
    {
-      return getDependencyTraverser().deriveChildTraverser(context);
+      return dependencyTraverser.deriveChildTraverser(context);
    }
 
    @Override
    public DependencyManagement manageDependency(Dependency dependency)
    {
-      return getDependencyManager().manageDependency(dependency);
+      return dependencyManager.manageDependency(dependency);
    }
 
    @Override
    public DependencyManager deriveChildManager(DependencyCollectionContext context)
    {
-      return getDependencyManager().deriveChildManager(context);
+      return dependencyManager.deriveChildManager(context);
    }
 
    @Override
    public boolean selectDependency(Dependency dependency)
    {
-      return getDependencySelector().selectDependency(dependency);
+      return dependencySelector.selectDependency(dependency);
    }
 
    @Override
    public DependencySelector deriveChildSelector(DependencyCollectionContext context)
    {
-      return getDependencySelector().deriveChildSelector(context);
+      return dependencySelector.deriveChildSelector(context);
    }
 
 }

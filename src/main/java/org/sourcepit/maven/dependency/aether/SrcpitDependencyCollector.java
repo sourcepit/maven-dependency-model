@@ -31,6 +31,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -40,6 +41,7 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.DependenciesFilter;
 import org.sourcepit.maven.dependency.DependencyNode;
 import org.sourcepit.maven.dependency.DependencyNodeManager;
 import org.sourcepit.maven.dependency.DependencyNodeRequest;
@@ -157,8 +159,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
          {
             if (childManager.selectDependency(dependency))
             {
-               final DependencyNode childNode = new DependencyNode(parentNode,
-                  request.getRepositories(), dependency);
+               final DependencyNode childNode = new DependencyNode(parentNode, request.getRepositories(), dependency);
                requests.add(new DependencyNodeRequest(session, trace, requestContext, childManager, childNode));
             }
          }
@@ -230,18 +231,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
    private DependencyNodeManager newRootContext(final RepositorySystemSession session, final CollectRequest request)
    {
-      final DependencyNodeManager context = new DependencyNodeManager()
-      {
-         @Override
-         public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
-            List<Dependency> managedDependencies)
-         {
-            return super.deriveChildManager(session, parent,
-               mergeDeps(request.getManagedDependencies(), managedDependencies));
-         }
-      };
-
-      context.setDependencySelector(new DependencySelector()
+      final DependencySelector dependencySelector = new DependencySelector()
       {
          @Override
          public boolean selectDependency(Dependency dependency)
@@ -254,8 +244,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
          {
             return session.getDependencySelector().deriveChildSelector(context);
          }
-      });
-      context.setDependencyManager(new DependencyManager()
+      };
+      final DependencyManager dependencyManager = new DependencyManager()
       {
          @Override
          public DependencyManagement manageDependency(Dependency dependency)
@@ -268,9 +258,20 @@ public class SrcpitDependencyCollector implements DependencyCollector
          {
             return session.getDependencyManager().deriveChildManager(context);
          }
-      });
-      context.setDependencyTraverser(session.getDependencyTraverser());
-      context.setDependenciesFilter(new AdditionalDependenciesFilter(request.getDependencies()));
+      };
+      final DependencyTraverser dependencyTraverser = session.getDependencyTraverser();
+      final DependenciesFilter dependenciesFilter = new AdditionalDependenciesFilter(request.getDependencies());
+      final DependencyNodeManager context = new DependencyNodeManager(dependencySelector, dependencyManager,
+         dependencyTraverser, dependenciesFilter)
+      {
+         @Override
+         public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
+            List<Dependency> managedDependencies)
+         {
+            return super.deriveChildManager(session, parent,
+               mergeDeps(request.getManagedDependencies(), managedDependencies));
+         }
+      };
       return context;
    }
 }
