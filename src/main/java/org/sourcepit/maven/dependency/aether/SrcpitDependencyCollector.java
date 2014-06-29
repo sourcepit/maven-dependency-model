@@ -35,6 +35,7 @@ import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
@@ -59,6 +60,28 @@ import org.sourcepit.maven.dependency.impl.VersionConflictKeyAdapter;
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
 {
+   private final class RootNodeImpl extends DependencyNodeImpl
+   {
+      private final Artifact rootArtifact;
+
+      private RootNodeImpl(Artifact rootArtifact)
+      {
+         this.rootArtifact = rootArtifact;
+      }
+
+      @Override
+      public void setDependency(Dependency dependency)
+      {
+         throw new IllegalStateException();
+      }
+
+      @Override
+      public Artifact getArtifact()
+      {
+         return rootArtifact;
+      }
+   }
+
    private final RemoteRepositoryManager remoteRepositoryManager;
 
    private final DependencyResolver dependencyResolver;
@@ -100,10 +123,13 @@ public class SrcpitDependencyCollector implements DependencyCollector
          DependencyManagerUtils.CONFIG_PROP_VERBOSE);
 
       final CollectResult result = new CollectResult(request);
-
-      final DependencyNodeManager nodeManager = newRootContext(session, request);
+      final List<Dependency> managedDependencies = request.getManagedDependencies();
+      final List<Dependency> dependencies = request.getDependencies();
+      final List<RemoteRepository> repositories = request.getRepositories();
       final String requestContext = request.getRequestContext();
-      final DependencyNode node = new DependencyNode(request.getRepositories(), dependency);
+
+      final DependencyNodeManager nodeManager = newRootManager(session, managedDependencies, dependencies);
+      final DependencyNode node = new DependencyNode(repositories, dependency);
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
       final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, requestContext, nodeManager,
          node);
@@ -126,43 +152,31 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final CollectResult result = new CollectResult(request);
       final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
 
-      final DependencyNodeImpl node = new DependencyNodeImpl()
-      {
-         @Override
-         public void setDependency(Dependency dependency)
-         {
-            throw new IllegalStateException();
-         }
-
-         @Override
-         public Artifact getArtifact()
-         {
-            return rootArtifact;
-         }
-      };
+      final DependencyNodeImpl node = new RootNodeImpl(rootArtifact);
 
       if (!dependencies.isEmpty())
       {
-         final DependencyNodeManager rootManager = newRootContext(session, request);
-         final DependencyNodeManager childManager = rootManager.deriveChildManager(session, null,
-            Collections.<Dependency> emptyList());
-
-         final DependencyNode parentNode = new DependencyNode(request.getRepositories(), null);
-         setDependencyNode(parentNode, node);
-         parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
-
          final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
          final String requestContext = request.getRequestContext();
+         final List<RemoteRepository> repositories = request.getRepositories();
+         final List<Dependency> managedDependencies = request.getManagedDependencies();
+
+         final DependencyNodeManager childManager = newChildManager(session, managedDependencies);
+
+         final DependencyNode parentNode = new DependencyNode(repositories, null);
+         parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
+         setDependencyNode(parentNode, node);
 
          final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
          for (Dependency dependency : dependencies)
          {
             if (childManager.selectDependency(dependency))
             {
-               final DependencyNode childNode = new DependencyNode(parentNode, request.getRepositories(), dependency);
+               final DependencyNode childNode = new DependencyNode(parentNode, repositories, dependency);
                requests.add(new DependencyNodeRequest(session, trace, requestContext, childManager, childNode));
             }
          }
+
          treeTraversal.traverse(treeProvider, requests);
       }
 
@@ -229,7 +243,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
       };
    }
 
-   private DependencyNodeManager newRootContext(final RepositorySystemSession session, final CollectRequest request)
+   private DependencyNodeManager newRootManager(final RepositorySystemSession session,
+      final List<Dependency> managedDependencies, final List<Dependency> dependencies)
    {
       final DependencySelector dependencySelector = new DependencySelector()
       {
@@ -260,18 +275,25 @@ public class SrcpitDependencyCollector implements DependencyCollector
          }
       };
       final DependencyTraverser dependencyTraverser = session.getDependencyTraverser();
-      final DependenciesFilter dependenciesFilter = new AdditionalDependenciesFilter(request.getDependencies());
-      final DependencyNodeManager context = new DependencyNodeManager(dependencySelector, dependencyManager,
+      final DependenciesFilter dependenciesFilter = new AdditionalDependenciesFilter(dependencies);
+      final DependencyNodeManager nodeManager = new DependencyNodeManager(dependencySelector, dependencyManager,
          dependencyTraverser, dependenciesFilter)
       {
          @Override
          public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
-            List<Dependency> managedDependencies)
+            List<Dependency> managedDeps)
          {
-            return super.deriveChildManager(session, parent,
-               mergeDeps(request.getManagedDependencies(), managedDependencies));
+            return super.deriveChildManager(session, parent, mergeDeps(managedDependencies, managedDeps));
          }
       };
-      return context;
+      return nodeManager;
+   }
+
+   private DependencyNodeManager newChildManager(RepositorySystemSession session,
+      final List<Dependency> managedDependencies)
+   {
+      final DependencyNodeManager rootManager = newRootManager(session, managedDependencies,
+         Collections.<Dependency> emptyList());
+      return rootManager.deriveChildManager(session, null, Collections.<Dependency> emptyList());
    }
 }
