@@ -83,7 +83,6 @@ public class SrcpitDependencyCollector implements DependencyCollector
          DependencyManagerUtils.CONFIG_PROP_VERBOSE);
 
       final CollectResult result = new CollectResult(request);
-      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
 
       final DependencyNodeManager nodeManager = newRootContext(session, request);
       final String requestContext = request.getRequestContext();
@@ -91,6 +90,8 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
       final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, requestContext, nodeManager,
          node);
+
+      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
       newTreeTraversal().traverse(treeProvider, nodeRequest);
       result.setRoot(getDependencyNode(node));
 
@@ -195,8 +196,11 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
       final ConflictKeyAdapter<Set<VersionConflictKey>> conflictKeyAdapter = new VersionConflictKeyAdapter();
 
-      final TreeProvider<DependencyNodeRequest> conflictSolver = new ConflictSolvingTreeProvider<Set<VersionConflictKey>>(
+      final TreeProvider<DependencyNodeRequest> cycleSolver = new CycleSolvingTreeProvider<Set<VersionConflictKey>>(
          nodeResolver, conflictKeyAdapter);
+
+      final TreeProvider<DependencyNodeRequest> conflictSolver = new ConflictSolvingTreeProvider<Set<VersionConflictKey>>(
+         cycleSolver, conflictKeyAdapter);
 
       return new AetherDependencyNodeBuildingTreeProvider(conflictSolver, savePremanagedState)
       {

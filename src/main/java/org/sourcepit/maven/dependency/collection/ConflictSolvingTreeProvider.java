@@ -31,17 +31,6 @@ public class ConflictSolvingTreeProvider<ConflictKey> extends AbstractConflictSo
    }
 
    @Override
-   protected DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node)
-   {
-      DependencyResolutionNode parent = node.getParent();
-      while (parent != null && !conflictKeyAdapter.conflicts(parent, node))
-      {
-         parent = parent.getParent();
-      }
-      return parent;
-   }
-
-   @Override
    protected List<DependencyNodeRequest> solveSiblingConflicts(List<DependencyNodeRequest> siblingRequests)
    {
       final Map<ConflictKey, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<ConflictKey, List<DependencyResolutionNode>>(

@@ -21,38 +21,19 @@ public abstract class AbstractConflictSolvingTreeProvider implements TreeProvide
    @Override
    public List<DependencyNodeRequest> getRoots(List<DependencyNodeRequest> requests)
    {
-      return solveSiblingConflicts(solveCycles(target.getRoots(requests)));
+      return solveSiblingConflicts(target.getRoots(requests));
    }
 
    @Override
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
       final DependencyResolutionNode node = request.getNode();
-
       if (node.getConflictNode() != null)
       {
          return Collections.emptyList();
       }
-
-      if (node.getCyclicParent() != null)
-      {
-         return Collections.emptyList();
-      }
-
-      return solveTreeConflicts(solveSiblingConflicts(solveCycles(target.getChildren(request))));
+      return solveTreeConflicts(solveSiblingConflicts(target.getChildren(request)));
    }
-
-   protected List<DependencyNodeRequest> solveCycles(List<DependencyNodeRequest> requests)
-   {
-      for (DependencyNodeRequest request : requests)
-      {
-         final DependencyResolutionNode node = request.getNode();
-         node.setCyclicParent(detectCyclicParent(node));
-      }
-      return requests;
-   }
-
-   protected abstract DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node);
 
    protected abstract List<DependencyNodeRequest> solveSiblingConflicts(List<DependencyNodeRequest> requests);
 
