@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,6 +37,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
+import org.sourcepit.common.maven.model.VersionConflictKey;
 
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
@@ -191,7 +193,10 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeProvider<DependencyNodeRequest> nodeResolver = new DependencyResolvingTreeProvider(
          remoteRepositoryManager, dependencyResolver, versionChooser);
 
-      final TreeProvider<DependencyNodeRequest> conflictSolver = new VersionConflictSolvingTreeProvider(nodeResolver);
+      final ConflictKeyAdapter<Set<VersionConflictKey>> conflictKeyAdapter = new VersionConflictKeyAdapter();
+
+      final TreeProvider<DependencyNodeRequest> conflictSolver = new ConflictSolvingTreeProvider<Set<VersionConflictKey>>(
+         nodeResolver, conflictKeyAdapter);
 
       return new AetherDependencyNodeBuildingTreeProvider(conflictSolver, savePremanagedState)
       {
