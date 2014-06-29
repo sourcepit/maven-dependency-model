@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.List;
 
@@ -30,6 +30,9 @@ import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
+import org.sourcepit.maven.dependency.DependencyResolutionRequest;
+import org.sourcepit.maven.dependency.DependencyResolutionResult;
+import org.sourcepit.maven.dependency.ManagedDependency;
 
 @Named
 public class DependencyResolverImpl implements DependencyResolver

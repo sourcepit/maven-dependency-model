@@ -4,13 +4,14 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
+import org.sourcepit.maven.dependency.VersionChooser;
 
 public class HighestVersionChooser implements VersionChooser
 {

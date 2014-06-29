@@ -4,12 +4,13 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
-import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.version.Version;
+import java.util.List;
 
-public interface VersionChooser
+public interface TreeProvider<Node>
 {
-   Version chooseVersion(VersionRangeResult versionRangeResult);
+   List<Node> getRoots(List<Node> roots);
+
+   List<Node> getChildren(Node node);
 }

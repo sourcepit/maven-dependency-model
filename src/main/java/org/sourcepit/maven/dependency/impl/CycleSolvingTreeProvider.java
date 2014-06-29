@@ -4,10 +4,15 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.Collections;
 import java.util.List;
+
+import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.TreeProvider;
 
 public class CycleSolvingTreeProvider<ConflictKey> implements TreeProvider<DependencyNodeRequest>
 {
@@ -31,7 +36,7 @@ public class CycleSolvingTreeProvider<ConflictKey> implements TreeProvider<Depen
    @Override
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final DependencyResolutionNode node = request.getNode();
+      final DependencyNode node = request.getNode();
       if (node.getCyclicParent() != null)
       {
          return Collections.emptyList();
@@ -43,15 +48,15 @@ public class CycleSolvingTreeProvider<ConflictKey> implements TreeProvider<Depen
    {
       for (DependencyNodeRequest request : requests)
       {
-         final DependencyResolutionNode node = request.getNode();
+         final DependencyNode node = request.getNode();
          node.setCyclicParent(detectCyclicParent(node));
       }
       return requests;
    }
 
-   protected DependencyResolutionNode detectCyclicParent(DependencyResolutionNode node)
+   protected DependencyNode detectCyclicParent(DependencyNode node)
    {
-      DependencyResolutionNode parent = node.getParent();
+      DependencyNode parent = node.getParent();
       while (parent != null && !conflictKeyAdapter.conflicts(parent, node))
       {
          parent = parent.getParent();

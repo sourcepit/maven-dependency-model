@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.aether;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,12 +14,14 @@ import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.graph.Dependency;
+import org.sourcepit.maven.dependency.DependenciesFilter;
+import org.sourcepit.maven.dependency.impl.NoopDependenciesFilter;
 
 public final class AdditionalDependenciesFilter implements DependenciesFilter
 {
    private final List<Dependency> dependencies;
 
-   AdditionalDependenciesFilter(List<Dependency> dependencies)
+   public AdditionalDependenciesFilter(List<Dependency> dependencies)
    {
       this.dependencies = dependencies;
    }
@@ -36,7 +38,7 @@ public final class AdditionalDependenciesFilter implements DependenciesFilter
       return new NoopDependenciesFilter();
    }
 
-   static List<Dependency> mergeDeps(List<Dependency> dominant, List<Dependency> recessive)
+   public static List<Dependency> mergeDeps(List<Dependency> dominant, List<Dependency> recessive)
    {
       List<Dependency> result;
       if (dominant == null || dominant.isEmpty())

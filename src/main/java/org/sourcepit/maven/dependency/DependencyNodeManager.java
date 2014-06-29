@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
+import org.sourcepit.maven.dependency.aether.DependencyCollectionContextImpl;
 
 public class DependencyNodeManager
    implements
@@ -75,7 +76,7 @@ public class DependencyNodeManager
    public DependencyNodeManager deriveChildManager(RepositorySystemSession session, Dependency parent,
       List<Dependency> managedDependencies)
    {
-      final DefaultDependencyCollectionContext collectionContext = new DefaultDependencyCollectionContext(session,
+      final DependencyCollectionContextImpl collectionContext = new DependencyCollectionContextImpl(session,
          parent, managedDependencies);
 
       final DependencyNodeManager childContext = new DependencyNodeManager();

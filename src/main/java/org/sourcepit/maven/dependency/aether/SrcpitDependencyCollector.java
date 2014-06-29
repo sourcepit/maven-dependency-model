@@ -4,10 +4,11 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.aether;
 
-import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuildingTreeProvider.getDependencyNode;
-import static org.sourcepit.maven.dependency.collection.AetherDependencyNodeBuildingTreeProvider.setDependencyNode;
+import static org.sourcepit.maven.dependency.aether.AdditionalDependenciesFilter.mergeDeps;
+import static org.sourcepit.maven.dependency.aether.AetherDependencyNodeBuildingTreeProvider.getDependencyNode;
+import static org.sourcepit.maven.dependency.aether.AetherDependencyNodeBuildingTreeProvider.setDependencyNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +39,20 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
+import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeManager;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.TreeProvider;
+import org.sourcepit.maven.dependency.TreeTraversal;
+import org.sourcepit.maven.dependency.VersionChooser;
+import org.sourcepit.maven.dependency.impl.ConflictSolvingTreeProvider;
+import org.sourcepit.maven.dependency.impl.CycleSolvingTreeProvider;
+import org.sourcepit.maven.dependency.impl.DependencyResolver;
+import org.sourcepit.maven.dependency.impl.DependencyResolvingTreeProvider;
+import org.sourcepit.maven.dependency.impl.HighestVersionChooser;
+import org.sourcepit.maven.dependency.impl.NearestNodesFirstTreeTraversal;
+import org.sourcepit.maven.dependency.impl.VersionConflictKeyAdapter;
 
 @Named("srcpit")
 public class SrcpitDependencyCollector implements DependencyCollector
@@ -86,7 +101,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
       final DependencyNodeManager nodeManager = newRootContext(session, request);
       final String requestContext = request.getRequestContext();
-      final DependencyResolutionNode node = new DependencyResolutionNode(request.getRepositories(), dependency);
+      final DependencyNode node = new DependencyNode(request.getRepositories(), dependency);
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
       final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, requestContext, nodeManager,
          node);
@@ -130,7 +145,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
          final DependencyNodeManager childManager = rootManager.deriveChildManager(session, null,
             Collections.<Dependency> emptyList());
 
-         final DependencyResolutionNode parentNode = new DependencyResolutionNode(request.getRepositories(), null);
+         final DependencyNode parentNode = new DependencyNode(request.getRepositories(), null);
          setDependencyNode(parentNode, node);
          parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
 
@@ -142,7 +157,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
          {
             if (childManager.selectDependency(dependency))
             {
-               final DependencyResolutionNode childNode = new DependencyResolutionNode(parentNode,
+               final DependencyNode childNode = new DependencyNode(parentNode,
                   request.getRepositories(), dependency);
                requests.add(new DependencyNodeRequest(session, trace, requestContext, childManager, childNode));
             }
@@ -160,7 +175,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
       try
       {
-         result.setRoot(transformer.transformGraph(result.getRoot(), new DefaultDependencyGraphTransformationContext(
+         result.setRoot(transformer.transformGraph(result.getRoot(), new DependencyGraphTransformationContextImpl(
             session)));
       }
       catch (RepositoryException e)
@@ -222,7 +237,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
             List<Dependency> managedDependencies)
          {
             return super.deriveChildManager(session, parent,
-               AdditionalDependenciesFilter.mergeDeps(request.getManagedDependencies(), managedDependencies));
+               mergeDeps(request.getManagedDependencies(), managedDependencies));
          }
       };
 

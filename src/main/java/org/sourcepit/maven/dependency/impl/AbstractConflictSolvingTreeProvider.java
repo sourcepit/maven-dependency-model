@@ -4,10 +4,14 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.Collections;
 import java.util.List;
+
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.TreeProvider;
 
 public abstract class AbstractConflictSolvingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
@@ -27,7 +31,7 @@ public abstract class AbstractConflictSolvingTreeProvider implements TreeProvide
    @Override
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
-      final DependencyResolutionNode node = request.getNode();
+      final DependencyNode node = request.getNode();
       if (node.getConflictNode() != null)
       {
          return Collections.emptyList();
@@ -41,7 +45,7 @@ public abstract class AbstractConflictSolvingTreeProvider implements TreeProvide
    {
       for (DependencyNodeRequest request : requests)
       {
-         final DependencyResolutionNode node = request.getNode();
+         final DependencyNode node = request.getNode();
          if (node.getConflictNode() == null) // no sibling conflicts
          {
             updateTreeConflicts(node);
@@ -50,5 +54,5 @@ public abstract class AbstractConflictSolvingTreeProvider implements TreeProvide
       return requests;
    }
 
-   protected abstract void updateTreeConflicts(DependencyResolutionNode node);
+   protected abstract void updateTreeConflicts(DependencyNode node);
 }

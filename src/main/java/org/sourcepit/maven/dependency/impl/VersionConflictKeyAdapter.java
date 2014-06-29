@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,11 +17,13 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
+import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.DependencyNode;
 
 public class VersionConflictKeyAdapter implements ConflictKeyAdapter<Set<VersionConflictKey>>
 {
    @Override
-   public Set<VersionConflictKey> getConflictKey(DependencyResolutionNode node)
+   public Set<VersionConflictKey> getConflictKey(DependencyNode node)
    {
       @SuppressWarnings("unchecked")
       Set<VersionConflictKey> conflictKeys = (Set<VersionConflictKey>) node.getData().get(
@@ -44,7 +46,7 @@ public class VersionConflictKeyAdapter implements ConflictKeyAdapter<Set<Version
    }
 
    @Override
-   public Set<VersionConflictKey> mergeConflictKeys(DependencyResolutionNode node, Set<VersionConflictKey> key)
+   public Set<VersionConflictKey> mergeConflictKeys(DependencyNode node, Set<VersionConflictKey> key)
    {
       final Set<VersionConflictKey> merged = getConflictKey(node);
       merged.addAll(key);
@@ -64,12 +66,12 @@ public class VersionConflictKeyAdapter implements ConflictKeyAdapter<Set<Version
    }
 
    @Override
-   public boolean conflicts(DependencyResolutionNode node1, DependencyResolutionNode node2)
+   public boolean conflicts(DependencyNode node1, DependencyNode node2)
    {
       return conflicts(getConflictKey(node1), getConflictKey(node2));
    }
 
-   private static Set<VersionConflictKey> determineConflictKeys(DependencyResolutionNode node)
+   private static Set<VersionConflictKey> determineConflictKeys(DependencyNode node)
    {
       final Map<Version, ArtifactDescriptorResult> versionToDescriptorResultMap = node
          .getVersionToArtifactDescriptorResultMap();

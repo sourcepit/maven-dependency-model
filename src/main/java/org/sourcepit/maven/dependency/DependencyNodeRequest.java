@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -20,10 +20,10 @@ public class DependencyNodeRequest
 
    private final DependencyNodeManager nodeManager;
 
-   private final DependencyResolutionNode node;
+   private final DependencyNode node;
 
    public DependencyNodeRequest(RepositorySystemSession session, RequestTrace trace, String requestContext,
-      DependencyNodeManager nodeManager, DependencyResolutionNode node)
+      DependencyNodeManager nodeManager, DependencyNode node)
    {
       this.session = session;
       this.trace = trace;
@@ -52,7 +52,7 @@ public class DependencyNodeRequest
       return nodeManager;
    }
 
-   public DependencyResolutionNode getNode()
+   public DependencyNode getNode()
    {
       return node;
    }

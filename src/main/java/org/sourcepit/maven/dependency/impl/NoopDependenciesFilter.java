@@ -4,17 +4,26 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.graph.Dependency;
+import org.sourcepit.maven.dependency.DependenciesFilter;
 
-public interface DependenciesFilter
+public class NoopDependenciesFilter implements DependenciesFilter
 {
-   List<Dependency> filterDependencies(Artifact artifact, List<Dependency> dependencies);
+   @Override
+   public List<Dependency> filterDependencies(Artifact artifact, List<Dependency> dependencies)
+   {
+      return dependencies;
+   }
 
-   DependenciesFilter deriveChildFilter(DependencyCollectionContext context);
+   @Override
+   public DependenciesFilter deriveChildFilter(DependencyCollectionContext context)
+   {
+      return this;
+   }
 }

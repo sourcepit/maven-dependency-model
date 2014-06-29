@@ -4,17 +4,17 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
 public interface ConflictKeyAdapter<Key>
 {
-   Key getConflictKey(DependencyResolutionNode node);
+   Key getConflictKey(DependencyNode node);
 
    Key mergeConflictKeys(Key key1, Key key2);
    
-   Key mergeConflictKeys(DependencyResolutionNode node, Key key);
+   Key mergeConflictKeys(DependencyNode node, Key key);
 
    boolean conflicts(Key key1, Key key2);
 
-   boolean conflicts(DependencyResolutionNode node1, DependencyResolutionNode node2);
+   boolean conflicts(DependencyNode node1, DependencyNode node2);
 }

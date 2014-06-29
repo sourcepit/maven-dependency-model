@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +20,13 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeManager;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.DependencyResolutionRequest;
+import org.sourcepit.maven.dependency.DependencyResolutionResult;
+import org.sourcepit.maven.dependency.TreeProvider;
+import org.sourcepit.maven.dependency.VersionChooser;
 
 public class DependencyResolvingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
@@ -47,7 +54,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
    public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
    {
       final DependencyNodeManager nodeManager = request.getNodeManager();
-      final DependencyResolutionNode node = request.getNode();
+      final DependencyNode node = request.getNode();
 
       final Version resolvedVersion = node.getResolvedVersion();
       if (resolvedVersion == null)
@@ -109,11 +116,11 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
    private static DependencyNodeRequest newDependencyNodeRequest(DependencyNodeRequest parentRequest,
       DependencyNodeManager nodeManager, List<RemoteRepository> repositories, Dependency dependency)
    {
-      final DependencyResolutionNode parentNode = parentRequest.getNode();
+      final DependencyNode parentNode = parentRequest.getNode();
       final RepositorySystemSession session = parentRequest.getSession();
       final RequestTrace trace = parentRequest.getTrace();
       final String requestContext = parentRequest.getRequestContext();
-      final DependencyResolutionNode node = new DependencyResolutionNode(parentNode, repositories, dependency);
+      final DependencyNode node = new DependencyNode(parentNode, repositories, dependency);
       return new DependencyNodeRequest(session, trace, requestContext, nodeManager, node);
    }
 
@@ -147,7 +154,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       final DependencyResolutionRequest resolutionRequest = newDependencyResolutionRequest(request);
       final DependencyResolutionResult resolutionResult = dependencyResolver.resolveDependency(resolutionRequest);
 
-      final DependencyResolutionNode node = request.getNode();
+      final DependencyNode node = request.getNode();
       node.setManagedDependency(resolutionResult.getManagedDependency());
       node.setVersionRangeResult(resolutionResult.getVersionRangeResult());
       node.setVersionToArtifactDescriptorResultMap(resolutionResult.getVersionToArtifactDescriptorResultMap());
@@ -170,7 +177,7 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       resolutionRequest.setDependencyManager(nodeManager);
       resolutionRequest.setDependencySelector(nodeManager);
 
-      final DependencyResolutionNode node = request.getNode();
+      final DependencyNode node = request.getNode();
       resolutionRequest.setRepositories(node.getRepositories());
       resolutionRequest.setDependency(node.getDependency());
 

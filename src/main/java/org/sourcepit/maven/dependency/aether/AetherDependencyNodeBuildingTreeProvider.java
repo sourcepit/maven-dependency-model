@@ -4,13 +4,12 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.aether;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -18,6 +17,10 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.ManagedDependency;
+import org.sourcepit.maven.dependency.TreeProvider;
 
 public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<DependencyNodeRequest>
 {
@@ -45,7 +48,7 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
    {
       for (DependencyNodeRequest request : requests)
       {
-         final DependencyResolutionNode node = request.getNode();
+         final DependencyNode node = request.getNode();
          try
          {
             if (node.getConflictNode() == null)
@@ -72,15 +75,15 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
       return children;
    }
 
-   static void setDependencyNode(DependencyResolutionNode resolutionNode, DependencyNodeImpl dependencyNode)
+   static void setDependencyNode(DependencyNode resolutionNode, DependencyNodeImpl dependencyNode)
    {
-      resolutionNode.getData().put(DependencyNode.class, dependencyNode);
+      resolutionNode.getData().put(org.eclipse.aether.graph.DependencyNode.class, dependencyNode);
    }
 
    private DependencyNodeImpl buildNode(DependencyNodeRequest request) throws VersionRangeResolutionException,
       ArtifactDescriptorException
    {
-      final DependencyResolutionNode resolutionNode = request.getNode();
+      final DependencyNode resolutionNode = request.getNode();
 
       final VersionRangeResult rangeResult = resolutionNode.getVersionRangeResult();
 
@@ -111,16 +114,16 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
          node.setVersion(version);
          node.setVersionConstraint(rangeResult.getVersionConstraint());
 
-         final DependencyResolutionNode cyclicParent = resolutionNode.getCyclicParent();
+         final DependencyNode cyclicParent = resolutionNode.getCyclicParent();
          if (cyclicParent != null)
          {
-            final DependencyNode cyclicNode = getDependencyNode(cyclicParent);
+            final org.eclipse.aether.graph.DependencyNode cyclicNode = getDependencyNode(cyclicParent);
             node.setRepositories(cyclicNode.getRepositories());
             node.setChildren(cyclicNode.getChildren());
             node.setData("cycleNode", cyclicNode);
          }
 
-         final DependencyResolutionNode parent = resolutionNode.getParent();
+         final DependencyNode parent = resolutionNode.getParent();
          if (parent != null)
          {
             getDependencyNode(parent).getChildren().add(node);
@@ -134,9 +137,10 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
       }
    }
 
-   static DependencyNode getDependencyNode(DependencyResolutionNode resolutionNode)
+   static org.eclipse.aether.graph.DependencyNode getDependencyNode(DependencyNode resolutionNode)
    {
-      return (DependencyNode) resolutionNode.getData().get(DependencyNode.class);
+      return (org.eclipse.aether.graph.DependencyNode) resolutionNode.getData().get(
+         org.eclipse.aether.graph.DependencyNode.class);
    }
 
    protected void handleException(Exception e)

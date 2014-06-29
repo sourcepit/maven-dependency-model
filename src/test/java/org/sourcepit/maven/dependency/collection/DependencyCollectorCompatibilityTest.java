@@ -48,6 +48,7 @@ import org.sourcepit.common.maven.artifact.ArtifactFactory;
 import org.sourcepit.common.maven.testing.ArtifactRepositoryFacade;
 import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
+import org.sourcepit.maven.dependency.aether.SrcpitDependencyCollector;
 import org.sourcepit.maven.dependency.model.poc.TestHarness;
 
 import com.google.inject.Binder;

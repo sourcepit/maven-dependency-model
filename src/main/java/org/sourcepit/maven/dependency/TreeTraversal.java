@@ -4,13 +4,15 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
 import java.util.List;
 
-interface TreeProvider<Node>
-{
-   List<Node> getRoots(List<Node> roots);
 
-   List<Node> getChildren(Node node);
+public interface TreeTraversal<Node>
+{
+   void traverse(TreeProvider<Node> tree, Node node);
+
+   void traverse(TreeProvider<Node> tree, List<Node> nodes);
+
 }

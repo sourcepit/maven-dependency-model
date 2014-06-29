@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +16,9 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 
-public class DependencyResolutionNode
+public class DependencyNode
 {
-   private final DependencyResolutionNode parent;
+   private final DependencyNode parent;
 
    private List<RemoteRepository> repositories;
 
@@ -34,16 +34,16 @@ public class DependencyResolutionNode
 
    private Version resolvedVersion;
 
-   private DependencyResolutionNode cyclicParent;
+   private DependencyNode cyclicParent;
 
-   private DependencyResolutionNode conflictNode;
+   private DependencyNode conflictNode;
 
-   public DependencyResolutionNode(List<RemoteRepository> repositories, Dependency dependency)
+   public DependencyNode(List<RemoteRepository> repositories, Dependency dependency)
    {
       this(null, repositories, dependency);
    }
 
-   public DependencyResolutionNode(DependencyResolutionNode parent, List<RemoteRepository> repositories,
+   public DependencyNode(DependencyNode parent, List<RemoteRepository> repositories,
       Dependency dependency)
    {
       this.parent = parent;
@@ -51,7 +51,7 @@ public class DependencyResolutionNode
       this.dependency = dependency;
    }
 
-   public DependencyResolutionNode getParent()
+   public DependencyNode getParent()
    {
       return parent;
    }
@@ -112,22 +112,22 @@ public class DependencyResolutionNode
       return resolvedVersion;
    }
 
-   public void setCyclicParent(DependencyResolutionNode cyclicParent)
+   public void setCyclicParent(DependencyNode cyclicParent)
    {
       this.cyclicParent = cyclicParent;
    }
 
-   public DependencyResolutionNode getCyclicParent()
+   public DependencyNode getCyclicParent()
    {
       return cyclicParent;
    }
 
-   public void setConflictNode(DependencyResolutionNode conflictNode)
+   public void setConflictNode(DependencyNode conflictNode)
    {
       this.conflictNode = conflictNode;
    }
 
-   public DependencyResolutionNode getConflictNode()
+   public DependencyNode getConflictNode()
    {
       return conflictNode;
    }

@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.sourcepit.maven.dependency.TreeProvider;
+import org.sourcepit.maven.dependency.impl.NearestNodesFirstTreeTraversal;
 
 public class NearestNodesFirstTreeTraversalTest
 {

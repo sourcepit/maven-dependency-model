@@ -4,13 +4,16 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class NearestNodesFirstTreeTraversal<Node> implements TreeTraversal<Node>
+import org.sourcepit.maven.dependency.TreeProvider;
+import org.sourcepit.maven.dependency.TreeTraversal;
+
+public class NearestNodesFirstTreeTraversal<Node> implements TreeTraversal<Node>
 {
    @Override
    public void traverse(TreeProvider<Node> tree, Node node)

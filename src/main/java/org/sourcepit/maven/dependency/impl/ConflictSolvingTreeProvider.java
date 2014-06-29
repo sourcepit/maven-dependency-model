@@ -4,7 +4,7 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.sourcepit.maven.dependency.collection;
+package org.sourcepit.maven.dependency.impl;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
@@ -17,9 +17,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.DependencyNode;
+import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.TreeProvider;
+
 public class ConflictSolvingTreeProvider<ConflictKey> extends AbstractConflictSolvingTreeProvider
 {
-   private final Map<ConflictKey, List<DependencyResolutionNode>> conflictGroups = new HashMap<ConflictKey, List<DependencyResolutionNode>>();
+   private final Map<ConflictKey, List<DependencyNode>> conflictGroups = new HashMap<ConflictKey, List<DependencyNode>>();
 
    private final ConflictKeyAdapter<ConflictKey> conflictKeyAdapter;
 
@@ -33,38 +38,38 @@ public class ConflictSolvingTreeProvider<ConflictKey> extends AbstractConflictSo
    @Override
    protected List<DependencyNodeRequest> solveSiblingConflicts(List<DependencyNodeRequest> siblingRequests)
    {
-      final Map<ConflictKey, List<DependencyResolutionNode>> conflictGroupMap = new HashMap<ConflictKey, List<DependencyResolutionNode>>(
+      final Map<ConflictKey, List<DependencyNode>> conflictGroupMap = new HashMap<ConflictKey, List<DependencyNode>>(
          siblingRequests.size());
 
       for (DependencyNodeRequest request : siblingRequests)
       {
-         final DependencyResolutionNode node = request.getNode();
+         final DependencyNode node = request.getNode();
          final ConflictKey key = conflictKeyAdapter.getConflictKey(node);
          addItemToConflictGroup(conflictGroupMap, key, node);
       }
 
-      for (Entry<ConflictKey, List<DependencyResolutionNode>> entry : conflictGroupMap.entrySet())
+      for (Entry<ConflictKey, List<DependencyNode>> entry : conflictGroupMap.entrySet())
       {
          final ConflictKey groupKey = entry.getKey();
-         final List<DependencyResolutionNode> conflictGroup = entry.getValue();
+         final List<DependencyNode> conflictGroup = entry.getValue();
          if (conflictGroup.size() > 1)
          {
-            Collections.sort(conflictGroup, new Comparator<DependencyResolutionNode>()
+            Collections.sort(conflictGroup, new Comparator<DependencyNode>()
             {
                @Override
-               public int compare(DependencyResolutionNode n1, DependencyResolutionNode n2)
+               public int compare(DependencyNode n1, DependencyNode n2)
                {
                   return -1 * n1.getResolvedVersion().compareTo(n2.getResolvedVersion());
                }
             });
 
             // remove winner
-            final DependencyResolutionNode winner = conflictGroup.remove(0);
+            final DependencyNode winner = conflictGroup.remove(0);
 
             // remember merged conflict keys, so we won't loose any keys from aliases or relocations of loser nodes
             conflictKeyAdapter.mergeConflictKeys(winner, groupKey);
 
-            for (DependencyResolutionNode loser : conflictGroup)
+            for (DependencyNode loser : conflictGroup)
             {
                loser.setConflictNode(winner);
             }
@@ -75,15 +80,15 @@ public class ConflictSolvingTreeProvider<ConflictKey> extends AbstractConflictSo
    }
 
    @Override
-   protected void updateTreeConflicts(DependencyResolutionNode node)
+   protected void updateTreeConflicts(DependencyNode node)
    {
-      final Entry<ConflictKey, List<DependencyResolutionNode>> conflictGroup = addItemToConflictGroup(conflictGroups,
+      final Entry<ConflictKey, List<DependencyNode>> conflictGroup = addItemToConflictGroup(conflictGroups,
          conflictKeyAdapter.getConflictKey(node), node);
 
       if (conflictGroup.getValue().size() > 1)
       {
-         final Iterator<DependencyResolutionNode> it = conflictGroup.getValue().iterator();
-         final DependencyResolutionNode winner = it.next();
+         final Iterator<DependencyNode> it = conflictGroup.getValue().iterator();
+         final DependencyNode winner = it.next();
          while (it.hasNext())
          {
             it.next().setConflictNode(winner);
