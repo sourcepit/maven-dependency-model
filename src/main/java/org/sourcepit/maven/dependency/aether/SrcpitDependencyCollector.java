@@ -7,12 +7,9 @@
 package org.sourcepit.maven.dependency.aether;
 
 import static org.sourcepit.maven.dependency.aether.AdditionalDependenciesFilter.mergeDeps;
-import static org.sourcepit.maven.dependency.aether.AetherDependencyNodeBuildingTreeProvider.getDependencyNode;
-import static org.sourcepit.maven.dependency.aether.AetherDependencyNodeBuildingTreeProvider.setDependencyNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -36,12 +33,11 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
-import org.eclipse.aether.version.Version;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.maven.dependency.ConflictKeyAdapter;
+import org.sourcepit.maven.dependency.CustomModelAdapter;
 import org.sourcepit.maven.dependency.DependenciesFilter;
 import org.sourcepit.maven.dependency.DependencyNode;
 import org.sourcepit.maven.dependency.DependencyNodeManager;
@@ -129,14 +125,22 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final String requestContext = request.getRequestContext();
 
       final DependencyNodeManager nodeManager = newRootManager(session, managedDependencies, dependencies);
-      final DependencyNode node = new DependencyNode(repositories, dependency);
+      final DependencyNode node = new DependencyNode(requestContext, repositories, dependency);
       final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, requestContext, nodeManager,
-         node);
+      final DependencyNodeRequest nodeRequest = new DependencyNodeRequest(session, trace, nodeManager, node);
 
-      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
-      newTreeTraversal().traverse(treeProvider, nodeRequest);
-      result.setRoot(getDependencyNode(node));
+      final CustomModelAdapter<org.eclipse.aether.graph.DependencyNode> aetherAdapter = new AbstractAetherModelAdapter(
+         savePremanagedState)
+      {
+         @Override
+         protected void handleException(DependencyNode node, Exception e)
+         {
+            result.addException(e);
+         }
+      };
+
+      newTreeTraversal().traverse(newTreeProvider(aetherAdapter), nodeRequest);
+      result.setRoot(aetherAdapter.adapt(node));
 
       return result;
    }
@@ -150,9 +154,18 @@ public class SrcpitDependencyCollector implements DependencyCollector
          DependencyManagerUtils.CONFIG_PROP_VERBOSE);
 
       final CollectResult result = new CollectResult(request);
-      final TreeProvider<DependencyNodeRequest> treeProvider = newTreeProvider(result, savePremanagedState);
 
-      final DependencyNodeImpl node = new RootNodeImpl(rootArtifact);
+      final CustomModelAdapter<org.eclipse.aether.graph.DependencyNode> aetherAdapter = new AbstractAetherModelAdapter(
+         savePremanagedState)
+      {
+         @Override
+         protected void handleException(DependencyNode node, Exception e)
+         {
+            result.addException(e);
+         }
+      };
+
+      final DependencyNodeImpl root = new RootNodeImpl(rootArtifact);
 
       if (!dependencies.isEmpty())
       {
@@ -163,26 +176,39 @@ public class SrcpitDependencyCollector implements DependencyCollector
 
          final DependencyNodeManager childManager = newChildManager(session, managedDependencies);
 
-         final DependencyNode parentNode = new DependencyNode(repositories, null);
-         parentNode.setVersionToArtifactDescriptorResultMap(new HashMap<Version, ArtifactDescriptorResult>());
-         setDependencyNode(parentNode, node);
-
          final List<DependencyNodeRequest> requests = new ArrayList<DependencyNodeRequest>(dependencies.size());
          for (Dependency dependency : dependencies)
          {
             if (childManager.selectDependency(dependency))
             {
-               final DependencyNode childNode = new DependencyNode(parentNode, repositories, dependency);
-               requests.add(new DependencyNodeRequest(session, trace, requestContext, childManager, childNode));
+               final DependencyNode childNode = new DependencyNode(requestContext, repositories, dependency);
+               requests.add(new DependencyNodeRequest(session, trace, childManager, childNode));
             }
          }
 
-         treeTraversal.traverse(treeProvider, requests);
+         treeTraversal.traverse(newTreeProvider(aetherAdapter), requests);
+
+         for (DependencyNodeRequest nodeRequest : requests)
+         {
+            final org.eclipse.aether.graph.DependencyNode node = aetherAdapter.adapt(nodeRequest.getNode());
+            if (node != null)
+            {
+               root.getChildren().add(node);
+            }
+         }
+
       }
 
-      result.setRoot(node);
+      result.setRoot(root);
 
       return result;
+   }
+
+   private TreeProvider<DependencyNodeRequest> newTreeProvider(
+      final CustomModelAdapter<org.eclipse.aether.graph.DependencyNode> aetherAdapter)
+   {
+      return new CustomModelBuildingTreeProvider<org.eclipse.aether.graph.DependencyNode>(newTreeProvider(),
+         aetherAdapter);
    }
 
    private void transformGraph(RepositorySystemSession session, final CollectResult result)
@@ -217,7 +243,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
       return new NearestNodesFirstTreeTraversal<DependencyNodeRequest>();
    }
 
-   private TreeProvider<DependencyNodeRequest> newTreeProvider(final CollectResult result, boolean savePremanagedState)
+   private TreeProvider<DependencyNodeRequest> newTreeProvider()
    {
       final VersionChooser versionChooser = new HighestVersionChooser();
 
@@ -229,18 +255,7 @@ public class SrcpitDependencyCollector implements DependencyCollector
       final TreeProvider<DependencyNodeRequest> cycleSolver = new CycleSolvingTreeProvider<Set<VersionConflictKey>>(
          nodeResolver, conflictKeyAdapter);
 
-      final TreeProvider<DependencyNodeRequest> conflictSolver = new ConflictSolvingTreeProvider<Set<VersionConflictKey>>(
-         cycleSolver, conflictKeyAdapter);
-
-      return new AetherDependencyNodeBuildingTreeProvider(conflictSolver, savePremanagedState)
-      {
-         @Override
-         protected void handleException(Exception e)
-         {
-            super.handleException(e);
-            result.addException(e);
-         }
-      };
+      return new ConflictSolvingTreeProvider<Set<VersionConflictKey>>(cycleSolver, conflictKeyAdapter);
    }
 
    private DependencyNodeManager newRootManager(final RepositorySystemSession session,

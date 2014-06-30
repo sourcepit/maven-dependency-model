@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -17,74 +18,56 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
-import org.sourcepit.maven.dependency.DependencyNode;
-import org.sourcepit.maven.dependency.DependencyNodeRequest;
+import org.sourcepit.maven.dependency.CustomModelAdapter;
 import org.sourcepit.maven.dependency.ManagedDependency;
-import org.sourcepit.maven.dependency.TreeProvider;
 
-public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<DependencyNodeRequest>
+public abstract class AbstractAetherModelAdapter implements CustomModelAdapter<DependencyNode>
 {
-   private final TreeProvider<DependencyNodeRequest> target;
+   private static final class AdaptResult
+   {
+      private DependencyNode node;
+   }
 
    private final boolean savePremanagedState;
 
-   public AetherDependencyNodeBuildingTreeProvider(TreeProvider<DependencyNodeRequest> target,
-      boolean savePremanagedState)
+   public AbstractAetherModelAdapter(boolean savePremanagedState)
    {
-      this.target = target;
       this.savePremanagedState = savePremanagedState;
-
    }
 
    @Override
-   public List<DependencyNodeRequest> getRoots(List<DependencyNodeRequest> requests)
+   public DependencyNode adapt(org.sourcepit.maven.dependency.DependencyNode node)
    {
-      final List<DependencyNodeRequest> children = target.getRoots(requests);
-      build(children);
-      return children;
-   }
-
-   private void build(List<DependencyNodeRequest> requests)
-   {
-      for (DependencyNodeRequest request : requests)
+      AdaptResult result = getAdaptResult(node);
+      if (result == null)
       {
-         final DependencyNode node = request.getNode();
+         result = new AdaptResult();
          try
          {
             if (node.getConflictNode() == null)
             {
-               setDependencyNode(node, buildNode(request));
+               result.node = newDependencyNode(node);
             }
          }
          catch (VersionRangeResolutionException e)
          {
-            handleException(e);
+            handleException(node, e);
          }
          catch (ArtifactDescriptorException e)
          {
-            handleException(e);
+            handleException(node, e);
          }
+         setAdaptResult(node, result);
       }
+
+      return result.node;
    }
 
-   @Override
-   public List<DependencyNodeRequest> getChildren(DependencyNodeRequest request)
-   {
-      final List<DependencyNodeRequest> children = target.getChildren(request);
-      build(children);
-      return children;
-   }
+   protected abstract void handleException(org.sourcepit.maven.dependency.DependencyNode node, Exception e);
 
-   static void setDependencyNode(DependencyNode resolutionNode, DependencyNodeImpl dependencyNode)
+   private DependencyNode newDependencyNode(org.sourcepit.maven.dependency.DependencyNode resolutionNode)
+      throws VersionRangeResolutionException, ArtifactDescriptorException
    {
-      resolutionNode.getData().put(org.eclipse.aether.graph.DependencyNode.class, dependencyNode);
-   }
-
-   private DependencyNodeImpl buildNode(DependencyNodeRequest request) throws VersionRangeResolutionException,
-      ArtifactDescriptorException
-   {
-      final DependencyNode resolutionNode = request.getNode();
-
       final VersionRangeResult rangeResult = resolutionNode.getVersionRangeResult();
 
       final ManagedDependency managedDependency = resolutionNode.getManagedDependency();
@@ -110,23 +93,27 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
          node.setRelocations(descriptorResult.getRelocations());
          node.setRepositories(getRemoteRepositories(rangeResult.getRepository(version),
             resolutionNode.getRepositories()));
-         node.setRequestContext(request.getRequestContext());
+         node.setRequestContext(node.getRequestContext());
          node.setVersion(version);
          node.setVersionConstraint(rangeResult.getVersionConstraint());
 
-         final DependencyNode cyclicParent = resolutionNode.getCyclicParent();
+         final org.sourcepit.maven.dependency.DependencyNode cyclicParent = resolutionNode.getCyclicParent();
          if (cyclicParent != null)
          {
-            final org.eclipse.aether.graph.DependencyNode cyclicNode = getDependencyNode(cyclicParent);
+            final DependencyNode cyclicNode = getDependencyNode(cyclicParent);
             node.setRepositories(cyclicNode.getRepositories());
             node.setChildren(cyclicNode.getChildren());
             node.setData("cycleNode", cyclicNode);
          }
 
-         final DependencyNode parent = resolutionNode.getParent();
+         final org.sourcepit.maven.dependency.DependencyNode parent = resolutionNode.getParent();
          if (parent != null)
          {
-            getDependencyNode(parent).getChildren().add(node);
+            final DependencyNode parentNode = getDependencyNode(parent);
+            if (parentNode != null)
+            {
+               parentNode.getChildren().add(node);
+            }
          }
 
          return node;
@@ -137,14 +124,20 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
       }
    }
 
-   static org.eclipse.aether.graph.DependencyNode getDependencyNode(DependencyNode resolutionNode)
+   private static void setAdaptResult(final org.sourcepit.maven.dependency.DependencyNode node, AdaptResult result)
    {
-      return (org.eclipse.aether.graph.DependencyNode) resolutionNode.getData().get(
-         org.eclipse.aether.graph.DependencyNode.class);
+      node.getData().put(AdaptResult.class, result);
    }
 
-   protected void handleException(Exception e)
+   private static AdaptResult getAdaptResult(final org.sourcepit.maven.dependency.DependencyNode node)
    {
+      return (AdaptResult) node.getData().get(AdaptResult.class);
+   }
+
+   private static DependencyNode getDependencyNode(org.sourcepit.maven.dependency.DependencyNode resolutionNode)
+   {
+      AdaptResult adaptResult = getAdaptResult(resolutionNode);
+      return adaptResult == null ? null : adaptResult.node;
    }
 
    private List<RemoteRepository> getRemoteRepositories(ArtifactRepository repository,
@@ -160,4 +153,12 @@ public class AetherDependencyNodeBuildingTreeProvider implements TreeProvider<De
       }
       return repositories;
    }
+
+   public void assign(org.sourcepit.maven.dependency.DependencyNode node, DependencyNode aetherNode)
+   {
+      final AdaptResult result = new AdaptResult();
+      result.node = aetherNode;
+      setAdaptResult(node, result);
+   }
+
 }

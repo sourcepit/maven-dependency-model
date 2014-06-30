@@ -20,6 +20,8 @@ public class DependencyNode
 {
    private final DependencyNode parent;
 
+   private final String requestContext;
+
    private List<RemoteRepository> repositories;
 
    private final Dependency dependency;
@@ -38,15 +40,21 @@ public class DependencyNode
 
    private DependencyNode conflictNode;
 
-   public DependencyNode(List<RemoteRepository> repositories, Dependency dependency)
+   public DependencyNode(String requestContext, List<RemoteRepository> repositories, Dependency dependency)
    {
-      this(null, repositories, dependency);
+      this(null, requestContext, repositories, dependency);
    }
 
-   public DependencyNode(DependencyNode parent, List<RemoteRepository> repositories,
+   public DependencyNode(DependencyNode parent, List<RemoteRepository> repositories, Dependency dependency)
+   {
+      this(parent, parent.getRequestContext(), repositories, dependency);
+   }
+
+   private DependencyNode(DependencyNode parent, String requestContext, List<RemoteRepository> repositories,
       Dependency dependency)
    {
       this.parent = parent;
+      this.requestContext = requestContext;
       this.repositories = repositories;
       this.dependency = dependency;
    }
@@ -54,6 +62,11 @@ public class DependencyNode
    public DependencyNode getParent()
    {
       return parent;
+   }
+
+   public String getRequestContext()
+   {
+      return requestContext;
    }
 
    public Dependency getDependency()

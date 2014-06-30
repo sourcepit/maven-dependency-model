@@ -119,9 +119,8 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       final DependencyNode parentNode = parentRequest.getNode();
       final RepositorySystemSession session = parentRequest.getSession();
       final RequestTrace trace = parentRequest.getTrace();
-      final String requestContext = parentRequest.getRequestContext();
       final DependencyNode node = new DependencyNode(parentNode, repositories, dependency);
-      return new DependencyNodeRequest(session, trace, requestContext, nodeManager, node);
+      return new DependencyNodeRequest(session, trace, nodeManager, node);
    }
 
    private List<RemoteRepository> aggregateRepositories(RepositorySystemSession session,
@@ -171,13 +170,13 @@ public class DependencyResolvingTreeProvider implements TreeProvider<DependencyN
       final DependencyResolutionRequest resolutionRequest = new DependencyResolutionRequest();
       resolutionRequest.setSession(request.getSession());
       resolutionRequest.setRequestTrace(request.getTrace());
-      resolutionRequest.setRequestContext(request.getRequestContext());
 
       final DependencyNodeManager nodeManager = request.getNodeManager();
       resolutionRequest.setDependencyManager(nodeManager);
       resolutionRequest.setDependencySelector(nodeManager);
 
       final DependencyNode node = request.getNode();
+      resolutionRequest.setRequestContext(node.getRequestContext());
       resolutionRequest.setRepositories(node.getRepositories());
       resolutionRequest.setDependency(node.getDependency());
 

@@ -14,20 +14,17 @@ public class DependencyNodeRequest
 {
    private final RepositorySystemSession session;
 
-   private final String requestContext;
-
    private final RequestTrace trace;
 
    private final DependencyNodeManager nodeManager;
 
    private final DependencyNode node;
 
-   public DependencyNodeRequest(RepositorySystemSession session, RequestTrace trace, String requestContext,
-      DependencyNodeManager nodeManager, DependencyNode node)
+   public DependencyNodeRequest(RepositorySystemSession session, RequestTrace trace, DependencyNodeManager nodeManager,
+      DependencyNode node)
    {
       this.session = session;
       this.trace = trace;
-      this.requestContext = requestContext;
       this.nodeManager = nodeManager;
       this.node = node;
    }
@@ -40,11 +37,6 @@ public class DependencyNodeRequest
    public RequestTrace getTrace()
    {
       return trace;
-   }
-
-   public String getRequestContext()
-   {
-      return requestContext;
    }
 
    public DependencyNodeManager getNodeManager()
