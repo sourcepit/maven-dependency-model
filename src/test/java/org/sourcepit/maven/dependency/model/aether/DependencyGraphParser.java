@@ -207,7 +207,7 @@ public class DependencyGraphParser
       }
       return ret;
    }
-   
+
    /**
     * Parse multiple graphs in one resource, divided by "---".
     */
