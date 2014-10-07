@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>org.sourcepit</groupId>
 		<artifactId>srcpit-parent</artifactId>
-		<version>18-SNAPSHOT</version>
+		<version>18</version>
 	</parent>
 
 	<artifactId>maven-dependency-model</artifactId>
@@ -33,7 +33,7 @@
 	</scm>
 
 	<properties>
-		<common-maven.version>0.21.0-SNAPSHOT</common-maven.version>
+		<common-maven.version>0.21.0</common-maven.version>
 	</properties>
 
 	<!-- repo to resolve parent pom from -->
@@ -53,12 +53,12 @@
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>org.sourcepit.common.utils</artifactId>
-			<version>0.14.0-SNAPSHOT</version>
+			<version>0.14.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>org.sourcepit.common.constraints</artifactId>
-			<version>0.14.0-SNAPSHOT</version>
+			<version>0.14.0</version>
 		</dependency>
 
 		<dependency>
@@ -89,7 +89,7 @@
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>common-testing</artifactId>
-			<version>0.12.0-SNAPSHOT</version>
+			<version>0.12.0</version>
 			<scope>test</scope>
 		</dependency>
 
