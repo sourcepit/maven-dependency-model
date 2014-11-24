@@ -14,13 +14,14 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.sourcepit</groupId>
 		<artifactId>srcpit-parent</artifactId>
-		<version>19</version>
+		<version>20-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>maven-dependency-model</artifactId>
@@ -32,7 +33,7 @@
 	</scm>
 
 	<properties>
-		<common-maven.version>0.21.1</common-maven.version>
+		<common-maven.version>0.22.0-SNAPSHOT</common-maven.version>
 	</properties>
 
 	<!-- repo to resolve parent pom from -->
@@ -52,12 +53,12 @@
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>org.sourcepit.common.utils</artifactId>
-			<version>0.14.1</version>
+			<version>0.15.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>org.sourcepit.common.constraints</artifactId>
-			<version>0.14.1</version>
+			<version>0.15.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -88,7 +89,7 @@
 		<dependency>
 			<groupId>org.sourcepit.common</groupId>
 			<artifactId>common-testing</artifactId>
-			<version>0.12.0</version>
+			<version>0.13.0-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -120,19 +121,22 @@
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
-			<artifactId>aether-connector-wagon</artifactId>
+			<artifactId>aether-connector-basic</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.maven.wagon</groupId>
-			<artifactId>wagon-file</artifactId>
-			<version>2.4</version>
+			<groupId>org.eclipse.aether</groupId>
+			<artifactId>aether-transport-wagon</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.maven.wagon</groupId>
-			<artifactId>wagon-http</artifactId>
-			<version>2.4</version>
+			<groupId>org.eclipse.aether</groupId>
+			<artifactId>aether-transport-file</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.aether</groupId>
+			<artifactId>aether-transport-http</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

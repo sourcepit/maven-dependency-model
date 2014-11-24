@@ -121,7 +121,7 @@ public class DependencyNode2Adapter implements DependencyNode2
          // }
          // }
 
-         final List<Artifact> relocations = target.getRelocations();
+         final List<? extends Artifact> relocations = target.getRelocations();
          if (relocations != null)
          {
             for (Artifact relocation : relocations)
@@ -137,7 +137,7 @@ public class DependencyNode2Adapter implements DependencyNode2
    @Override
    public VersionConflictKey getDependencyConflictKey()
    {
-      final List<Artifact> relocations = target.getRelocations();
+      final List<? extends Artifact> relocations = target.getRelocations();
       if (relocations != null && !relocations.isEmpty())
       {
          return toVersionConflictKey(relocations.get(0));
