@@ -21,17 +21,13 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
-public class ResetVisibility implements DependencyGraphTransformer
-{
+public class ResetVisibility implements DependencyGraphTransformer {
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
-      graph.accept(new AbstractDependencyVisitor(false)
-      {
+      throws RepositoryException {
+      graph.accept(new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             DependencyNode2Adapter.get(node).setVisible(true);
             return true;
          }

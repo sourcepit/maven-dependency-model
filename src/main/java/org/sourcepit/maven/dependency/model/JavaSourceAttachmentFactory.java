@@ -21,25 +21,20 @@ import java.util.Set;
 
 import org.sourcepit.common.maven.model.ArtifactKey;
 
-public class JavaSourceAttachmentFactory implements ArtifactAttachmentFactory
-{
+public class JavaSourceAttachmentFactory implements ArtifactAttachmentFactory {
    @Override
-   public Set<ArtifactAttachment> createAttachments(ArtifactKey artifact)
-   {
-      if (isAttachJavaSource(artifact))
-      {
+   public Set<ArtifactAttachment> createAttachments(ArtifactKey artifact) {
+      if (isAttachJavaSource(artifact)) {
          return Collections.singleton(new ArtifactAttachment(null, "java-source", isJavaSourceRequired(artifact)));
       }
       return null;
    }
 
-   protected boolean isJavaSourceRequired(ArtifactKey artifact)
-   {
+   protected boolean isJavaSourceRequired(ArtifactKey artifact) {
       return false;
    }
 
-   protected boolean isAttachJavaSource(ArtifactKey artifact)
-   {
+   protected boolean isAttachJavaSource(ArtifactKey artifact) {
       return artifact.getClassifier() == null && "jar".equals(artifact.getType());
    }
 }

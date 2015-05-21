@@ -40,8 +40,7 @@ import org.sourcepit.common.testing.Environment;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2Adapter;
 
-public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
-{
+public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest {
    @Inject
    private ArtifactRepositoryFacade repositoryFacade;
 
@@ -52,15 +51,13 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    private DependencyTreeBuilder treeBuilder;
 
    @Override
-   protected Environment newEnvironment()
-   {
+   protected Environment newEnvironment() {
       return Environment.get("env-test.properties");
    }
 
    @Override
    @Before
-   public void setUp() throws Exception
-   {
+   public void setUp() throws Exception {
       super.setUp();
       repositoryFacade.setEmbeddedMaven(getEmbeddedMaven());
 
@@ -69,27 +66,23 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Override
-   protected File getLocalRepositoryPath()
-   {
+   protected File getLocalRepositoryPath() {
       return getWs().newDir("local-repo");
    }
 
-   protected File getRemoteRepositoryPath()
-   {
+   protected File getRemoteRepositoryPath() {
       return getWs().newDir("remote-repo");
    }
 
    @Override
    @After
-   public void tearDown() throws Exception
-   {
+   public void tearDown() throws Exception {
       buildContext.setSession(null);
       super.tearDown();
    }
 
    @Test
-   public void testDepMngt() throws Exception
-   {
+   public void testDepMngt() throws Exception {
       Model pom;
 
       pom = newModel("group", "B", "1");
@@ -118,8 +111,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testReuse() throws Exception
-   {
+   public void testReuse() throws Exception {
       Model pom;
 
       pom = newModel("group", "C", "1");
@@ -149,8 +141,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testTheE1Problem() throws Exception
-   {
+   public void testTheE1Problem() throws Exception {
       Model pom;
 
       pom = newModel("group", "E", "2");
@@ -195,8 +186,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
 
-   public void testCycle() throws Exception
-   {
+   public void testCycle() throws Exception {
       Model pom;
 
       pom = newModel("group", "C", "1");
@@ -226,8 +216,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testLatest() throws Exception
-   {
+   public void testLatest() throws Exception {
       Model pom;
 
       pom = newModel("group", "A", "1");
@@ -248,8 +237,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testScopes() throws Exception
-   {
+   public void testScopes() throws Exception {
       Model pom;
 
       pom = newModel("group", "C", "1");
@@ -278,8 +266,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testScopes2() throws Exception
-   {
+   public void testScopes2() throws Exception {
       Model pom;
 
       pom = newModel("group", "C", "2");
@@ -312,8 +299,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testOptional() throws Exception
-   {
+   public void testOptional() throws Exception {
       Model pom;
 
       // pom = newModel("group", "B", "2");
@@ -346,8 +332,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testRelocation() throws Exception
-   {
+   public void testRelocation() throws Exception {
       Model pom;
 
       pom = newModel("group", "C", "2");
@@ -385,8 +370,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void test() throws Exception
-   {
+   public void test() throws Exception {
       Model pom;
       pom = newModel("group", "D", "1");
       repositoryFacade.deploy(pom);
@@ -427,11 +411,9 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       print(DependencyNode2Adapter.get(graph), 0);
    }
 
-   private void print(DependencyNode2 node, int level)
-   {
+   private void print(DependencyNode2 node, int level) {
       StringBuilder sb = new StringBuilder();
-      for (int i = 0; i < level; i++)
-      {
+      for (int i = 0; i < level; i++) {
          sb.append("   ");
       }
       sb.append(node.toString());
@@ -440,14 +422,12 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       System.out.println(sb);
       level++;
 
-      for (DependencyNode dependencyNode : node.getTarget().getChildren())
-      {
+      for (DependencyNode dependencyNode : node.getTarget().getChildren()) {
          print(DependencyNode2Adapter.get(dependencyNode), level);
       }
    }
 
-   private static Model newModel(String groupId, String artifactId, String version)
-   {
+   private static Model newModel(String groupId, String artifactId, String version) {
       final Model pom = new Model();
       pom.setModelVersion("4.0.0");
       pom.setGroupId(groupId);
@@ -456,8 +436,7 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       return pom;
    }
 
-   private static Dependency newDependency(String groupId, String artifactId, String version)
-   {
+   private static Dependency newDependency(String groupId, String artifactId, String version) {
       final Dependency dependency = new Dependency();
       dependency.setGroupId(groupId);
       dependency.setArtifactId(artifactId);
@@ -465,11 +444,9 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       return dependency;
    }
 
-   private static void setRelocation(Model model, String groupId, String artifactId, String version)
-   {
+   private static void setRelocation(Model model, String groupId, String artifactId, String version) {
       DistributionManagement distributionManagement = model.getDistributionManagement();
-      if (distributionManagement == null)
-      {
+      if (distributionManagement == null) {
          distributionManagement = new DistributionManagement();
          model.setDistributionManagement(distributionManagement);
       }
@@ -482,15 +459,13 @@ public class DependencyResolutionTest extends EmbeddedMavenEnvironmentTest
       distributionManagement.setRelocation(relocation);
    }
 
-   private static Dependency addDependency(ModelBase model, String groupId, String artifactId, String version)
-   {
+   private static Dependency addDependency(ModelBase model, String groupId, String artifactId, String version) {
       final Dependency dependency = newDependency(groupId, artifactId, version);
       model.getDependencies().add(dependency);
       return dependency;
    }
 
-   private static Dependency addDependency(DependencyManagement model, String groupId, String artifactId, String version)
-   {
+   private static Dependency addDependency(DependencyManagement model, String groupId, String artifactId, String version) {
       final Dependency dependency = newDependency(groupId, artifactId, version);
       model.getDependencies().add(dependency);
       return dependency;

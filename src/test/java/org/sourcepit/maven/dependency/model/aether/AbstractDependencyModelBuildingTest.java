@@ -44,8 +44,7 @@ import org.sourcepit.common.maven.testing.EmbeddedMavenEnvironmentTest;
 import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.io.Read.FromStream;
 
-public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest
-{
+public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenEnvironmentTest {
    @Inject
    private ArtifactFactory artifactFactory;
 
@@ -53,157 +52,131 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    public TestName name = new TestName();
 
    @Test
-   public void testCycle1() throws Exception
-   {
+   public void testCycle1() throws Exception {
       test();
    }
 
    @Test
-   public void testCycle2() throws Exception
-   {
+   public void testCycle2() throws Exception {
       test();
    }
 
    @Test
-   public void testSimple() throws Exception
-   {
+   public void testSimple() throws Exception {
       test();
    }
 
    @Test
-   public void testSelected() throws Exception
-   {
+   public void testSelected() throws Exception {
       test();
    }
 
    @Test
-   public void testOptional1() throws Exception
-   {
+   public void testOptional1() throws Exception {
       test();
    }
 
    @Test
-   public void testOptional2() throws Exception
-   {
+   public void testOptional2() throws Exception {
       test();
    }
 
    @Test
-   public void testOptional3() throws Exception
-   {
+   public void testOptional3() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict1() throws Exception
-   {
+   public void testVersionConflict1() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict2() throws Exception
-   {
+   public void testVersionConflict2() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict3() throws Exception
-   {
+   public void testVersionConflict3() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict4() throws Exception
-   {
+   public void testVersionConflict4() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict5() throws Exception
-   {
+   public void testVersionConflict5() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict6() throws Exception
-   {
+   public void testVersionConflict6() throws Exception {
       test();
    }
 
    @Test
-   public void testVersionConflict7() throws Exception
-   {
+   public void testVersionConflict7() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope1() throws Exception
-   {
+   public void testEffectiveScope1() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope2() throws Exception
-   {
+   public void testEffectiveScope2() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope3() throws Exception
-   {
+   public void testEffectiveScope3() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope4() throws Exception
-   {
+   public void testEffectiveScope4() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope5() throws Exception
-   {
+   public void testEffectiveScope5() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope6() throws Exception
-   {
+   public void testEffectiveScope6() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope7() throws Exception
-   {
+   public void testEffectiveScope7() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope8() throws Exception
-   {
+   public void testEffectiveScope8() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope9() throws Exception
-   {
+   public void testEffectiveScope9() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope10() throws Exception
-   {
+   public void testEffectiveScope10() throws Exception {
       test();
    }
 
    @Test
-   public void testEffectiveScope11() throws Exception
-   {
+   public void testEffectiveScope11() throws Exception {
       test();
    }
 
-   private void test() throws Exception
-   {
+   private void test() throws Exception {
       DependencyNode graph;
       String actual;
       String expected;
@@ -256,18 +229,14 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
       assertEquals(expected, actual);
    }
 
-   protected String getTestName()
-   {
+   protected String getTestName() {
       return name.getMethodName().substring("test".length());
    }
 
-   private String getStringContent(String resource)
-   {
-      final FromStream<String> fromStream = new FromStream<String>()
-      {
+   private String getStringContent(String resource) {
+      final FromStream<String> fromStream = new FromStream<String>() {
          @Override
-         public String read(InputStream inputStream) throws Exception
-         {
+         public String read(InputStream inputStream) throws Exception {
             final StringWriter writer = new StringWriter();
             copy(inputStream, writer, "UTF-8");
             return writer.toString();
@@ -277,16 +246,14 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
    }
 
    private String transformGraph(Artifact root, DependencyNode graph, boolean computeTreePerArtifact, boolean scopeTest)
-      throws RepositoryException
-   {
+      throws RepositoryException {
       ByteArrayOutputStream bytes = new ByteArrayOutputStream();
       PrintStream printStream = new PrintStream(bytes);
       DependencyModelHandler printer = newPrinter(printStream);
 
 
       ReplaceRootNode transformer1 = null;
-      if (root != null)
-      {
+      if (root != null) {
          DefaultDependencyNode rootNode = new DefaultDependencyNode(new org.eclipse.aether.graph.Dependency(root,
             "compile"));
          rootNode.setRequestContext("project");
@@ -304,14 +271,12 @@ public abstract class AbstractDependencyModelBuildingTest extends EmbeddedMavenE
 
    protected abstract DependencyModelHandler newPrinter(PrintStream printStream);
 
-   private DependencyNode parseDependencyGraph(String resource) throws IOException
-   {
+   private DependencyNode parseDependencyGraph(String resource) throws IOException {
       return new DependencyGraphParser().parse(resource);
    }
 
    @Override
-   protected Environment newEnvironment()
-   {
+   protected Environment newEnvironment() {
       return Environment.get("env-test.properties");
    }
 

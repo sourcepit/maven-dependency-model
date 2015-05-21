@@ -33,14 +33,12 @@ import org.sourcepit.common.testing.Environment;
 import org.sourcepit.common.utils.props.PropertiesMap;
 import org.sourcepit.maven.dependency.model.aether.DependencyNodeTraverser.Visit;
 
-public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
-{
+public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest {
    @Rule
    public TestName name = new TestName();
 
    @Test
-   public void testSimple() throws Exception
-   {
+   public void testSimple() throws Exception {
       final List<Visit> visits = traverse(null);
       assertEquals(4, visits.size());
       assertEquals("null", visits.get(0).toString());
@@ -50,8 +48,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testCycle1() throws Exception
-   {
+   public void testCycle1() throws Exception {
       final List<Visit> visits = traverse(null);
       assertEquals(4, visits.size());
       assertEquals("null", visits.get(0).toString());
@@ -61,8 +58,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testCycle2() throws Exception
-   {
+   public void testCycle2() throws Exception {
       final List<Visit> visits = traverse(null);
       assertEquals(4, visits.size());
       assertEquals("null", visits.get(0).toString());
@@ -72,8 +68,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testReplaced1() throws Exception
-   {
+   public void testReplaced1() throws Exception {
       DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser(false);
 
       DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
@@ -115,8 +110,7 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
    }
 
    @Test
-   public void testReplaced2() throws Exception
-   {
+   public void testReplaced2() throws Exception {
       DependencyNodeChooser nodeChooser = new NearestDependencyNodeChooser(false);
 
       DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
@@ -153,25 +147,20 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
       assertEquals("a:A:jar:2 (compile) -> a:A:jar:1 (compile) (cyclic)", visits.get(2).toString());
    }
 
-   private List<Visit> traverse(DependencyGraphTransformer transformer) throws Exception
-   {
+   private List<Visit> traverse(DependencyGraphTransformer transformer) throws Exception {
       final String resource = getClass().getSimpleName() + "/" + getTestName() + ".txt";
       DependencyNode graph = parseDependencyGraph(resource);
-      if (transformer != null)
-      {
+      if (transformer != null) {
          graph = transformer.transformGraph(graph, null);
       }
       return traverseGraph(graph);
    }
 
-   private List<Visit> traverseGraph(DependencyNode graph)
-   {
+   private List<Visit> traverseGraph(DependencyNode graph) {
       final List<Visit> visits = new ArrayList<Visit>();
-      DependencyNodeTraverser traverser = new DependencyNodeTraverser(false)
-      {
+      DependencyNodeTraverser traverser = new DependencyNodeTraverser(false) {
          @Override
-         protected boolean visitEnter(Visit visit, PropertiesMap parentProps)
-         {
+         protected boolean visitEnter(Visit visit, PropertiesMap parentProps) {
             visits.add(visit);
             return super.visitEnter(visit, parentProps);
          }
@@ -180,19 +169,16 @@ public class DependencyNodeTraverserTest extends EmbeddedMavenEnvironmentTest
       return visits;
    }
 
-   private DependencyNode parseDependencyGraph(String resource) throws IOException
-   {
+   private DependencyNode parseDependencyGraph(String resource) throws IOException {
       return new DependencyGraphParser().parse(resource);
    }
 
-   protected String getTestName()
-   {
+   protected String getTestName() {
       return name.getMethodName().substring("test".length());
    }
 
    @Override
-   protected Environment newEnvironment()
-   {
+   protected Environment newEnvironment() {
       return Environment.get("env-test.properties");
    }
 }

@@ -23,36 +23,29 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
-public class VersionConflictResolver implements DependencyGraphTransformer
-{
+public class VersionConflictResolver implements DependencyGraphTransformer {
    private DependencyNodeChooser nodeChooser;
 
-   public VersionConflictResolver(DependencyNodeChooser nodeChooser)
-   {
+   public VersionConflictResolver(DependencyNodeChooser nodeChooser) {
       this.nodeChooser = nodeChooser;
    }
 
    @Override
    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
+      throws RepositoryException {
       final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
-      for (List<DependencyNode> conflictGroups : adapter.getConflictingNodeGroups())
-      {
+      for (List<DependencyNode> conflictGroups : adapter.getConflictingNodeGroups()) {
          solveConflict(conflictGroups);
       }
 
       return node;
    }
 
-   private void solveConflict(List<DependencyNode> conflictGroup)
-   {
+   private void solveConflict(List<DependencyNode> conflictGroup) {
       final DependencyNode choosen = nodeChooser.choose(conflictGroup);
-      for (DependencyNode node : conflictGroup)
-      {
-         if (node == choosen)
-         {
+      for (DependencyNode node : conflictGroup) {
+         if (node == choosen) {
             continue;
          }
          DependencyNode2Adapter.get(node).setReplacement(choosen);

@@ -38,43 +38,34 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.sourcepit.common.utils.lang.PipedException;
 
 @Named
-public class AttachmentResolver
-{
+public class AttachmentResolver {
    private ArtifactResolver artifactResolver;
 
    @Inject
-   public AttachmentResolver(ArtifactResolver artifactResolver)
-   {
+   public AttachmentResolver(ArtifactResolver artifactResolver) {
       this.artifactResolver = artifactResolver;
    }
 
    public Collection<Artifact> resolveAttachments(final RepositorySystemSession repositorySession, DependencyNode graph)
-      throws ArtifactResolutionException
-   {
+      throws ArtifactResolutionException {
       final Set<Artifact> resolvedAttachments = new LinkedHashSet<Artifact>();
-      final DependencyVisitor attachmentResolver = new AbstractDependencyVisitor(false)
-      {
+      final DependencyVisitor attachmentResolver = new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
-            try
-            {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
+            try {
                resolveAttachments(resolvedAttachments, repositorySession, node);
             }
-            catch (ArtifactResolutionException e)
-            {
+            catch (ArtifactResolutionException e) {
                throw pipe(e);
             }
             return super.onVisitEnter(parent, node);
          }
       };
 
-      try
-      {
+      try {
          graph.accept(attachmentResolver);
       }
-      catch (PipedException e)
-      {
+      catch (PipedException e) {
          e.adaptAndThrow(ArtifactResolutionException.class);
          throw e;
       }
@@ -84,53 +75,43 @@ public class AttachmentResolver
 
    @SuppressWarnings({ "unchecked", "rawtypes" })
    private void resolveAttachments(Collection<Artifact> resolvedAttachments,
-      final RepositorySystemSession repositorySession, DependencyNode node) throws ArtifactResolutionException
-   {
+      final RepositorySystemSession repositorySession, DependencyNode node) throws ArtifactResolutionException {
       Collection<Artifact> attachments;
 
       // resolve required attachments
       attachments = (Collection) node.getData().get("requiredAttachments");
-      if (attachments != null && !attachments.isEmpty())
-      {
+      if (attachments != null && !attachments.isEmpty()) {
          resolveAttachments(resolvedAttachments, repositorySession, node, attachments, true);
       }
 
       // resolve optional attachments
       attachments = (Collection) node.getData().get("optionalAttachments");
-      if (attachments != null && !attachments.isEmpty())
-      {
+      if (attachments != null && !attachments.isEmpty()) {
          resolveAttachments(resolvedAttachments, repositorySession, node, attachments, false);
       }
    }
 
    private void resolveAttachments(Collection<Artifact> resolvedAttachments, RepositorySystemSession session,
-      DependencyNode node, Collection<Artifact> attachments, boolean required) throws ArtifactResolutionException
-   {
+      DependencyNode node, Collection<Artifact> attachments, boolean required) throws ArtifactResolutionException {
       final List<ArtifactRequest> requests = new ArrayList<ArtifactRequest>(attachments.size());
 
-      for (org.eclipse.aether.artifact.Artifact artifact : attachments)
-      {
+      for (org.eclipse.aether.artifact.Artifact artifact : attachments) {
          requests.add(new ArtifactRequest(artifact, node.getRepositories(), node.getRequestContext()));
       }
 
       List<ArtifactResult> results = null;
-      try
-      {
+      try {
          results = artifactResolver.resolveArtifacts(session, requests);
       }
-      catch (ArtifactResolutionException e)
-      {
+      catch (ArtifactResolutionException e) {
          results = e.getResults();
-         if (required)
-         {
+         if (required) {
             throw e;
          }
       }
 
-      for (ArtifactResult result : results)
-      {
-         if (result.isResolved())
-         {
+      for (ArtifactResult result : results) {
+         if (result.isResolved()) {
             resolvedAttachments.add(result.getArtifact());
          }
       }

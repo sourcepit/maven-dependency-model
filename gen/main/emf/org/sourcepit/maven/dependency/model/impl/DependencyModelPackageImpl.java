@@ -36,8 +36,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * 
  * @generated
  */
-public class DependencyModelPackageImpl extends EPackageImpl implements DependencyModelPackage
-{
+public class DependencyModelPackageImpl extends EPackageImpl implements DependencyModelPackage {
    /**
     * <!-- begin-user-doc -->
     * <!-- end-user-doc -->
@@ -76,8 +75,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * @see #init()
     * @generated
     */
-   private DependencyModelPackageImpl()
-   {
+   private DependencyModelPackageImpl() {
       super(eNS_URI, DependencyModelFactory.eINSTANCE);
    }
 
@@ -102,14 +100,12 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * @see #initializePackageContents()
     * @generated
     */
-   public static DependencyModelPackage init()
-   {
+   public static DependencyModelPackage init() {
       if (isInited)
          return (DependencyModelPackage) EPackage.Registry.INSTANCE.getEPackage(DependencyModelPackage.eNS_URI);
 
       // Obtain or create and register package
-      DependencyModelPackageImpl theDependencyModelPackage = (DependencyModelPackageImpl) (EPackage.Registry.INSTANCE
-         .get(eNS_URI) instanceof DependencyModelPackageImpl
+      DependencyModelPackageImpl theDependencyModelPackage = (DependencyModelPackageImpl) (EPackage.Registry.INSTANCE.get(eNS_URI) instanceof DependencyModelPackageImpl
          ? EPackage.Registry.INSTANCE.get(eNS_URI)
          : new DependencyModelPackageImpl());
 
@@ -139,8 +135,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EClass getDependencyNode()
-   {
+   public EClass getDependencyNode() {
       return dependencyNodeEClass;
    }
 
@@ -150,8 +145,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_Artifact()
-   {
+   public EReference getDependencyNode_Artifact() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(0);
    }
 
@@ -161,8 +155,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_Children()
-   {
+   public EReference getDependencyNode_Children() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(1);
    }
 
@@ -172,8 +165,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_Selected()
-   {
+   public EAttribute getDependencyNode_Selected() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(2);
    }
 
@@ -183,8 +175,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_Parent()
-   {
+   public EReference getDependencyNode_Parent() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(3);
    }
 
@@ -194,8 +185,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_InheritedScope()
-   {
+   public EAttribute getDependencyNode_InheritedScope() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(4);
    }
 
@@ -205,8 +195,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_ManagedVersionConstraint()
-   {
+   public EAttribute getDependencyNode_ManagedVersionConstraint() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(5);
    }
 
@@ -216,8 +205,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_ManagedScope()
-   {
+   public EAttribute getDependencyNode_ManagedScope() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(6);
    }
 
@@ -227,8 +215,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_ConflictNode()
-   {
+   public EReference getDependencyNode_ConflictNode() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(7);
    }
 
@@ -238,8 +225,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_DeclaredDependency()
-   {
+   public EReference getDependencyNode_DeclaredDependency() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(8);
    }
 
@@ -249,8 +235,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_Optional()
-   {
+   public EAttribute getDependencyNode_Optional() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(9);
    }
 
@@ -260,8 +245,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EAttribute getDependencyNode_ConflictVersionConstraint()
-   {
+   public EAttribute getDependencyNode_ConflictVersionConstraint() {
       return (EAttribute) dependencyNodeEClass.getEStructuralFeatures().get(10);
    }
 
@@ -271,8 +255,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyNode_CycleNode()
-   {
+   public EReference getDependencyNode_CycleNode() {
       return (EReference) dependencyNodeEClass.getEStructuralFeatures().get(11);
    }
 
@@ -282,8 +265,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EClass getDependencyModel()
-   {
+   public EClass getDependencyModel() {
       return dependencyModelEClass;
    }
 
@@ -293,8 +275,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyModel_Artifacts()
-   {
+   public EReference getDependencyModel_Artifacts() {
       return (EReference) dependencyModelEClass.getEStructuralFeatures().get(0);
    }
 
@@ -304,8 +285,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyModel_DependencyTrees()
-   {
+   public EReference getDependencyModel_DependencyTrees() {
       return (EReference) dependencyModelEClass.getEStructuralFeatures().get(1);
    }
 
@@ -315,8 +295,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyModel_RootArtifacts()
-   {
+   public EReference getDependencyModel_RootArtifacts() {
       return (EReference) dependencyModelEClass.getEStructuralFeatures().get(2);
    }
 
@@ -326,8 +305,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EClass getDependencyTree()
-   {
+   public EClass getDependencyTree() {
       return dependencyTreeEClass;
    }
 
@@ -337,8 +315,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyTree_Artifact()
-   {
+   public EReference getDependencyTree_Artifact() {
       return (EReference) dependencyTreeEClass.getEStructuralFeatures().get(0);
    }
 
@@ -348,8 +325,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public EReference getDependencyTree_DependencyNodes()
-   {
+   public EReference getDependencyTree_DependencyNodes() {
       return (EReference) dependencyTreeEClass.getEStructuralFeatures().get(1);
    }
 
@@ -359,8 +335,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyModelFactory getDependencyModelFactory()
-   {
+   public DependencyModelFactory getDependencyModelFactory() {
       return (DependencyModelFactory) getEFactoryInstance();
    }
 
@@ -380,8 +355,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public void createPackageContents()
-   {
+   public void createPackageContents() {
       if (isCreated)
          return;
       isCreated = true;
@@ -427,8 +401,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
     * 
     * @generated
     */
-   public void initializePackageContents()
-   {
+   public void initializePackageContents() {
       if (isInitialized)
          return;
       isInitialized = true;
@@ -439,8 +412,7 @@ public class DependencyModelPackageImpl extends EPackageImpl implements Dependen
       setNsURI(eNS_URI);
 
       // Obtain other dependent packages
-      MavenModelPackage theMavenModelPackage = (MavenModelPackage) EPackage.Registry.INSTANCE
-         .getEPackage(MavenModelPackage.eNS_URI);
+      MavenModelPackage theMavenModelPackage = (MavenModelPackage) EPackage.Registry.INSTANCE.getEPackage(MavenModelPackage.eNS_URI);
 
       // Create type parameters
 

@@ -23,8 +23,7 @@ import java.util.Set;
 import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 
-public interface DependencyNode2
-{
+public interface DependencyNode2 {
    DependencyNode getTarget();
 
    Set<DependencyNode> getParents();

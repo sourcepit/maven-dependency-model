@@ -39,8 +39,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * @see org.sourcepit.maven.dependency.model.DependencyModelPackage
  * @generated
  */
-public class DependencyModelSwitch<T>
-{
+public class DependencyModelSwitch<T> {
    /**
     * The cached model package
     * <!-- begin-user-doc -->
@@ -57,10 +56,8 @@ public class DependencyModelSwitch<T>
     * 
     * @generated
     */
-   public DependencyModelSwitch()
-   {
-      if (modelPackage == null)
-      {
+   public DependencyModelSwitch() {
+      if (modelPackage == null) {
          modelPackage = DependencyModelPackage.eINSTANCE;
       }
    }
@@ -73,8 +70,7 @@ public class DependencyModelSwitch<T>
     * @return the first non-null result returned by a <code>caseXXX</code> call.
     * @generated
     */
-   public T doSwitch(EObject theEObject)
-   {
+   public T doSwitch(EObject theEObject) {
       return doSwitch(theEObject.eClass(), theEObject);
    }
 
@@ -86,14 +82,11 @@ public class DependencyModelSwitch<T>
     * @return the first non-null result returned by a <code>caseXXX</code> call.
     * @generated
     */
-   protected T doSwitch(EClass theEClass, EObject theEObject)
-   {
-      if (theEClass.eContainer() == modelPackage)
-      {
+   protected T doSwitch(EClass theEClass, EObject theEObject) {
+      if (theEClass.eContainer() == modelPackage) {
          return doSwitch(theEClass.getClassifierID(), theEObject);
       }
-      else
-      {
+      else {
          List<EClass> eSuperTypes = theEClass.getESuperTypes();
          return eSuperTypes.isEmpty() ? defaultCase(theEObject) : doSwitch(eSuperTypes.get(0), theEObject);
       }
@@ -107,28 +100,23 @@ public class DependencyModelSwitch<T>
     * @return the first non-null result returned by a <code>caseXXX</code> call.
     * @generated
     */
-   protected T doSwitch(int classifierID, EObject theEObject)
-   {
-      switch (classifierID)
-      {
-         case DependencyModelPackage.DEPENDENCY_NODE :
-         {
+   protected T doSwitch(int classifierID, EObject theEObject) {
+      switch (classifierID) {
+         case DependencyModelPackage.DEPENDENCY_NODE : {
             DependencyNode dependencyNode = (DependencyNode) theEObject;
             T result = caseDependencyNode(dependencyNode);
             if (result == null)
                result = defaultCase(theEObject);
             return result;
          }
-         case DependencyModelPackage.DEPENDENCY_MODEL :
-         {
+         case DependencyModelPackage.DEPENDENCY_MODEL : {
             DependencyModel dependencyModel = (DependencyModel) theEObject;
             T result = caseDependencyModel(dependencyModel);
             if (result == null)
                result = defaultCase(theEObject);
             return result;
          }
-         case DependencyModelPackage.DEPENDENCY_TREE :
-         {
+         case DependencyModelPackage.DEPENDENCY_TREE : {
             DependencyTree dependencyTree = (DependencyTree) theEObject;
             T result = caseDependencyTree(dependencyTree);
             if (result == null)
@@ -152,8 +140,7 @@ public class DependencyModelSwitch<T>
     * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
     * @generated
     */
-   public T caseDependencyNode(DependencyNode object)
-   {
+   public T caseDependencyNode(DependencyNode object) {
       return null;
    }
 
@@ -169,8 +156,7 @@ public class DependencyModelSwitch<T>
     * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
     * @generated
     */
-   public T caseDependencyModel(DependencyModel object)
-   {
+   public T caseDependencyModel(DependencyModel object) {
       return null;
    }
 
@@ -186,8 +172,7 @@ public class DependencyModelSwitch<T>
     * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
     * @generated
     */
-   public T caseDependencyTree(DependencyTree object)
-   {
+   public T caseDependencyTree(DependencyTree object) {
       return null;
    }
 
@@ -203,8 +188,7 @@ public class DependencyModelSwitch<T>
     * @see #doSwitch(org.eclipse.emf.ecore.EObject)
     * @generated
     */
-   public T defaultCase(EObject object)
-   {
+   public T defaultCase(EObject object) {
       return null;
    }
 

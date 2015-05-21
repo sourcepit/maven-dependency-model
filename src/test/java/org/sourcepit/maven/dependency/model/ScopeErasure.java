@@ -25,25 +25,21 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
-public class ScopeErasure implements DependencySelector
-{
+public class ScopeErasure implements DependencySelector {
    private final Set<String> excludedScopes;
 
-   public ScopeErasure(String... excludedScopes)
-   {
+   public ScopeErasure(String... excludedScopes) {
       this.excludedScopes = new HashSet<String>(excludedScopes.length);
       addAll(this.excludedScopes, excludedScopes);
    }
 
    @Override
-   public boolean selectDependency(Dependency dependency)
-   {
+   public boolean selectDependency(Dependency dependency) {
       return !excludedScopes.contains(dependency.getScope());
    }
 
    @Override
-   public DependencySelector deriveChildSelector(DependencyCollectionContext context)
-   {
+   public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
       return this;
    }
 

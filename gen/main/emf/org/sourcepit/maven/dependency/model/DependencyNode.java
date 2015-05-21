@@ -51,8 +51,7 @@ import org.sourcepit.common.maven.model.Scope;
  * @model
  * @generated
  */
-public interface DependencyNode extends EObject
-{
+public interface DependencyNode extends EObject {
    /**
     * Returns the value of the '<em><b>Artifact</b></em>' reference.
     * <!-- begin-user-doc -->

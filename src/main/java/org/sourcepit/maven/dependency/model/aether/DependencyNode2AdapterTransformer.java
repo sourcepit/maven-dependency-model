@@ -21,19 +21,16 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
-public class DependencyNode2AdapterTransformer implements DependencyGraphTransformer
-{
+public class DependencyNode2AdapterTransformer implements DependencyGraphTransformer {
    private final boolean reset;
 
-   public DependencyNode2AdapterTransformer(boolean reset)
-   {
+   public DependencyNode2AdapterTransformer(boolean reset) {
       this.reset = reset;
    }
 
    @Override
    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
+      throws RepositoryException {
       DependencyNode2Adapter.adapt(node, reset);
       return node;
    }

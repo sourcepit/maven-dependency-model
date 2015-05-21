@@ -18,29 +18,24 @@ package org.sourcepit.maven.dependency.model;
 
 import org.apache.maven.artifact.Artifact;
 
-public class DependencyTreeBuilderRequest
-{
+public class DependencyTreeBuilderRequest {
    private Artifact artifact;
 
    private boolean excludeOptionalDependencies;
 
-   public void setArtifact(Artifact artifact)
-   {
+   public void setArtifact(Artifact artifact) {
       this.artifact = artifact;
    }
 
-   public Artifact getArtifact()
-   {
+   public Artifact getArtifact() {
       return artifact;
    }
 
-   public void setExcludeOptionalDependencies(boolean excludeOptionalDependencies)
-   {
+   public void setExcludeOptionalDependencies(boolean excludeOptionalDependencies) {
       this.excludeOptionalDependencies = excludeOptionalDependencies;
    }
 
-   public boolean isExcludeOptionalDependencies()
-   {
+   public boolean isExcludeOptionalDependencies() {
       return excludeOptionalDependencies;
    }
 }

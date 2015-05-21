@@ -20,7 +20,6 @@ import java.util.Set;
 
 import org.sourcepit.common.maven.model.ArtifactKey;
 
-public interface ArtifactAttachmentFactory
-{
+public interface ArtifactAttachmentFactory {
    Set<ArtifactAttachment> createAttachments(ArtifactKey artifact);
 }

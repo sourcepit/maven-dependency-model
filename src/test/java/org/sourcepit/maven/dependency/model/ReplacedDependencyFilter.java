@@ -23,12 +23,10 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2;
 import org.sourcepit.maven.dependency.model.aether.DependencyNode2Adapter;
 
-public class ReplacedDependencyFilter implements DependencyFilter
-{
+public class ReplacedDependencyFilter implements DependencyFilter {
 
    @Override
-   public boolean accept(DependencyNode node, List<DependencyNode> parents)
-   {
+   public boolean accept(DependencyNode node, List<DependencyNode> parents) {
       final DependencyNode2 node2 = DependencyNode2Adapter.get(node);
       return node2.getReplacement() == null;
    }

@@ -34,8 +34,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * @see org.sourcepit.maven.dependency.model.DependencyModelPackage
  * @generated
  */
-public class DependencyModelAdapterFactory extends AdapterFactoryImpl
-{
+public class DependencyModelAdapterFactory extends AdapterFactoryImpl {
    /**
     * The cached model package.
     * <!-- begin-user-doc -->
@@ -52,10 +51,8 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * 
     * @generated
     */
-   public DependencyModelAdapterFactory()
-   {
-      if (modelPackage == null)
-      {
+   public DependencyModelAdapterFactory() {
+      if (modelPackage == null) {
          modelPackage = DependencyModelPackage.eINSTANCE;
       }
    }
@@ -71,14 +68,11 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @generated
     */
    @Override
-   public boolean isFactoryForType(Object object)
-   {
-      if (object == modelPackage)
-      {
+   public boolean isFactoryForType(Object object) {
+      if (object == modelPackage) {
          return true;
       }
-      if (object instanceof EObject)
-      {
+      if (object instanceof EObject) {
          return ((EObject) object).eClass().getEPackage() == modelPackage;
       }
       return false;
@@ -91,29 +85,24 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * 
     * @generated
     */
-   protected DependencyModelSwitch<Adapter> modelSwitch = new DependencyModelSwitch<Adapter>()
-   {
+   protected DependencyModelSwitch<Adapter> modelSwitch = new DependencyModelSwitch<Adapter>() {
       @Override
-      public Adapter caseDependencyNode(DependencyNode object)
-      {
+      public Adapter caseDependencyNode(DependencyNode object) {
          return createDependencyNodeAdapter();
       }
 
       @Override
-      public Adapter caseDependencyModel(DependencyModel object)
-      {
+      public Adapter caseDependencyModel(DependencyModel object) {
          return createDependencyModelAdapter();
       }
 
       @Override
-      public Adapter caseDependencyTree(DependencyTree object)
-      {
+      public Adapter caseDependencyTree(DependencyTree object) {
          return createDependencyTreeAdapter();
       }
 
       @Override
-      public Adapter defaultCase(EObject object)
-      {
+      public Adapter defaultCase(EObject object) {
          return createEObjectAdapter();
       }
    };
@@ -128,8 +117,7 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @generated
     */
    @Override
-   public Adapter createAdapter(Notifier target)
-   {
+   public Adapter createAdapter(Notifier target) {
       return modelSwitch.doSwitch((EObject) target);
    }
 
@@ -146,8 +134,7 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @see org.sourcepit.maven.dependency.model.DependencyNode
     * @generated
     */
-   public Adapter createDependencyNodeAdapter()
-   {
+   public Adapter createDependencyNodeAdapter() {
       return null;
    }
 
@@ -163,8 +150,7 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @see org.sourcepit.maven.dependency.model.DependencyModel
     * @generated
     */
-   public Adapter createDependencyModelAdapter()
-   {
+   public Adapter createDependencyModelAdapter() {
       return null;
    }
 
@@ -180,8 +166,7 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @see org.sourcepit.maven.dependency.model.DependencyTree
     * @generated
     */
-   public Adapter createDependencyTreeAdapter()
-   {
+   public Adapter createDependencyTreeAdapter() {
       return null;
    }
 
@@ -194,8 +179,7 @@ public class DependencyModelAdapterFactory extends AdapterFactoryImpl
     * @return the new adapter.
     * @generated
     */
-   public Adapter createEObjectAdapter()
-   {
+   public Adapter createEObjectAdapter() {
       return null;
    }
 

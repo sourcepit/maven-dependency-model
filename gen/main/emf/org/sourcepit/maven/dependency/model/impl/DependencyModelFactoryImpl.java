@@ -34,8 +34,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * 
  * @generated
  */
-public class DependencyModelFactoryImpl extends EFactoryImpl implements DependencyModelFactory
-{
+public class DependencyModelFactoryImpl extends EFactoryImpl implements DependencyModelFactory {
    /**
     * Creates the default factory implementation.
     * <!-- begin-user-doc -->
@@ -43,19 +42,14 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public static DependencyModelFactory init()
-   {
-      try
-      {
-         DependencyModelFactory theDependencyModelFactory = (DependencyModelFactory) EPackage.Registry.INSTANCE
-            .getEFactory(DependencyModelPackage.eNS_URI);
-         if (theDependencyModelFactory != null)
-         {
+   public static DependencyModelFactory init() {
+      try {
+         DependencyModelFactory theDependencyModelFactory = (DependencyModelFactory) EPackage.Registry.INSTANCE.getEFactory(DependencyModelPackage.eNS_URI);
+         if (theDependencyModelFactory != null) {
             return theDependencyModelFactory;
          }
       }
-      catch (Exception exception)
-      {
+      catch (Exception exception) {
          EcorePlugin.INSTANCE.log(exception);
       }
       return new DependencyModelFactoryImpl();
@@ -68,8 +62,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyModelFactoryImpl()
-   {
+   public DependencyModelFactoryImpl() {
       super();
    }
 
@@ -80,10 +73,8 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * @generated
     */
    @Override
-   public EObject create(EClass eClass)
-   {
-      switch (eClass.getClassifierID())
-      {
+   public EObject create(EClass eClass) {
+      switch (eClass.getClassifierID()) {
          case DependencyModelPackage.DEPENDENCY_NODE :
             return createDependencyNode();
          case DependencyModelPackage.DEPENDENCY_MODEL :
@@ -101,8 +92,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyNode createDependencyNode()
-   {
+   public DependencyNode createDependencyNode() {
       DependencyNodeImpl dependencyNode = new DependencyNodeImpl();
       return dependencyNode;
    }
@@ -113,8 +103,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyModel createDependencyModel()
-   {
+   public DependencyModel createDependencyModel() {
       DependencyModelImpl dependencyModel = new DependencyModelImpl();
       return dependencyModel;
    }
@@ -125,8 +114,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyTree createDependencyTree()
-   {
+   public DependencyTree createDependencyTree() {
       DependencyTreeImpl dependencyTree = new DependencyTreeImpl();
       return dependencyTree;
    }
@@ -137,8 +125,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * 
     * @generated
     */
-   public DependencyModelPackage getDependencyModelPackage()
-   {
+   public DependencyModelPackage getDependencyModelPackage() {
       return (DependencyModelPackage) getEPackage();
    }
 
@@ -150,8 +137,7 @@ public class DependencyModelFactoryImpl extends EFactoryImpl implements Dependen
     * @generated
     */
    @Deprecated
-   public static DependencyModelPackage getPackage()
-   {
+   public static DependencyModelPackage getPackage() {
       return DependencyModelPackage.eINSTANCE;
    }
 

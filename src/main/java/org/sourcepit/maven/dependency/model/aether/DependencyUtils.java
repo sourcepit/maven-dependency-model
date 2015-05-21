@@ -34,19 +34,16 @@ import org.sourcepit.common.maven.model.VersionConflictKey;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
-public final class DependencyUtils
-{
+public final class DependencyUtils {
    private static final Map<String, Map<String, String>> SCOPE_INHERITANCE = createScopeMatrix();
 
    private static final Set<String> SCOPES = createScopes();
 
-   private DependencyUtils()
-   {
+   private DependencyUtils() {
       super();
    }
 
-   private static Set<String> createScopes()
-   {
+   private static Set<String> createScopes() {
       final Set<String> scopes = new HashSet<String>();
       scopes.add("compile");
       scopes.add("provided");
@@ -56,19 +53,16 @@ public final class DependencyUtils
       return scopes;
    }
 
-   public static String getEffectiveScope(String parent, String current)
-   {
+   public static String getEffectiveScope(String parent, String current) {
       return getEffectiveScope(parent, current, true);
    }
 
-   public static String getEffectiveScope(String parent, String current, boolean erase)
-   {
+   public static String getEffectiveScope(String parent, String current, boolean erase) {
       checkArgument(parent != null, "Parent scope may not be null.");
       checkArgument(!"system".equals(parent) && SCOPES.contains(parent), "'%s' is no valid parent scope.", parent);
       checkArgument(SCOPES.contains(parent), "'%s' is no valid scope.", parent);
 
-      if (parent == null)
-      {
+      if (parent == null) {
          return null;
       }
 
@@ -77,8 +71,7 @@ public final class DependencyUtils
       return scope == null && !erase ? current : scope;
    }
 
-   private static Map<String, Map<String, String>> createScopeMatrix()
-   {
+   private static Map<String, Map<String, String>> createScopeMatrix() {
       final Map<String, Map<String, String>> matrix = new HashMap<String, Map<String, String>>();
 
       final Map<String, String> compile = new HashMap<String, String>();
@@ -155,25 +148,19 @@ public final class DependencyUtils
    // return "test";
    // }
 
-   public static Collection<List<DependencyNode>> computeConflictingNodeGroups(DependencyNode node)
-   {
+   public static Collection<List<DependencyNode>> computeConflictingNodeGroups(DependencyNode node) {
       final Collection<Collection<VersionConflictKey>> conflictKeyGroups = computeConflictKeyGroups(node);
 
       final Multimap<Collection<VersionConflictKey>, DependencyNode> conflictNodes = LinkedHashMultimap.create();
-      node.accept(new AbstractDependencyVisitor(false)
-      {
+      node.accept(new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
             final VersionConflictKey originGroupKey = adapter.getDependencyConflictKey();
-            if (originGroupKey != null)
-            {
+            if (originGroupKey != null) {
                boolean put = false;
-               for (Collection<VersionConflictKey> conflictGroup : conflictKeyGroups)
-               {
-                  if (conflictGroup.contains(originGroupKey))
-                  {
+               for (Collection<VersionConflictKey> conflictGroup : conflictKeyGroups) {
+                  if (conflictGroup.contains(originGroupKey)) {
                      checkState(!put);
                      conflictNodes.put(conflictGroup, node);
                      put = true;
@@ -187,10 +174,8 @@ public final class DependencyUtils
 
       final Collection<List<DependencyNode>> conflictNodeGroups = new ArrayList<List<DependencyNode>>();
 
-      for (Collection<DependencyNode> conflictNodeGroup : conflictNodes.asMap().values())
-      {
-         if (conflictNodeGroup.size() > 1)
-         {
+      for (Collection<DependencyNode> conflictNodeGroup : conflictNodes.asMap().values()) {
+         if (conflictNodeGroup.size() > 1) {
             conflictNodeGroups.add(new ArrayList<DependencyNode>(conflictNodeGroup));
          }
       }
@@ -198,23 +183,18 @@ public final class DependencyUtils
       return conflictNodeGroups;
    }
 
-   private static Collection<Collection<VersionConflictKey>> computeConflictKeyGroups(DependencyNode node)
-   {
+   private static Collection<Collection<VersionConflictKey>> computeConflictKeyGroups(DependencyNode node) {
       final Collection<Collection<VersionConflictKey>> existingGroups = new ArrayList<Collection<VersionConflictKey>>();
-      node.accept(new AbstractDependencyVisitor(false)
-      {
+      node.accept(new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
 
             final Set<VersionConflictKey> conflictKeys = adapter.getConflictKeys();
 
-            for (Iterator<Collection<VersionConflictKey>> it = existingGroups.iterator(); it.hasNext();)
-            {
+            for (Iterator<Collection<VersionConflictKey>> it = existingGroups.iterator(); it.hasNext();) {
                final Collection<VersionConflictKey> existing = it.next();
-               if (containsAny(existing, conflictKeys))
-               {
+               if (containsAny(existing, conflictKeys)) {
                   conflictKeys.addAll(existing);
                   it.remove();
                }
@@ -225,12 +205,9 @@ public final class DependencyUtils
             return true;
          }
 
-         private boolean containsAny(Collection<?> collection, Collection<?> elements)
-         {
-            for (Object element : elements)
-            {
-               if (collection.contains(element))
-               {
+         private boolean containsAny(Collection<?> collection, Collection<?> elements) {
+            for (Object element : elements) {
+               if (collection.contains(element)) {
                   return true;
                }
             }
@@ -241,20 +218,15 @@ public final class DependencyUtils
       return existingGroups;
    }
 
-   public static boolean isConflicting(final Set<VersionConflictKey> conflictKeys, Set<VersionConflictKey> conflictKeys2)
-   {
-      for (VersionConflictKey conflictKey2 : conflictKeys2)
-      {
-         if (conflictKeys.contains(conflictKey2))
-         {
+   public static boolean isConflicting(final Set<VersionConflictKey> conflictKeys, Set<VersionConflictKey> conflictKeys2) {
+      for (VersionConflictKey conflictKey2 : conflictKeys2) {
+         if (conflictKeys.contains(conflictKey2)) {
             return true;
          }
       }
 
-      for (VersionConflictKey conflictKey : conflictKeys)
-      {
-         if (conflictKeys2.contains(conflictKey))
-         {
+      for (VersionConflictKey conflictKey : conflictKeys) {
+         if (conflictKeys2.contains(conflictKey)) {
             return true;
          }
       }
@@ -262,18 +234,14 @@ public final class DependencyUtils
       return false;
    }
 
-   public static boolean isParentNodeOf(DependencyNode parent, DependencyNode node)
-   {
-      if (parent.equals(node))
-      {
+   public static boolean isParentNodeOf(DependencyNode parent, DependencyNode node) {
+      if (parent.equals(node)) {
          return true;
       }
 
       final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-      for (DependencyNode parentNode : adapter.getParents())
-      {
-         if (isParentNodeOf(parent, parentNode))
-         {
+      for (DependencyNode parentNode : adapter.getParents()) {
+         if (isParentNodeOf(parent, parentNode)) {
             return true;
          }
       }

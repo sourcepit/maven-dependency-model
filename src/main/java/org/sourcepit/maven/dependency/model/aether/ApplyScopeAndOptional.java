@@ -26,40 +26,33 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.artifact.MavenArtifactUtils;
 import org.sourcepit.common.maven.model.ArtifactKey;
 
-public class ApplyScopeAndOptional implements DependencyGraphTransformer
-{
+public class ApplyScopeAndOptional implements DependencyGraphTransformer {
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
-      graph.accept(new AbstractDependencyVisitor(false)
-      {
+      throws RepositoryException {
+      graph.accept(new AbstractDependencyVisitor(false) {
          Stack<ArtifactKey> path = new Stack<ArtifactKey>();
 
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             Dependency dependency = node.getDependency();
-            ArtifactKey artifactKey = dependency == null ? null : MavenArtifactUtils.toArtifactKey(dependency
-               .getArtifact());
+            ArtifactKey artifactKey = dependency == null
+               ? null
+               : MavenArtifactUtils.toArtifactKey(dependency.getArtifact());
 
-            if (path.contains(artifactKey))
-            {
+            if (path.contains(artifactKey)) {
                path.push(artifactKey);
                return false;
             }
 
             final int depth = path.size();
             boolean visible = DependencyNode2Adapter.get(node).isVisible();
-            if (visible && depth > 1)
-            {
+            if (visible && depth > 1) {
                DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
                visible = parentAdapter.isVisible();
-               if (visible)
-               {
+               if (visible) {
                   final String scope = dependency.getScope();
-                  if (dependency.isOptional() || scope.equals("test") || scope.equals("provided"))
-                  {
+                  if (dependency.isOptional() || scope.equals("test") || scope.equals("provided")) {
                      visible = false;
                   }
                }
@@ -70,8 +63,7 @@ public class ApplyScopeAndOptional implements DependencyGraphTransformer
          }
 
          @Override
-         protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitLeave(DependencyNode parent, DependencyNode node) {
             path.pop();
             return super.onVisitLeave(parent, node);
          }

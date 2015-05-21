@@ -20,53 +20,43 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 
-public class NearestDependencyNodeChooser implements DependencyNodeChooser
-{
+public class NearestDependencyNodeChooser implements DependencyNodeChooser {
    private boolean skipTest;
 
-   public NearestDependencyNodeChooser(boolean skipTest)
-   {
+   public NearestDependencyNodeChooser(boolean skipTest) {
       this.skipTest = skipTest;
    }
 
    @Override
-   public DependencyNode choose(List<DependencyNode> nodes)
-   {
+   public DependencyNode choose(List<DependencyNode> nodes) {
       final boolean hasVisibles = hasVisibles(nodes);
 
       DependencyNode chosen = null;
       int chosenDepth = Integer.MAX_VALUE;
 
-      for (DependencyNode node : nodes)
-      {
+      for (DependencyNode node : nodes) {
          final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-         if ((hasVisibles && !adapter.isVisible()) || getRoot(node, adapter) == null)
-         {
+         if ((hasVisibles && !adapter.isVisible()) || getRoot(node, adapter) == null) {
             continue;
          }
 
          String scope = node.getDependency().getScope();
-         if (skipTest && "test".equals(scope))
-         {
+         if (skipTest && "test".equals(scope)) {
             continue;
          }
 
          final int nodeDepth = adapter.getMinimalDepth();
-         if (chosenDepth > nodeDepth)
-         {
+         if (chosenDepth > nodeDepth) {
             chosen = node;
             chosenDepth = nodeDepth;
          }
       }
 
-      if (chosen == null)
-      {
-         for (DependencyNode node : nodes)
-         {
+      if (chosen == null) {
+         for (DependencyNode node : nodes) {
             final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
             final int nodeDepth = adapter.getMinimalDepth();
-            if (chosenDepth > nodeDepth)
-            {
+            if (chosenDepth > nodeDepth) {
                chosen = node;
                chosenDepth = nodeDepth;
             }
@@ -76,37 +66,29 @@ public class NearestDependencyNodeChooser implements DependencyNodeChooser
       return chosen;
    }
 
-   private boolean hasVisibles(List<DependencyNode> nodes)
-   {
-      for (DependencyNode node : nodes)
-      {
+   private boolean hasVisibles(List<DependencyNode> nodes) {
+      for (DependencyNode node : nodes) {
          final DependencyNode2 adapter = DependencyNode2Adapter.get(node);
-         if (adapter.isVisible())
-         {
+         if (adapter.isVisible()) {
             return true;
          }
       }
       return false;
    }
 
-   private DependencyNode getRoot(DependencyNode node, DependencyNode2 adapter)
-   {
-      if (adapter.getParents().isEmpty())
-      {
+   private DependencyNode getRoot(DependencyNode node, DependencyNode2 adapter) {
+      if (adapter.getParents().isEmpty()) {
          return node;
       }
 
-      for (DependencyNode parent : adapter.getParents())
-      {
+      for (DependencyNode parent : adapter.getParents()) {
          final DependencyNode2 parentAdapter = DependencyNode2Adapter.get(parent);
-         if (parentAdapter.getReplacement() != null)
-         {
+         if (parentAdapter.getReplacement() != null) {
             continue;
          }
 
          final DependencyNode root = getRoot(parent, parentAdapter);
-         if (root != null)
-         {
+         if (root != null) {
             return root;
          }
       }

@@ -48,8 +48,7 @@ import org.sourcepit.maven.dependency.model.DependencyTree;
  * 
  * @generated
  */
-public class DependencyModelImpl extends EObjectImpl implements DependencyModel
-{
+public class DependencyModelImpl extends EObjectImpl implements DependencyModel {
    /**
     * The cached value of the '{@link #getArtifacts() <em>Artifacts</em>}' containment reference list.
     * <!-- begin-user-doc -->
@@ -89,8 +88,7 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   protected DependencyModelImpl()
-   {
+   protected DependencyModelImpl() {
       super();
    }
 
@@ -101,8 +99,7 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @generated
     */
    @Override
-   protected EClass eStaticClass()
-   {
+   protected EClass eStaticClass() {
       return DependencyModelPackage.Literals.DEPENDENCY_MODEL;
    }
 
@@ -112,10 +109,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public EList<MavenArtifact> getArtifacts()
-   {
-      if (artifacts == null)
-      {
+   public EList<MavenArtifact> getArtifacts() {
+      if (artifacts == null) {
          artifacts = new EObjectContainmentEList<MavenArtifact>(MavenArtifact.class, this,
             DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS);
       }
@@ -128,10 +123,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public EList<DependencyTree> getDependencyTrees()
-   {
-      if (dependencyTrees == null)
-      {
+   public EList<DependencyTree> getDependencyTrees() {
+      if (dependencyTrees == null) {
          dependencyTrees = new EObjectContainmentEList<DependencyTree>(DependencyTree.class, this,
             DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES);
       }
@@ -144,10 +137,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public EList<MavenArtifact> getRootArtifacts()
-   {
-      if (rootArtifacts == null)
-      {
+   public EList<MavenArtifact> getRootArtifacts() {
+      if (rootArtifacts == null) {
          rootArtifacts = new EObjectResolvingEList<MavenArtifact>(MavenArtifact.class, this,
             DependencyModelPackage.DEPENDENCY_MODEL__ROOT_ARTIFACTS);
       }
@@ -160,8 +151,7 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public DependencyTree getDependencyTree(MavenArtifact artifact)
-   {
+   public DependencyTree getDependencyTree(MavenArtifact artifact) {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -173,8 +163,7 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public DependencyTree getDependencyTree(ArtifactKey artifactKey)
-   {
+   public DependencyTree getDependencyTree(ArtifactKey artifactKey) {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -186,8 +175,7 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * 
     * @generated
     */
-   public MavenArtifact getArtifact(ArtifactKey artifactKey)
-   {
+   public MavenArtifact getArtifact(ArtifactKey artifactKey) {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -200,10 +188,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @generated
     */
    @Override
-   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
-   {
-      switch (featureID)
-      {
+   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS :
             return ((InternalEList<?>) getArtifacts()).basicRemove(otherEnd, msgs);
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :
@@ -219,10 +205,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @generated
     */
    @Override
-   public Object eGet(int featureID, boolean resolve, boolean coreType)
-   {
-      switch (featureID)
-      {
+   public Object eGet(int featureID, boolean resolve, boolean coreType) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS :
             return getArtifacts();
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :
@@ -241,10 +225,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     */
    @SuppressWarnings("unchecked")
    @Override
-   public void eSet(int featureID, Object newValue)
-   {
-      switch (featureID)
-      {
+   public void eSet(int featureID, Object newValue) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS :
             getArtifacts().clear();
             getArtifacts().addAll((Collection<? extends MavenArtifact>) newValue);
@@ -268,10 +250,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @generated
     */
    @Override
-   public void eUnset(int featureID)
-   {
-      switch (featureID)
-      {
+   public void eUnset(int featureID) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS :
             getArtifacts().clear();
             return;
@@ -292,10 +272,8 @@ public class DependencyModelImpl extends EObjectImpl implements DependencyModel
     * @generated
     */
    @Override
-   public boolean eIsSet(int featureID)
-   {
-      switch (featureID)
-      {
+   public boolean eIsSet(int featureID) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_MODEL__ARTIFACTS :
             return artifacts != null && !artifacts.isEmpty();
          case DependencyModelPackage.DEPENDENCY_MODEL__DEPENDENCY_TREES :

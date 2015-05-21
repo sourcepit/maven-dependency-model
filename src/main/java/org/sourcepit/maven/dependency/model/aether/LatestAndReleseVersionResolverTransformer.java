@@ -16,8 +16,6 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import org.sourcepit.common.constraints.NotNull;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
@@ -29,43 +27,35 @@ import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
+import org.sourcepit.common.constraints.NotNull;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.common.utils.lang.Exceptions;
 import org.sourcepit.common.utils.lang.PipedException;
 
-public class LatestAndReleseVersionResolverTransformer implements DependencyGraphTransformer
-{
+public class LatestAndReleseVersionResolverTransformer implements DependencyGraphTransformer {
    private final VersionResolver versionResolver;
 
-   public LatestAndReleseVersionResolverTransformer(@NotNull VersionResolver versionResolver)
-   {
+   public LatestAndReleseVersionResolverTransformer(@NotNull VersionResolver versionResolver) {
       this.versionResolver = versionResolver;
    }
 
    @Override
    public DependencyNode transformGraph(final DependencyNode node, final DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
-      final DependencyVisitor visitor = new AbstractDependencyVisitor(false)
-      {
+      throws RepositoryException {
+      final DependencyVisitor visitor = new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             final Artifact artifact = getArtifact(node);
-            if (artifact != null)
-            {
+            if (artifact != null) {
                final String version = artifact.getVersion();
-               if ("LATEST".equals(version) || "RELEASE".equals(version))
-               {
+               if ("LATEST".equals(version) || "RELEASE".equals(version)) {
                   final VersionRequest request = newVersionRequest(node, artifact);
 
                   final VersionResult result;
-                  try
-                  {
+                  try {
                      result = versionResolver.resolveVersion(context.getSession(), request);
                   }
-                  catch (VersionResolutionException e)
-                  {
+                  catch (VersionResolutionException e) {
                      throw Exceptions.pipe(e);
                   }
                   node.setArtifact(artifact.setVersion(MavenModelUtils.normalizeSnapshotVersion(result.getVersion())));
@@ -74,12 +64,10 @@ public class LatestAndReleseVersionResolverTransformer implements DependencyGrap
             return super.onVisitEnter(parent, node);
          }
       };
-      try
-      {
+      try {
          node.accept(visitor);
       }
-      catch (PipedException e)
-      {
+      catch (PipedException e) {
          e.adaptAndThrow(VersionResolutionException.class);
          throw e;
       }
@@ -87,16 +75,13 @@ public class LatestAndReleseVersionResolverTransformer implements DependencyGrap
       return node;
    }
 
-   private static VersionRequest newVersionRequest(DependencyNode node, final Artifact artifact)
-   {
+   private static VersionRequest newVersionRequest(DependencyNode node, final Artifact artifact) {
       return new VersionRequest(artifact, node.getRepositories(), node.getRequestContext());
    }
 
-   private static Artifact getArtifact(DependencyNode node)
-   {
+   private static Artifact getArtifact(DependencyNode node) {
       final Dependency dependency = node.getDependency();
-      if (dependency != null)
-      {
+      if (dependency != null) {
          return dependency.getArtifact();
       }
       return null;

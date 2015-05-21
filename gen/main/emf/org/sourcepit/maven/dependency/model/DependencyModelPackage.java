@@ -37,8 +37,7 @@ import org.eclipse.emf.ecore.EReference;
  * @model kind="package"
  * @generated
  */
-public interface DependencyModelPackage extends EPackage
-{
+public interface DependencyModelPackage extends EPackage {
    /**
     * The package name.
     * <!-- begin-user-doc -->
@@ -594,8 +593,7 @@ public interface DependencyModelPackage extends EPackage
     * 
     * @generated
     */
-   interface Literals
-   {
+   interface Literals {
       /**
        * The meta object literal for the '{@link org.sourcepit.maven.dependency.model.impl.DependencyNodeImpl
        * <em>Dependency Node</em>}' class.

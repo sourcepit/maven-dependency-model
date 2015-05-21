@@ -16,7 +16,12 @@
 
 package org.sourcepit.maven.dependency.model.aether;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,8 +54,7 @@ import org.sourcepit.maven.dependency.model.DependencyNode;
 import org.sourcepit.maven.dependency.model.DependencyTree;
 import org.sourcepit.maven.dependency.model.JavaSourceAttachmentFactory;
 
-public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentTest
-{
+public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentTest {
    @Inject
    private ArtifactRepositoryFacade repositoryFacade;
 
@@ -62,15 +66,13 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    private DependencyModelResolver modelResolver;
 
    @Override
-   protected Environment newEnvironment()
-   {
+   protected Environment newEnvironment() {
       return Environment.get("env-test.properties");
    }
 
    @Override
    @Before
-   public void setUp() throws Exception
-   {
+   public void setUp() throws Exception {
       super.setUp();
       repositoryFacade.setEmbeddedMaven(getEmbeddedMaven());
 
@@ -79,27 +81,23 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Override
-   protected File getLocalRepositoryPath()
-   {
+   protected File getLocalRepositoryPath() {
       return getWs().newDir("local-repo");
    }
 
-   protected File getRemoteRepositoryPath()
-   {
+   protected File getRemoteRepositoryPath() {
       return getWs().newDir("remote-repo");
    }
 
    @Override
    @After
-   public void tearDown() throws Exception
-   {
+   public void tearDown() throws Exception {
       buildContext.setSession(null);
       super.tearDown();
    }
 
    @Test
-   public void testRootIsResolved() throws Exception
-   {
+   public void testRootIsResolved() throws Exception {
       Model pom;
 
       pom = newModel("A", "1");
@@ -118,8 +116,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testSnapshot() throws Exception
-   {
+   public void testSnapshot() throws Exception {
       Model pom;
 
       pom = newModel("B", "1.0.0-SNAPSHOT");
@@ -143,8 +140,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testDuplicatedNodes() throws Exception
-   {
+   public void testDuplicatedNodes() throws Exception {
       Model pom;
 
       pom = newModel("D", "1");
@@ -169,15 +165,13 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertEquals(4, model.getArtifacts().size());
       assertEquals(4, model.getDependencyTrees().size());
 
-      for (MavenArtifact artifact : model.getArtifacts())
-      {
+      for (MavenArtifact artifact : model.getArtifacts()) {
          assertTrue(artifact.getFile().exists());
       }
    }
 
    @Test
-   public void testCycle() throws Exception
-   {
+   public void testCycle() throws Exception {
       Model pom;
 
       pom = newModel("C", "1");
@@ -262,8 +256,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testDependencies() throws Exception
-   {
+   public void testDependencies() throws Exception {
       Model pom;
 
       pom = newModel("B", "1");
@@ -282,8 +275,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testScopeTest() throws Exception
-   {
+   public void testScopeTest() throws Exception {
       Model pom;
 
       pom = newModel("C", "1");
@@ -346,8 +338,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testScopeTest2() throws Exception
-   {
+   public void testScopeTest2() throws Exception {
       Model pom;
 
       pom = newModel("C", "1");
@@ -402,8 +393,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testScopeTest_EraseChildDepsOfTestDeps() throws Exception
-   {
+   public void testScopeTest_EraseChildDepsOfTestDeps() throws Exception {
       Model pom;
       pom = newModel("C", "1");
       repositoryFacade.deploy(pom);
@@ -441,8 +431,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testScope_FallbackToNonTestNode() throws Exception
-   {
+   public void testScope_FallbackToNonTestNode() throws Exception {
       Model pom;
 
       pom = newModel("C", "2");
@@ -472,27 +461,22 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
 
       DependencyModel model = modelResolver.resolve(artifact, null);
 
-      for (DependencyTree tree : model.getDependencyTrees())
-      {
-         for (DependencyNode node : tree.getDependencyNodes())
-         {
+      for (DependencyTree tree : model.getDependencyTrees()) {
+         for (DependencyNode node : tree.getDependencyNodes()) {
             assertArtifactsNotNull(node);
          }
       }
    }
 
-   private void assertArtifactsNotNull(DependencyNode node)
-   {
+   private void assertArtifactsNotNull(DependencyNode node) {
       assertNotNull(node.getArtifact());
-      for (DependencyNode childNode : node.getChildren())
-      {
+      for (DependencyNode childNode : node.getChildren()) {
          assertArtifactsNotNull(childNode);
       }
    }
 
    @Test
-   public void testLatest() throws Exception
-   {
+   public void testLatest() throws Exception {
       Model pom;
 
       pom = newModel("B", "1");
@@ -525,8 +509,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testRelease() throws Exception
-   {
+   public void testRelease() throws Exception {
       Model pom;
 
       pom = newModel("B", "2-SNAPSHOT");
@@ -559,8 +542,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testVersionRange() throws Exception
-   {
+   public void testVersionRange() throws Exception {
       Model pom;
 
       pom = newModel("B", "2");
@@ -591,8 +573,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testSourceAttachment() throws Exception
-   {
+   public void testSourceAttachment() throws Exception {
       Model pom;
 
       pom = newModel("B", "1");
@@ -635,8 +616,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
    }
 
    @Test
-   public void testModuleProject() throws Exception
-   {
+   public void testModuleProject() throws Exception {
       Model pom;
 
       pom = newModel("parent", "1");
@@ -688,8 +668,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       assertSame(artifactA, nodeA.getArtifact());
    }
 
-   private static Model newModel(String artifactId, String version)
-   {
+   private static Model newModel(String artifactId, String version) {
       final Model pom = new Model();
       pom.setModelVersion("4.0.0");
       pom.setGroupId(artifactId.toLowerCase());
@@ -698,8 +677,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       return pom;
    }
 
-   private static Dependency newDependency(String artifactId, String version)
-   {
+   private static Dependency newDependency(String artifactId, String version) {
       final Dependency dependency = new Dependency();
       dependency.setGroupId(artifactId.toLowerCase());
       dependency.setArtifactId(artifactId);
@@ -707,8 +685,7 @@ public class AetherDependencyModelResolverTest extends EmbeddedMavenEnvironmentT
       return dependency;
    }
 
-   private static Dependency addDependency(ModelBase model, String artifactId, String version)
-   {
+   private static Dependency addDependency(ModelBase model, String artifactId, String version) {
       final Dependency dependency = newDependency(artifactId, version);
       model.getDependencies().add(dependency);
       return dependency;

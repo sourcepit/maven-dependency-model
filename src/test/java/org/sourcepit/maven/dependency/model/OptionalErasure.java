@@ -20,17 +20,14 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
-public class OptionalErasure implements DependencySelector
-{
+public class OptionalErasure implements DependencySelector {
    @Override
-   public boolean selectDependency(Dependency dependency)
-   {
+   public boolean selectDependency(Dependency dependency) {
       return !dependency.isOptional();
    }
 
    @Override
-   public DependencySelector deriveChildSelector(DependencyCollectionContext context)
-   {
+   public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
       return this;
    }
 }

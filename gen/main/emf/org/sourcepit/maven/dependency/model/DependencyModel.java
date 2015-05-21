@@ -39,8 +39,7 @@ import org.sourcepit.common.maven.model.MavenArtifact;
  * @model
  * @generated
  */
-public interface DependencyModel extends EObject
-{
+public interface DependencyModel extends EObject {
    /**
     * Returns the value of the '<em><b>Artifacts</b></em>' containment reference list.
     * The list contents are of type {@link org.sourcepit.common.maven.model.MavenArtifact}.

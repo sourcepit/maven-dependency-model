@@ -30,8 +30,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.common.maven.model.VersionConflictKey;
 import org.sourcepit.common.maven.model.util.MavenModelUtils;
 
-public class DependencyNode2Adapter implements DependencyNode2
-{
+public class DependencyNode2Adapter implements DependencyNode2 {
    private final DependencyNode target;
 
    private final Set<DependencyNode> parents = new LinkedHashSet<DependencyNode>();
@@ -44,70 +43,58 @@ public class DependencyNode2Adapter implements DependencyNode2
 
    private boolean visible = true;
 
-   public DependencyNode2Adapter(DependencyNode target)
-   {
+   public DependencyNode2Adapter(DependencyNode target) {
       this.target = target;
    }
 
    @Override
-   public DependencyNode getTarget()
-   {
+   public DependencyNode getTarget() {
       return target;
    }
 
    @Override
-   public Set<DependencyNode> getParents()
-   {
+   public Set<DependencyNode> getParents() {
       return parents;
    }
 
    @Override
-   public int getMinimalDepth()
-   {
+   public int getMinimalDepth() {
       return minimalDepth;
    }
 
-   public void setMinimalDepth(int minimalDepth)
-   {
+   public void setMinimalDepth(int minimalDepth) {
       this.minimalDepth = minimalDepth;
    }
 
    @Override
-   public DependencyNode getReplacement()
-   {
+   public DependencyNode getReplacement() {
       return replacement;
    }
 
-   public void setReplacement(DependencyNode replacement)
-   {
+   public void setReplacement(DependencyNode replacement) {
       this.replacement = replacement;
    }
 
-   public Set<DependencyNode> getReplaced()
-   {
+   public Set<DependencyNode> getReplaced() {
       return replaced;
    }
 
    private Collection<List<DependencyNode>> conflictGroups;
 
    @Override
-   public Collection<List<DependencyNode>> getConflictingNodeGroups()
-   {
-      if (conflictGroups == null)
-      {
+   public Collection<List<DependencyNode>> getConflictingNodeGroups() {
+      if (conflictGroups == null) {
          conflictGroups = DependencyUtils.computeConflictingNodeGroups(this.getTarget());
       }
       return conflictGroups;
    }
 
    @Override
-   public Set<VersionConflictKey> getConflictKeys()
-   {
+   public Set<VersionConflictKey> getConflictKeys() {
       final Set<VersionConflictKey> conflictKeys = new HashSet<VersionConflictKey>();
 
       final VersionConflictKey targetGroupKey = getArtifactConflictKey();
-      if (targetGroupKey != null)
-      {
+      if (targetGroupKey != null) {
          conflictKeys.add(targetGroupKey);
 
          // Havn't found any use case for aliases... Even not in aether tests.
@@ -122,10 +109,8 @@ public class DependencyNode2Adapter implements DependencyNode2
          // }
 
          final List<? extends Artifact> relocations = target.getRelocations();
-         if (relocations != null)
-         {
-            for (Artifact relocation : relocations)
-            {
+         if (relocations != null) {
+            for (Artifact relocation : relocations) {
                conflictKeys.add(toVersionConflictKey(relocation));
             }
          }
@@ -135,68 +120,55 @@ public class DependencyNode2Adapter implements DependencyNode2
    }
 
    @Override
-   public VersionConflictKey getDependencyConflictKey()
-   {
+   public VersionConflictKey getDependencyConflictKey() {
       final List<? extends Artifact> relocations = target.getRelocations();
-      if (relocations != null && !relocations.isEmpty())
-      {
+      if (relocations != null && !relocations.isEmpty()) {
          return toVersionConflictKey(relocations.get(0));
       }
       return getArtifactConflictKey();
    }
 
    @Override
-   public VersionConflictKey getArtifactConflictKey()
-   {
+   public VersionConflictKey getArtifactConflictKey() {
       final Dependency dependency = target.getDependency();
       return dependency == null ? null : toVersionConflictKey(dependency.getArtifact());
    }
 
-   private static VersionConflictKey toVersionConflictKey(final Artifact artifact)
-   {
+   private static VersionConflictKey toVersionConflictKey(final Artifact artifact) {
       return MavenModelUtils.toVersionConflictKey(artifact.getGroupId(), artifact.getArtifactId(),
          artifact.getExtension(), artifact.getClassifier());
    }
 
    @Override
-   public String toString()
-   {
-      if (replacement != null)
-      {
+   public String toString() {
+      if (replacement != null) {
          return target.toString() + " -> " + replacement;
       }
       return target.toString();
    }
 
-   public static DependencyNode2 adapt(DependencyNode root, final boolean reset)
-   {
-      final AbstractDependencyVisitor initializor = new AbstractDependencyVisitor(false)
-      {
+   public static DependencyNode2 adapt(DependencyNode root, final boolean reset) {
+      final AbstractDependencyVisitor initializor = new AbstractDependencyVisitor(false) {
          @Override
-         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-         {
+         protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
             DependencyNode2Adapter node2 = (DependencyNode2Adapter) get(node);
-            if (reset && node2 != null)
-            {
+            if (reset && node2 != null) {
                node.setData(DependencyNode2Adapter.class, null);
                node2 = null;
             }
 
-            if (node2 == null)
-            {
+            if (node2 == null) {
                node2 = new DependencyNode2Adapter(node);
                node.setData(DependencyNode2Adapter.class, node2);
             }
 
-            if (parent != null)
-            {
+            if (parent != null) {
                node2.getParents().add(parent);
             }
 
             final int depth = path.size();
             final int current = node2.getMinimalDepth();
-            if (current == -1 || current > depth)
-            {
+            if (current == -1 || current > depth) {
                node2.setMinimalDepth(depth);
             }
 
@@ -209,20 +181,17 @@ public class DependencyNode2Adapter implements DependencyNode2
       return get(root);
    }
 
-   public static DependencyNode2 get(DependencyNode node)
-   {
+   public static DependencyNode2 get(DependencyNode node) {
       return (DependencyNode2) node.getData().get(DependencyNode2Adapter.class);
    }
 
    @Override
-   public void setVisible(boolean visible)
-   {
+   public void setVisible(boolean visible) {
       this.visible = visible;
    }
 
    @Override
-   public boolean isVisible()
-   {
+   public boolean isVisible() {
       return visible;
    }
 }

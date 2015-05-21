@@ -21,68 +21,57 @@ import java.util.Stack;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 
-public abstract class AbstractDependencyVisitor implements DependencyVisitor
-{
+public abstract class AbstractDependencyVisitor implements DependencyVisitor {
    protected Stack<DependencyNode> path = new Stack<DependencyNode>();
 
    protected boolean filterInvisibleNodes;
 
-   public AbstractDependencyVisitor(boolean filterInvisibleNodes)
-   {
+   public AbstractDependencyVisitor(boolean filterInvisibleNodes) {
       this.filterInvisibleNodes = filterInvisibleNodes;
    }
 
    private boolean skipLeave;
 
    @Override
-   public final boolean visitEnter(DependencyNode node)
-   {
-      if (filterInvisibleNodes && !DependencyNode2Adapter.get(node).isVisible())
-      {
+   public final boolean visitEnter(DependencyNode node) {
+      if (filterInvisibleNodes && !DependencyNode2Adapter.get(node).isVisible()) {
          path.push(node);
          skipLeave = true;
          return false;
       }
 
       final boolean cycle = path.contains(node);
-      if (cycle)
-      {
+      if (cycle) {
          path.push(node);
          skipLeave = true;
          return false;
       }
-      else
-      {
+      else {
          final boolean result = onVisitEnter(getParent(), node);
          path.push(node);
          return result;
       }
    }
 
-   private DependencyNode getParent()
-   {
+   private DependencyNode getParent() {
       return path.isEmpty() ? null : path.peek();
    }
 
-   protected boolean onVisitEnter(DependencyNode parent, DependencyNode node)
-   {
+   protected boolean onVisitEnter(DependencyNode parent, DependencyNode node) {
       return true;
    }
 
    @Override
-   public final boolean visitLeave(DependencyNode node)
-   {
+   public final boolean visitLeave(DependencyNode node) {
       path.pop();
-      if (skipLeave)
-      {
+      if (skipLeave) {
          skipLeave = false;
          return true;
       }
       return onVisitLeave(getParent(), node);
    }
 
-   protected boolean onVisitLeave(DependencyNode parent, DependencyNode node)
-   {
+   protected boolean onVisitLeave(DependencyNode parent, DependencyNode node) {
       return true;
    }
 }

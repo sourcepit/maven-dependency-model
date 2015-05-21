@@ -21,32 +21,24 @@ import org.sourcepit.common.maven.model.MavenArtifact;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyTree;
 
-public final class DependencyModelOperations
-{
-   private DependencyModelOperations()
-   {
+public final class DependencyModelOperations {
+   private DependencyModelOperations() {
       super();
    }
 
-   public static MavenArtifact getArtifact(DependencyModel model, ArtifactKey artifactKey)
-   {
-      for (MavenArtifact artifact : model.getArtifacts())
-      {
-         if (artifactKey.equals(artifact.getArtifactKey()))
-         {
+   public static MavenArtifact getArtifact(DependencyModel model, ArtifactKey artifactKey) {
+      for (MavenArtifact artifact : model.getArtifacts()) {
+         if (artifactKey.equals(artifact.getArtifactKey())) {
             return artifact;
          }
       }
       return null;
    }
 
-   public static DependencyTree getDependencyTree(DependencyModel model, ArtifactKey artifactKey)
-   {
-      for (DependencyTree tree : model.getDependencyTrees())
-      {
+   public static DependencyTree getDependencyTree(DependencyModel model, ArtifactKey artifactKey) {
+      for (DependencyTree tree : model.getDependencyTrees()) {
          final MavenArtifact artifact = tree.getArtifact();
-         if (artifact != null && artifactKey.equals(artifact.getArtifactKey()))
-         {
+         if (artifact != null && artifactKey.equals(artifact.getArtifactKey())) {
             return tree;
          }
       }

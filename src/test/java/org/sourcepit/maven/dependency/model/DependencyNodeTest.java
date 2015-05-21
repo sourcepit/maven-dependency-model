@@ -24,24 +24,20 @@ import org.junit.Test;
 import org.sourcepit.common.maven.model.MavenModelFactory;
 import org.sourcepit.common.maven.model.Scope;
 
-public class DependencyNodeTest
-{
+public class DependencyNodeTest {
 
    @Test
-   public void testGetEffectiveScope()
-   {
+   public void testGetEffectiveScope() {
       DependencyModelFactory eFactory = DependencyModelFactory.eINSTANCE;
       MavenModelFactory mavenModelFactory = MavenModelFactory.eINSTANCE;
 
       DependencyNode node = eFactory.createDependencyNode();
 
-      try
-      {
+      try {
          node.getEffectiveScope();
          fail();
       }
-      catch (NullPointerException e)
-      {
+      catch (NullPointerException e) {
       }
 
       node.setDeclaredDependency(mavenModelFactory.createMavenDependency());

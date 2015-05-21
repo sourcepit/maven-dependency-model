@@ -37,8 +37,7 @@ import org.sourcepit.common.maven.model.MavenArtifact;
  * @model
  * @generated
  */
-public interface DependencyTree extends EObject
-{
+public interface DependencyTree extends EObject {
    /**
     * Returns the value of the '<em><b>Artifact</b></em>' reference.
     * <!-- begin-user-doc -->

@@ -61,8 +61,7 @@ import org.sourcepit.maven.dependency.model.DependencyNode;
  * 
  * @generated
  */
-public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
-{
+public class DependencyNodeImpl extends EObjectImpl implements DependencyNode {
    /**
     * The cached value of the '{@link #getArtifact() <em>Artifact</em>}' reference.
     * <!-- begin-user-doc -->
@@ -256,8 +255,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   protected DependencyNodeImpl()
-   {
+   protected DependencyNodeImpl() {
       super();
    }
 
@@ -268,8 +266,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   protected EClass eStaticClass()
-   {
+   protected EClass eStaticClass() {
       return DependencyModelPackage.Literals.DEPENDENCY_NODE;
    }
 
@@ -279,14 +276,11 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public MavenArtifact getArtifact()
-   {
-      if (artifact != null && artifact.eIsProxy())
-      {
+   public MavenArtifact getArtifact() {
+      if (artifact != null && artifact.eIsProxy()) {
          InternalEObject oldArtifact = (InternalEObject) artifact;
          artifact = (MavenArtifact) eResolveProxy(oldArtifact);
-         if (artifact != oldArtifact)
-         {
+         if (artifact != oldArtifact) {
             if (eNotificationRequired())
                eNotify(new ENotificationImpl(this, Notification.RESOLVE,
                   DependencyModelPackage.DEPENDENCY_NODE__ARTIFACT, oldArtifact, artifact));
@@ -301,8 +295,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public MavenArtifact basicGetArtifact()
-   {
+   public MavenArtifact basicGetArtifact() {
       return artifact;
    }
 
@@ -312,8 +305,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setArtifact(MavenArtifact newArtifact)
-   {
+   public void setArtifact(MavenArtifact newArtifact) {
       MavenArtifact oldArtifact = artifact;
       artifact = newArtifact;
       if (eNotificationRequired())
@@ -327,10 +319,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public EList<DependencyNode> getChildren()
-   {
-      if (children == null)
-      {
+   public EList<DependencyNode> getChildren() {
+      if (children == null) {
          children = new EObjectContainmentWithInverseEList<DependencyNode>(DependencyNode.class, this,
             DependencyModelPackage.DEPENDENCY_NODE__CHILDREN, DependencyModelPackage.DEPENDENCY_NODE__PARENT);
       }
@@ -343,8 +333,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public boolean isSelected()
-   {
+   public boolean isSelected() {
       return selected;
    }
 
@@ -354,8 +343,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setSelected(boolean newSelected)
-   {
+   public void setSelected(boolean newSelected) {
       boolean oldSelected = selected;
       selected = newSelected;
       if (eNotificationRequired())
@@ -369,8 +357,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public DependencyNode getParent()
-   {
+   public DependencyNode getParent() {
       if (eContainerFeatureID() != DependencyModelPackage.DEPENDENCY_NODE__PARENT)
          return null;
       return (DependencyNode) eInternalContainer();
@@ -382,8 +369,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public NotificationChain basicSetParent(DependencyNode newParent, NotificationChain msgs)
-   {
+   public NotificationChain basicSetParent(DependencyNode newParent, NotificationChain msgs) {
       msgs = eBasicSetContainer((InternalEObject) newParent, DependencyModelPackage.DEPENDENCY_NODE__PARENT, msgs);
       return msgs;
    }
@@ -394,11 +380,9 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setParent(DependencyNode newParent)
-   {
+   public void setParent(DependencyNode newParent) {
       if (newParent != eInternalContainer()
-         || (eContainerFeatureID() != DependencyModelPackage.DEPENDENCY_NODE__PARENT && newParent != null))
-      {
+         || (eContainerFeatureID() != DependencyModelPackage.DEPENDENCY_NODE__PARENT && newParent != null)) {
          if (EcoreUtil.isAncestor(this, newParent))
             throw new IllegalArgumentException("Recursive containment not allowed for " + toString());
          NotificationChain msgs = null;
@@ -422,8 +406,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public Scope getInheritedScope()
-   {
+   public Scope getInheritedScope() {
       return inheritedScope;
    }
 
@@ -433,8 +416,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setInheritedScope(Scope newInheritedScope)
-   {
+   public void setInheritedScope(Scope newInheritedScope) {
       Scope oldInheritedScope = inheritedScope;
       inheritedScope = newInheritedScope;
       if (eNotificationRequired())
@@ -448,8 +430,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getManagedVersionConstraint()
-   {
+   public String getManagedVersionConstraint() {
       return managedVersionConstraint;
    }
 
@@ -459,8 +440,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setManagedVersionConstraint(String newManagedVersionConstraint)
-   {
+   public void setManagedVersionConstraint(String newManagedVersionConstraint) {
       String oldManagedVersionConstraint = managedVersionConstraint;
       managedVersionConstraint = newManagedVersionConstraint;
       if (eNotificationRequired())
@@ -475,8 +455,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public Scope getManagedScope()
-   {
+   public Scope getManagedScope() {
       return managedScope;
    }
 
@@ -486,8 +465,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setManagedScope(Scope newManagedScope)
-   {
+   public void setManagedScope(Scope newManagedScope) {
       Scope oldManagedScope = managedScope;
       managedScope = newManagedScope;
       if (eNotificationRequired())
@@ -501,14 +479,11 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public DependencyNode getConflictNode()
-   {
-      if (conflictNode != null && conflictNode.eIsProxy())
-      {
+   public DependencyNode getConflictNode() {
+      if (conflictNode != null && conflictNode.eIsProxy()) {
          InternalEObject oldConflictNode = (InternalEObject) conflictNode;
          conflictNode = (DependencyNode) eResolveProxy(oldConflictNode);
-         if (conflictNode != oldConflictNode)
-         {
+         if (conflictNode != oldConflictNode) {
             if (eNotificationRequired())
                eNotify(new ENotificationImpl(this, Notification.RESOLVE,
                   DependencyModelPackage.DEPENDENCY_NODE__CONFLICT_NODE, oldConflictNode, conflictNode));
@@ -523,8 +498,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public DependencyNode basicGetConflictNode()
-   {
+   public DependencyNode basicGetConflictNode() {
       return conflictNode;
    }
 
@@ -534,8 +508,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setConflictNode(DependencyNode newConflictNode)
-   {
+   public void setConflictNode(DependencyNode newConflictNode) {
       DependencyNode oldConflictNode = conflictNode;
       conflictNode = newConflictNode;
       if (eNotificationRequired())
@@ -549,8 +522,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public MavenDependency getDeclaredDependency()
-   {
+   public MavenDependency getDeclaredDependency() {
       return declaredDependency;
    }
 
@@ -560,12 +532,10 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public NotificationChain basicSetDeclaredDependency(MavenDependency newDeclaredDependency, NotificationChain msgs)
-   {
+   public NotificationChain basicSetDeclaredDependency(MavenDependency newDeclaredDependency, NotificationChain msgs) {
       MavenDependency oldDeclaredDependency = declaredDependency;
       declaredDependency = newDeclaredDependency;
-      if (eNotificationRequired())
-      {
+      if (eNotificationRequired()) {
          ENotificationImpl notification = new ENotificationImpl(this, Notification.SET,
             DependencyModelPackage.DEPENDENCY_NODE__DECLARED_DEPENDENCY, oldDeclaredDependency, newDeclaredDependency);
          if (msgs == null)
@@ -582,10 +552,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setDeclaredDependency(MavenDependency newDeclaredDependency)
-   {
-      if (newDeclaredDependency != declaredDependency)
-      {
+   public void setDeclaredDependency(MavenDependency newDeclaredDependency) {
+      if (newDeclaredDependency != declaredDependency) {
          NotificationChain msgs = null;
          if (declaredDependency != null)
             msgs = ((InternalEObject) declaredDependency).eInverseRemove(this, EOPPOSITE_FEATURE_BASE
@@ -608,8 +576,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public boolean isOptional()
-   {
+   public boolean isOptional() {
       return optional;
    }
 
@@ -619,8 +586,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setOptional(boolean newOptional)
-   {
+   public void setOptional(boolean newOptional) {
       boolean oldOptional = optional;
       optional = newOptional;
       if (eNotificationRequired())
@@ -634,8 +600,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getConflictVersionConstraint()
-   {
+   public String getConflictVersionConstraint() {
       return conflictVersionConstraint;
    }
 
@@ -645,8 +610,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setConflictVersionConstraint(String newConflictVersionConstraint)
-   {
+   public void setConflictVersionConstraint(String newConflictVersionConstraint) {
       String oldConflictVersionConstraint = conflictVersionConstraint;
       conflictVersionConstraint = newConflictVersionConstraint;
       if (eNotificationRequired())
@@ -661,14 +625,11 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public DependencyNode getCycleNode()
-   {
-      if (cycleNode != null && cycleNode.eIsProxy())
-      {
+   public DependencyNode getCycleNode() {
+      if (cycleNode != null && cycleNode.eIsProxy()) {
          InternalEObject oldCycleNode = (InternalEObject) cycleNode;
          cycleNode = (DependencyNode) eResolveProxy(oldCycleNode);
-         if (cycleNode != oldCycleNode)
-         {
+         if (cycleNode != oldCycleNode) {
             if (eNotificationRequired())
                eNotify(new ENotificationImpl(this, Notification.RESOLVE,
                   DependencyModelPackage.DEPENDENCY_NODE__CYCLE_NODE, oldCycleNode, cycleNode));
@@ -683,8 +644,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public DependencyNode basicGetCycleNode()
-   {
+   public DependencyNode basicGetCycleNode() {
       return cycleNode;
    }
 
@@ -694,8 +654,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public void setCycleNode(DependencyNode newCycleNode)
-   {
+   public void setCycleNode(DependencyNode newCycleNode) {
       DependencyNode oldCycleNode = cycleNode;
       cycleNode = newCycleNode;
       if (eNotificationRequired())
@@ -709,8 +668,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getGroupId()
-   {
+   public String getGroupId() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -722,8 +680,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getArtifactId()
-   {
+   public String getArtifactId() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -735,8 +692,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public Scope getEffectiveScope()
-   {
+   public Scope getEffectiveScope() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -748,8 +704,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getEffectiveVersionConstraint()
-   {
+   public String getEffectiveVersionConstraint() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -761,8 +716,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getClassifier()
-   {
+   public String getClassifier() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -774,8 +728,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * 
     * @generated
     */
-   public String getType()
-   {
+   public String getType() {
       // TODO: implement this method
       // Ensure that you remove @generated or mark it @generated NOT
       throw new UnsupportedOperationException();
@@ -789,10 +742,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     */
    @SuppressWarnings("unchecked")
    @Override
-   public NotificationChain eInverseAdd(InternalEObject otherEnd, int featureID, NotificationChain msgs)
-   {
-      switch (featureID)
-      {
+   public NotificationChain eInverseAdd(InternalEObject otherEnd, int featureID, NotificationChain msgs) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__CHILDREN :
             return ((InternalEList<InternalEObject>) (InternalEList<?>) getChildren()).basicAdd(otherEnd, msgs);
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
@@ -810,10 +761,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
-   {
-      switch (featureID)
-      {
+   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__CHILDREN :
             return ((InternalEList<?>) getChildren()).basicRemove(otherEnd, msgs);
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
@@ -831,10 +780,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public NotificationChain eBasicRemoveFromContainerFeature(NotificationChain msgs)
-   {
-      switch (eContainerFeatureID())
-      {
+   public NotificationChain eBasicRemoveFromContainerFeature(NotificationChain msgs) {
+      switch (eContainerFeatureID()) {
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return eInternalContainer().eInverseRemove(this, DependencyModelPackage.DEPENDENCY_NODE__CHILDREN,
                DependencyNode.class, msgs);
@@ -849,10 +796,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public Object eGet(int featureID, boolean resolve, boolean coreType)
-   {
-      switch (featureID)
-      {
+   public Object eGet(int featureID, boolean resolve, boolean coreType) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__ARTIFACT :
             if (resolve)
                return getArtifact();
@@ -895,10 +840,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     */
    @SuppressWarnings("unchecked")
    @Override
-   public void eSet(int featureID, Object newValue)
-   {
-      switch (featureID)
-      {
+   public void eSet(int featureID, Object newValue) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__ARTIFACT :
             setArtifact((MavenArtifact) newValue);
             return;
@@ -947,10 +890,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public void eUnset(int featureID)
-   {
-      switch (featureID)
-      {
+   public void eUnset(int featureID) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__ARTIFACT :
             setArtifact((MavenArtifact) null);
             return;
@@ -998,10 +939,8 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public boolean eIsSet(int featureID)
-   {
-      switch (featureID)
-      {
+   public boolean eIsSet(int featureID) {
+      switch (featureID) {
          case DependencyModelPackage.DEPENDENCY_NODE__ARTIFACT :
             return artifact != null;
          case DependencyModelPackage.DEPENDENCY_NODE__CHILDREN :
@@ -1011,8 +950,9 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
          case DependencyModelPackage.DEPENDENCY_NODE__PARENT :
             return getParent() != null;
          case DependencyModelPackage.DEPENDENCY_NODE__INHERITED_SCOPE :
-            return INHERITED_SCOPE_EDEFAULT == null ? inheritedScope != null : !INHERITED_SCOPE_EDEFAULT
-               .equals(inheritedScope);
+            return INHERITED_SCOPE_EDEFAULT == null
+               ? inheritedScope != null
+               : !INHERITED_SCOPE_EDEFAULT.equals(inheritedScope);
          case DependencyModelPackage.DEPENDENCY_NODE__MANAGED_VERSION_CONSTRAINT :
             return MANAGED_VERSION_CONSTRAINT_EDEFAULT == null
                ? managedVersionConstraint != null
@@ -1042,8 +982,7 @@ public class DependencyNodeImpl extends EObjectImpl implements DependencyNode
     * @generated
     */
    @Override
-   public String toString()
-   {
+   public String toString() {
       if (eIsProxy())
          return super.toString();
 

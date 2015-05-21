@@ -22,8 +22,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
-public interface DependencyModelHandler
-{
+public interface DependencyModelHandler {
    Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced);
 
    void startDependencyModel();

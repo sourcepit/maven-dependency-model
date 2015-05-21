@@ -51,8 +51,7 @@ import org.sourcepit.maven.dependency.model.aether.NearestDependencyNodeChooser;
 import org.sourcepit.maven.dependency.model.aether.VersionConflictResolver;
 
 @Named
-public class DependencyTreeBuilder
-{
+public class DependencyTreeBuilder {
    private final LegacySupport buildContext;
 
    @Inject
@@ -62,22 +61,19 @@ public class DependencyTreeBuilder
    private ProjectBuilder projectBuilder;
 
    @Inject
-   public DependencyTreeBuilder(LegacySupport buildContext)
-   {
+   public DependencyTreeBuilder(LegacySupport buildContext) {
       this.buildContext = buildContext;
    }
 
    public DependencyNode build(DependencyTreeBuilderRequest request) throws ProjectBuildingException,
-      DependencyResolutionException
-   {
+      DependencyResolutionException {
       DependencyResolutionResult resolutionResult = resolver.resolve(buildDependencyResolutionRequest(request));
 
       return resolutionResult.getDependencyGraph();
    }
 
    private DefaultDependencyResolutionRequest buildDependencyResolutionRequest(DependencyTreeBuilderRequest request)
-      throws ProjectBuildingException
-   {
+      throws ProjectBuildingException {
       final MavenProject project = buildProject(request.getArtifact());
 
       final DependencySelector selector = buildDependencySelector(request);
@@ -86,23 +82,19 @@ public class DependencyTreeBuilder
          new DependencyNode2AdapterTransformer(false), new VersionConflictResolver(new NearestDependencyNodeChooser(
             false)), new JavaDependencyContextRefiner());
 
-      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession()
-      {
+      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession() {
          @Override
-         public DependencySelector getDependencySelector()
-         {
+         public DependencySelector getDependencySelector() {
             return selector;
          }
 
          @Override
-         public DependencyGraphTransformer getDependencyGraphTransformer()
-         {
+         public DependencyGraphTransformer getDependencyGraphTransformer() {
             return transformer;
          }
 
          @Override
-         protected RepositorySystemSession getSession()
-         {
+         protected RepositorySystemSession getSession() {
             return buildContext.getRepositorySession();
          }
       };
@@ -118,12 +110,10 @@ public class DependencyTreeBuilder
    }
 
 
-   private DependencySelector buildDependencySelector(DependencyTreeBuilderRequest request)
-   {
+   private DependencySelector buildDependencySelector(DependencyTreeBuilderRequest request) {
       final Set<DependencySelector> dependencySelectors = new LinkedHashSet<DependencySelector>(3);
       // dependencySelectors.add(new ScopeErasure("test"));
-      if (request.isExcludeOptionalDependencies())
-      {
+      if (request.isExcludeOptionalDependencies()) {
          dependencySelectors.add(new OptionalErasure());
       }
       dependencySelectors.add(new ExclusionDependencySelector());
@@ -131,8 +121,7 @@ public class DependencyTreeBuilder
       return new AndDependencySelector(dependencySelectors);
    }
 
-   private MavenProject buildProject(final Artifact artifact) throws ProjectBuildingException
-   {
+   private MavenProject buildProject(final Artifact artifact) throws ProjectBuildingException {
       ProjectBuildingRequest request = new DefaultProjectBuildingRequest();
       request.setResolveDependencies(false);
       request.setProcessPlugins(false);

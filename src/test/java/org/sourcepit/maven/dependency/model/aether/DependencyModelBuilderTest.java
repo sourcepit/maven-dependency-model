@@ -45,11 +45,9 @@ import org.sourcepit.common.maven.model.util.MavenModelUtils;
 import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyTree;
 
-public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingTest
-{
+public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingTest {
    @Test
-   public void testGetDependencyModel() throws Exception
-   {
+   public void testGetDependencyModel() throws Exception {
       DependencyModelBuilder builder = new DependencyModelBuilder();
       assertNull(builder.getDependencyModel());
 
@@ -63,8 +61,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
    }
 
    @Test
-   public void testArtifactsAreUnique()
-   {
+   public void testArtifactsAreUnique() {
       DependencyModelBuilder builder = new DependencyModelBuilder();
       assertNull(builder.getDependencyModel());
 
@@ -93,8 +90,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
    }
 
    @Test
-   public void testToDeclaredDependency() throws Exception
-   {
+   public void testToDeclaredDependency() throws Exception {
       DefaultDependencyNode node = new DefaultDependencyNode(new Dependency(newArtifact("a"), "compile", true));
       node.setData(new HashMap<Object, Object>());
 
@@ -140,21 +136,17 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       assertEquals(Scope.COMPILE, declaredDependency.getScope());
    }
 
-   private Artifact newArtifact(String id)
-   {
+   private Artifact newArtifact(String id) {
       DefaultArtifact mavenArtifact = new DefaultArtifact(id.toLowerCase(), id.toUpperCase(), "1", "compile", "jar",
          null, new DefaultArtifactHandler("jar"));
       return RepositoryUtils.toArtifact(mavenArtifact);
    }
 
    @Override
-   protected DependencyModelHandler newPrinter(final PrintStream printStream)
-   {
-      return new DependencyModelBuilder()
-      {
+   protected DependencyModelHandler newPrinter(final PrintStream printStream) {
+      return new DependencyModelBuilder() {
          @Override
-         public void endDependencyModel()
-         {
+         public void endDependencyModel() {
             super.endDependencyModel();
 
 
@@ -164,8 +156,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       };
    }
 
-   private void print(PrintStream out, DependencyModel model)
-   {
+   private void print(PrintStream out, DependencyModel model) {
       out.println("model");
 
       final EList<MavenArtifact> artifacts = model.getArtifacts();
@@ -174,30 +165,25 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       final boolean hasArtifacts = !artifacts.isEmpty();
       final boolean hasDependencyTrees = !trees.isEmpty();
 
-      if (hasArtifacts)
-      {
+      if (hasArtifacts) {
          print(out, artifacts, hasDependencyTrees);
       }
 
-      if (hasDependencyTrees)
-      {
+      if (hasDependencyTrees) {
          print(out, trees);
       }
    }
 
-   private void print(PrintStream out, final EList<DependencyTree> trees)
-   {
+   private void print(PrintStream out, final EList<DependencyTree> trees) {
       out.println("+- dependencyTrees");
 
-      for (int i = 0; i < trees.size() - 1; i++)
-      {
+      for (int i = 0; i < trees.size() - 1; i++) {
          DependencyTree tree = trees.get(i);
          out.print("   |- ");
          out.println(toString(tree));
 
          EList<org.sourcepit.maven.dependency.model.DependencyNode> dependencyNodes = tree.getDependencyNodes();
-         for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : dependencyNodes)
-         {
+         for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : dependencyNodes) {
             print(out, "   | ", dependencyNode, dependencyNodes);
          }
       }
@@ -207,25 +193,21 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       out.println(toString(tree));
 
       EList<org.sourcepit.maven.dependency.model.DependencyNode> dependencyNodes = tree.getDependencyNodes();
-      for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : dependencyNodes)
-      {
+      for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : dependencyNodes) {
          print(out, "     ", dependencyNode, dependencyNodes);
       }
    }
 
    private void print(PrintStream out, String prefix, org.sourcepit.maven.dependency.model.DependencyNode node,
-      List<org.sourcepit.maven.dependency.model.DependencyNode> siblings)
-   {
+      List<org.sourcepit.maven.dependency.model.DependencyNode> siblings) {
       final boolean last = siblings.indexOf(node) == siblings.size() - 1;
 
       out.print(prefix);
 
-      if (last)
-      {
+      if (last) {
          out.print(" \\- ");
       }
-      else
-      {
+      else {
          out.print(" |- ");
       }
 
@@ -234,21 +216,18 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       final String appendix = last ? "   " : " | ";
 
       EList<org.sourcepit.maven.dependency.model.DependencyNode> children = node.getChildren();
-      for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : children)
-      {
+      for (org.sourcepit.maven.dependency.model.DependencyNode dependencyNode : children) {
          print(out, prefix + appendix, dependencyNode, children);
       }
    }
 
-   private String toString(org.sourcepit.maven.dependency.model.DependencyNode node)
-   {
+   private String toString(org.sourcepit.maven.dependency.model.DependencyNode node) {
       final StringBuilder sb = new StringBuilder();
       final String is = toKey(node);
       sb.append(is);
 
       final String was = toKey(node.getDeclaredDependency());
-      if (!was.equals(is))
-      {
+      if (!was.equals(is)) {
          sb.append(" (was ");
          sb.append(was);
          sb.append(')');
@@ -258,36 +237,30 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       sb.append(" -> ");
       sb.append(toString(artifact));
 
-      if (node.getConflictNode() != null || node.getConflictVersionConstraint() != null)
-      {
+      if (node.getConflictNode() != null || node.getConflictVersionConstraint() != null) {
          sb.append(" (conflicted)");
       }
 
-      if (node.getManagedScope() != null)
-      {
+      if (node.getManagedScope() != null) {
          sb.append(" (managed scope)");
       }
 
-      if (node.getManagedVersionConstraint() != null)
-      {
+      if (node.getManagedVersionConstraint() != null) {
          sb.append(" (managed version)");
       }
 
-      if (!node.isSelected())
-      {
+      if (!node.isSelected()) {
          sb.append(" (not selected)");
       }
 
-      if (node.getCycleNode() != null)
-      {
+      if (node.getCycleNode() != null) {
          sb.append(" (cycle)");
       }
 
       return sb.toString();
    }
 
-   private String toKey(org.sourcepit.maven.dependency.model.DependencyNode node)
-   {
+   private String toKey(org.sourcepit.maven.dependency.model.DependencyNode node) {
       MavenArtifact artifact = MavenModelFactory.eINSTANCE.createMavenArtifact();
       artifact.setGroupId(node.getGroupId());
       artifact.setArtifactId(node.getArtifactId());
@@ -299,8 +272,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       sb.append(MavenModelUtils.toArtifactKey(artifact));
       sb.append(':');
       sb.append(node.getEffectiveScope());
-      if (node.isOptional())
-      {
+      if (node.isOptional()) {
          sb.append(':');
          sb.append('?');
       }
@@ -308,8 +280,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       return sb.toString();
    }
 
-   private String toKey(MavenDependency dependency)
-   {
+   private String toKey(MavenDependency dependency) {
       MavenArtifact artifact = MavenModelFactory.eINSTANCE.createMavenArtifact();
       artifact.setGroupId(dependency.getGroupId());
       artifact.setArtifactId(dependency.getArtifactId());
@@ -321,8 +292,7 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       sb.append(MavenModelUtils.toArtifactKey(artifact));
       sb.append(':');
       sb.append(dependency.getScope());
-      if (dependency.isOptional())
-      {
+      if (dependency.isOptional()) {
          sb.append(':');
          sb.append('?');
       }
@@ -330,43 +300,34 @@ public class DependencyModelBuilderTest extends AbstractDependencyModelBuildingT
       return sb.toString();
    }
 
-   private String toString(DependencyTree tree)
-   {
+   private String toString(DependencyTree tree) {
       return toString(tree.getArtifact());
    }
 
-   private void print(PrintStream out, final EList<MavenArtifact> artifacts, final boolean hasDependencyTrees)
-   {
+   private void print(PrintStream out, final EList<MavenArtifact> artifacts, final boolean hasDependencyTrees) {
       out.println("+- artifacts");
 
-      for (int i = 0; i < artifacts.size() - 1; i++)
-      {
-         if (hasDependencyTrees)
-         {
+      for (int i = 0; i < artifacts.size() - 1; i++) {
+         if (hasDependencyTrees) {
             out.print("|  |- ");
          }
-         else
-         {
+         else {
             out.print("   |- ");
          }
          out.println(toString(artifacts.get(i)));
       }
 
-      if (hasDependencyTrees)
-      {
+      if (hasDependencyTrees) {
          out.print("|  \\- ");
       }
-      else
-      {
+      else {
          out.print("   \\- ");
       }
       out.println(toString(artifacts.get(artifacts.size() - 1)));
    }
 
-   private String toString(MavenArtifact artifact)
-   {
-      if (artifact == null)
-      {
+   private String toString(MavenArtifact artifact) {
+      if (artifact == null) {
          return "null";
       }
       return artifact.getArtifactKey().toString();

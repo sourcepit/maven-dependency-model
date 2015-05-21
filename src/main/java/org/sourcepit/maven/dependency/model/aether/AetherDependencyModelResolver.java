@@ -77,8 +77,7 @@ import org.sourcepit.maven.dependency.model.DependencyModel;
 import org.sourcepit.maven.dependency.model.DependencyModelResolver;
 
 @Named("aether")
-public class AetherDependencyModelResolver implements DependencyModelResolver
-{
+public class AetherDependencyModelResolver implements DependencyModelResolver {
    @Inject
    private ArtifactFactory artifactFactory;
 
@@ -102,17 +101,14 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
     */
    @Override
    public DependencyModel resolve(@NotNull Collection<Dependency> dependencies,
-      ArtifactAttachmentFactory attachmentFactory) throws ProjectBuildingException, DependencyResolutionException
-   {
+      ArtifactAttachmentFactory attachmentFactory) throws ProjectBuildingException, DependencyResolutionException {
       final Model model;
 
       final MavenProject currentProject = buildContext.getSession().getCurrentProject();
-      if (currentProject == null)
-      {
+      if (currentProject == null) {
          model = new Model();
       }
-      else
-      {
+      else {
          model = currentProject.getModel().clone();
       }
 
@@ -125,29 +121,24 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       model.getDependencies().addAll(dependencies);
 
       final ByteArrayOutputStream out = new ByteArrayOutputStream();
-      try
-      {
+      try {
          new DefaultModelWriter().write(out, null, model);
       }
-      catch (IOException e)
-      {
+      catch (IOException e) {
          throw Exceptions.pipe(e);
       }
       final byte[] bytes = out.toByteArray();
 
       final ProjectBuildingRequest request = newProjectBuildingRequest(false, false);
 
-      ProjectBuildingResult result = projectBuilder.build(new ModelSource()
-      {
+      ProjectBuildingResult result = projectBuilder.build(new ModelSource() {
          @Override
-         public String getLocation()
-         {
+         public String getLocation() {
             return "memory";
          }
 
          @Override
-         public InputStream getInputStream() throws IOException
-         {
+         public InputStream getInputStream() throws IOException {
             return new ByteArrayInputStream(bytes);
          }
       }, request);
@@ -161,8 +152,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
     */
    @Override
    public DependencyModel resolve(@NotNull Artifact artifact, ArtifactAttachmentFactory attachmentFactory)
-      throws ProjectBuildingException, DependencyResolutionException
-   {
+      throws ProjectBuildingException, DependencyResolutionException {
       final MavenProject project = buildProject(artifact);
       return resolve(project, attachmentFactory);
    }
@@ -172,8 +162,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
     */
    @Override
    public DependencyModel resolve(@NotNull MavenProject project, ArtifactAttachmentFactory attachmentFactory)
-      throws DependencyResolutionException
-   {
+      throws DependencyResolutionException {
       return resolve(project, true, attachmentFactory);
    }
 
@@ -181,8 +170,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
    private VersionResolver versionResolver;
 
    private DependencyModel resolve(@NotNull MavenProject project, boolean resolveRoot,
-      ArtifactAttachmentFactory attachmentFactory) throws DependencyResolutionException
-   {
+      ArtifactAttachmentFactory attachmentFactory) throws DependencyResolutionException {
       project = filterUnconnectableRepos(project);
 
       final DependencyModelBuilder modelBuilder = new DependencyModelBuilder(attachmentFactory);
@@ -195,23 +183,19 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       resolutionRequest.setResolutionFilter(new ScopeDependencyFilter("test"));
 
       DependencyResolutionResult resolutionResult;
-      try
-      {
+      try {
          resolutionResult = dependenciesResolver.resolve(resolutionRequest);
       }
-      catch (DependencyResolutionException e)
-      {
+      catch (DependencyResolutionException e) {
          resolutionResult = e.getResult();
       }
 
       final Collection<org.eclipse.aether.artifact.Artifact> resolvedAttachments;
-      try
-      {
+      try {
          resolvedAttachments = attachmentResolver.resolveAttachments(repositorySession,
             resolutionResult.getDependencyGraph());
       }
-      catch (ArtifactResolutionException e)
-      {
+      catch (ArtifactResolutionException e) {
          throw pipe(e);
       }
 
@@ -220,14 +204,11 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       applyResolvedArtifacts(project, resolutionResult, resolvedAttachments, model);
 
       final DependencyNode dependencyGraph = resolutionResult.getDependencyGraph();
-      if (resolveRoot)
-      {
+      if (resolveRoot) {
          addNodeArtifact(model.getRootArtifacts(), model, dependencyGraph);
       }
-      else
-      {
-         for (DependencyNode dependencyNode : dependencyGraph.getChildren())
-         {
+      else {
+         for (DependencyNode dependencyNode : dependencyGraph.getChildren()) {
             addNodeArtifact(model.getRootArtifacts(), model, dependencyNode);
          }
       }
@@ -235,28 +216,23 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       return model;
    }
 
-   private MavenProject filterUnconnectableRepos(MavenProject project)
-   {
+   private MavenProject filterUnconnectableRepos(MavenProject project) {
       final RepositorySystemSession repositorySession = buildContext.getRepositorySession();
 
       final List<ArtifactRepository> repositories = project.getRemoteArtifactRepositories();
       final List<ArtifactRepository> validRepositories = new ArrayList<ArtifactRepository>();
       final List<ArtifactRepository> invalidRepositories = new ArrayList<ArtifactRepository>();
-      for (ArtifactRepository artifactRepository : repositories)
-      {
-         try
-         {
+      for (ArtifactRepository artifactRepository : repositories) {
+         try {
             repositoryConnectorProvider.newRepositoryConnector(repositorySession, toRepo(artifactRepository));
             validRepositories.add(artifactRepository);
          }
-         catch (NoRepositoryConnectorException e)
-         {
+         catch (NoRepositoryConnectorException e) {
             invalidRepositories.add(artifactRepository);
          }
       }
 
-      if (!invalidRepositories.isEmpty())
-      {
+      if (!invalidRepositories.isEmpty()) {
          project = project.clone();
          project.setRemoteArtifactRepositories(validRepositories);
       }
@@ -264,20 +240,17 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       return project;
    }
 
-   private void addNodeArtifact(List<MavenArtifact> roots, DependencyModel model, DependencyNode dependencyNode)
-   {
+   private void addNodeArtifact(List<MavenArtifact> roots, DependencyModel model, DependencyNode dependencyNode) {
       MavenArtifact artifact = model.getArtifact(toArtifactKey(dependencyNode.getDependency().getArtifact()));
       roots.add(artifact);
    }
 
 
    private RepositorySystemSession newRepositorySystemSession(MavenProject project, boolean resolveRoot,
-      final DependencyModelBuilder modelBuilder)
-   {
+      final DependencyModelBuilder modelBuilder) {
       final List<DependencyGraphTransformer> transformers = new ArrayList<DependencyGraphTransformer>(3);
 
-      if (resolveRoot)
-      {
+      if (resolveRoot) {
          org.eclipse.aether.graph.Dependency dependency = new org.eclipse.aether.graph.Dependency(
             RepositoryUtils.toArtifact(project.getArtifact()), "compile");
          DefaultDependencyNode rootNode = new DefaultDependencyNode(dependency);
@@ -293,23 +266,19 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       final DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
          transformers.toArray(new DependencyGraphTransformer[transformers.size()]));
 
-      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession()
-      {
+      final RepositorySystemSession repositorySession = new AbstractForwardingRepositorySystemSession() {
          @Override
-         public DependencySelector getDependencySelector()
-         {
+         public DependencySelector getDependencySelector() {
             return new ScopeChildDependenciesErasure(Collections.singleton("test"));
          }
 
          @Override
-         public DependencyGraphTransformer getDependencyGraphTransformer()
-         {
+         public DependencyGraphTransformer getDependencyGraphTransformer() {
             return transformer;
          }
 
          @Override
-         protected RepositorySystemSession getSession()
-         {
+         protected RepositorySystemSession getSession() {
             return buildContext.getRepositorySession();
          }
       };
@@ -317,40 +286,34 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
    }
 
    private void applyResolvedArtifacts(MavenProject project, DependencyResolutionResult resolutionResult,
-      Collection<org.eclipse.aether.artifact.Artifact> resolvedAttachments, DependencyModel model)
-   {
+      Collection<org.eclipse.aether.artifact.Artifact> resolvedAttachments, DependencyModel model) {
       Map<ArtifactKey, MavenArtifact> keyToArtifact = new HashMap<ArtifactKey, MavenArtifact>();
 
       EList<MavenArtifact> artifacts2 = model.getArtifacts();
-      for (MavenArtifact mavenArtifact : artifacts2)
-      {
+      for (MavenArtifact mavenArtifact : artifacts2) {
          keyToArtifact.put(mavenArtifact.getArtifactKey(), mavenArtifact);
       }
 
-      for (org.eclipse.aether.artifact.Artifact artifact : resolvedAttachments)
-      {
+      for (org.eclipse.aether.artifact.Artifact artifact : resolvedAttachments) {
          final ArtifactKey artifactKey = toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
 
-      for (org.eclipse.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies())
-      {
+      for (org.eclipse.aether.graph.Dependency dependency : resolutionResult.getResolvedDependencies()) {
          org.eclipse.aether.artifact.Artifact artifact = dependency.getArtifact();
          final ArtifactKey artifactKey = toArtifactKey(artifact);
          keyToArtifact.get(artifactKey).setFile(artifact.getFile());
       }
    }
 
-   private MavenProject buildProject(final Artifact artifact) throws ProjectBuildingException
-   {
+   private MavenProject buildProject(final Artifact artifact) throws ProjectBuildingException {
       final ProjectBuildingRequest request = newProjectBuildingRequest(false, false);
 
       ProjectBuildingResult build = projectBuilder.build(artifact, request);
       return build.getProject();
    }
 
-   private ProjectBuildingRequest newProjectBuildingRequest(boolean resolveDeps, boolean processPlugins)
-   {
+   private ProjectBuildingRequest newProjectBuildingRequest(boolean resolveDeps, boolean processPlugins) {
       final ProjectBuildingRequest request = new DefaultProjectBuildingRequest(buildContext.getSession()
          .getProjectBuildingRequest());
       request.setResolveDependencies(resolveDeps);
@@ -358,8 +321,7 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       request.setProject(null);
 
       final MavenProject project = buildContext.getSession().getCurrentProject();
-      if (project != null)
-      {
+      if (project != null) {
          @SuppressWarnings("unchecked")
          List<ArtifactRepository> artifactRepos = combine(project.getRemoteArtifactRepositories(),
             request.getRemoteRepositories());
@@ -375,17 +337,13 @@ public class AetherDependencyModelResolver implements DependencyModelResolver
       return request;
    }
 
-   private static List<ArtifactRepository> combine(List<ArtifactRepository>... repoLists)
-   {
+   private static List<ArtifactRepository> combine(List<ArtifactRepository>... repoLists) {
       final Set<String> ids = new HashSet<String>();
       final List<ArtifactRepository> result = new ArrayList<ArtifactRepository>();
 
-      for (List<ArtifactRepository> repos : repoLists)
-      {
-         for (ArtifactRepository repo : repos)
-         {
-            if (ids.add(repo.getId()))
-            {
+      for (List<ArtifactRepository> repos : repoLists) {
+         for (ArtifactRepository repo : repos) {
+            if (ids.add(repo.getId())) {
                result.add(repo);
             }
          }

@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 
-public interface DependencyNodeChooser
-{
+public interface DependencyNodeChooser {
    DependencyNode choose(List<DependencyNode> nodes);
 }

@@ -17,63 +17,50 @@
 package org.sourcepit.maven.dependency.model.impl;
 
 import org.sourcepit.common.constraints.NotNull;
-
 import org.sourcepit.common.maven.model.Scope;
 import org.sourcepit.maven.dependency.model.DependencyNode;
 
-public final class DependencyNodeOperations
-{
-   private DependencyNodeOperations()
-   {
+public final class DependencyNodeOperations {
+   private DependencyNodeOperations() {
       super();
    }
 
-   public static String getGroupId(@NotNull DependencyNode n)
-   {
+   public static String getGroupId(@NotNull DependencyNode n) {
       return n.getDeclaredDependency().getGroupId();
    }
 
-   public static String getArtifactId(@NotNull DependencyNode n)
-   {
+   public static String getArtifactId(@NotNull DependencyNode n) {
       return n.getDeclaredDependency().getArtifactId();
    }
 
-   public static String getClassifier(@NotNull DependencyNode n)
-   {
+   public static String getClassifier(@NotNull DependencyNode n) {
       return n.getDeclaredDependency().getClassifier();
    }
 
-   public static String getType(@NotNull DependencyNode n)
-   {
+   public static String getType(@NotNull DependencyNode n) {
       return n.getDeclaredDependency().getType();
    }
 
-   public static Scope getEffectiveScope(@NotNull DependencyNode n)
-   {
+   public static Scope getEffectiveScope(@NotNull DependencyNode n) {
       Scope scope = n.getManagedScope();
-      if (scope == null)
-      {
+      if (scope == null) {
          scope = n.getInheritedScope();
-         if (scope == null)
-         {
+         if (scope == null) {
             scope = n.getDeclaredDependency().getScope();
          }
       }
       return scope;
    }
 
-   public static String getEffectiveVersionConstraint(@NotNull DependencyNode n)
-   {
+   public static String getEffectiveVersionConstraint(@NotNull DependencyNode n) {
       String versionConstraint;
       versionConstraint = n.getManagedVersionConstraint();
-      if (versionConstraint != null)
-      {
+      if (versionConstraint != null) {
          return versionConstraint;
       }
 
       versionConstraint = n.getConflictVersionConstraint();
-      if (versionConstraint != null)
-      {
+      if (versionConstraint != null) {
          return versionConstraint;
       }
 

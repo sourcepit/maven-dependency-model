@@ -26,53 +26,43 @@ import org.sourcepit.common.maven.artifact.MavenArtifactUtils;
 import org.sourcepit.common.maven.model.ArtifactKey;
 import org.sourcepit.maven.dependency.model.ArtifactAttachment;
 
-public class DependencyModelBuildingGraphTransformerTest extends AbstractDependencyModelBuildingTest
-{
+public class DependencyModelBuildingGraphTransformerTest extends AbstractDependencyModelBuildingTest {
    @Override
-   protected DependencyModelHandler newPrinter(PrintStream printStream)
-   {
+   protected DependencyModelHandler newPrinter(PrintStream printStream) {
       return new DependencyModelPriner(printStream);
    }
 
-   private class DependencyModelPriner implements DependencyModelHandler
-   {
+   private class DependencyModelPriner implements DependencyModelHandler {
       private final PrintStream out;
 
-      public DependencyModelPriner(PrintStream out)
-      {
+      public DependencyModelPriner(PrintStream out) {
          this.out = out;
       }
 
       private int depth = 0;
 
       @Override
-      public void startDependencyModel()
-      {
+      public void startDependencyModel() {
          out.println("model");
       }
 
       private Set<Artifact> referencedArtifacts = new HashSet<Artifact>();
 
       @Override
-      public Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced)
-      {
-         if (referenced)
-         {
+      public Set<ArtifactAttachment> artifact(Artifact artifact, boolean referenced) {
+         if (referenced) {
             referencedArtifacts.add(artifact);
          }
          return null;
       }
 
       @Override
-      public boolean startDependencyTree(Artifact artifact)
-      {
+      public boolean startDependencyTree(Artifact artifact) {
          final boolean referenced = referencedArtifacts.contains(artifact);
-         if (referenced)
-         {
+         if (referenced) {
             out.println("+- " + artifact);
          }
-         else
-         {
+         else {
             out.println("+- " + artifact + " (not referenced)");
          }
          return true;
@@ -80,51 +70,42 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
 
       @Override
       public void startDependencyNode(DependencyNode node, String effectiveScope, boolean optional, boolean selected,
-         DependencyNode shadowedNode, DependencyNode cycleNode, boolean cycleWithTrees)
-      {
+         DependencyNode shadowedNode, DependencyNode cycleNode, boolean cycleWithTrees) {
          depth++;
 
          final StringBuilder sb = new StringBuilder();
-         for (int i = 0; i < depth; i++)
-         {
+         for (int i = 0; i < depth; i++) {
             sb.append("|  ");
          }
          sb.append("+- ");
 
          final Artifact artifact = node.getDependency().getArtifact();
          final ArtifactKey effectiveKey = MavenArtifactUtils.toArtifactKey(artifact);
-         if (shadowedNode == null)
-         {
+         if (shadowedNode == null) {
             sb.append(effectiveKey);
             appendScope(sb, effectiveScope, node.getDependency().getScope(), optional, node.getDependency()
                .isOptional());
          }
-         else
-         {
+         else {
             final ArtifactKey originKey = MavenArtifactUtils.toArtifactKey(shadowedNode.getDependency().getArtifact());
             sb.append(originKey);
-            if (!effectiveKey.equals(originKey))
-            {
+            if (!effectiveKey.equals(originKey)) {
                sb.append(" -> ");
                sb.append(effectiveKey);
             }
-            appendScope(sb, effectiveScope, shadowedNode.getDependency().getScope(), optional, shadowedNode
-               .getDependency().isOptional());
+            appendScope(sb, effectiveScope, shadowedNode.getDependency().getScope(), optional,
+               shadowedNode.getDependency().isOptional());
          }
 
-         if (!selected)
-         {
+         if (!selected) {
             sb.append(" (not selected)");
          }
 
-         if (cycleNode != null)
-         {
-            if (cycleWithTrees)
-            {
+         if (cycleNode != null) {
+            if (cycleWithTrees) {
                sb.append(" (cycle with root)");
             }
-            else
-            {
+            else {
                sb.append(" (cycle)");
             }
          }
@@ -133,49 +114,41 @@ public class DependencyModelBuildingGraphTransformerTest extends AbstractDepende
       }
 
       private void appendScope(final StringBuilder sb, String effectiveScope, String shadowedScope,
-         boolean effeciveOptional, boolean shadowedOptional)
-      {
+         boolean effeciveOptional, boolean shadowedOptional) {
          sb.append(" (");
 
          effectiveScope = effectiveScope == null ? "none" : effectiveScope;
          shadowedScope = shadowedScope == null ? "none" : shadowedScope;
 
-         if (effectiveScope.equals(shadowedScope) && effeciveOptional == shadowedOptional)
-         {
+         if (effectiveScope.equals(shadowedScope) && effeciveOptional == shadowedOptional) {
             sb.append(effectiveScope);
          }
-         else
-         {
+         else {
             sb.append(shadowedScope);
-            if (shadowedOptional)
-            {
+            if (shadowedOptional) {
                sb.append("?");
             }
             sb.append(" -> ");
             sb.append(effectiveScope);
          }
-         if (effeciveOptional)
-         {
+         if (effeciveOptional) {
             sb.append("?");
          }
          sb.append(")");
       }
 
       @Override
-      public void endDependencyNode(DependencyNode node)
-      {
+      public void endDependencyNode(DependencyNode node) {
          depth--;
       }
 
       @Override
-      public void endDependencyTree(Artifact artifact)
-      {
+      public void endDependencyTree(Artifact artifact) {
          depth = 0;
       }
 
       @Override
-      public void endDependencyModel()
-      {
+      public void endDependencyModel() {
       }
    }
 

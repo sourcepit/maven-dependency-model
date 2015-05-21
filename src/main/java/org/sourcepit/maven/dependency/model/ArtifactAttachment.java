@@ -15,37 +15,31 @@
  */
 
 package org.sourcepit.maven.dependency.model;
-public class ArtifactAttachment
-{
+public class ArtifactAttachment {
    private final String classifier, type;
 
    private final boolean required;
 
-   public ArtifactAttachment(String classifier, String type, boolean required)
-   {
+   public ArtifactAttachment(String classifier, String type, boolean required) {
       this.classifier = classifier == null ? "" : classifier;
       this.type = type;
       this.required = required;
    }
 
-   public String getClassifier()
-   {
+   public String getClassifier() {
       return classifier;
    }
 
-   public String getType()
-   {
+   public String getType() {
       return type;
    }
 
-   public boolean isRequired()
-   {
+   public boolean isRequired() {
       return required;
    }
 
    @Override
-   public int hashCode()
-   {
+   public int hashCode() {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((classifier == null) ? 0 : classifier.hashCode());
@@ -55,45 +49,34 @@ public class ArtifactAttachment
    }
 
    @Override
-   public boolean equals(Object obj)
-   {
-      if (this == obj)
-      {
+   public boolean equals(Object obj) {
+      if (this == obj) {
          return true;
       }
-      if (obj == null)
-      {
+      if (obj == null) {
          return false;
       }
-      if (getClass() != obj.getClass())
-      {
+      if (getClass() != obj.getClass()) {
          return false;
       }
       ArtifactAttachment other = (ArtifactAttachment) obj;
-      if (classifier == null)
-      {
-         if (other.classifier != null)
-         {
+      if (classifier == null) {
+         if (other.classifier != null) {
             return false;
          }
       }
-      else if (!classifier.equals(other.classifier))
-      {
+      else if (!classifier.equals(other.classifier)) {
          return false;
       }
-      if (required != other.required)
-      {
+      if (required != other.required) {
          return false;
       }
-      if (type == null)
-      {
-         if (other.type != null)
-         {
+      if (type == null) {
+         if (other.type != null) {
             return false;
          }
       }
-      else if (!type.equals(other.type))
-      {
+      else if (!type.equals(other.type)) {
          return false;
       }
       return true;

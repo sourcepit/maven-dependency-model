@@ -21,19 +21,16 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
-public class ReplaceRootNode implements DependencyGraphTransformer
-{
+public class ReplaceRootNode implements DependencyGraphTransformer {
    private final DependencyNode rootNode;
 
-   public ReplaceRootNode(DependencyNode rootNode)
-   {
+   public ReplaceRootNode(DependencyNode rootNode) {
       this.rootNode = rootNode;
    }
 
    @Override
    public DependencyNode transformGraph(DependencyNode graph, DependencyGraphTransformationContext context)
-      throws RepositoryException
-   {
+      throws RepositoryException {
       rootNode.getChildren().addAll(graph.getChildren());
       return rootNode;
    }

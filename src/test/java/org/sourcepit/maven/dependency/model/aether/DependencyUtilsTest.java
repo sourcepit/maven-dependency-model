@@ -21,63 +21,49 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-public class DependencyUtilsTest
-{
+public class DependencyUtilsTest {
    @Test
-   public void getEffectiveScope_EraseFalse() throws Exception
-   {
-      try
-      {
+   public void getEffectiveScope_EraseFalse() throws Exception {
+      try {
          DependencyUtils.getEffectiveScope(null, "compile", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "provided", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "runtime", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "test", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "system", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope("system", "compile", false);
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
       assertEquals("compile", DependencyUtils.getEffectiveScope("compile", "compile", false));
@@ -106,60 +92,47 @@ public class DependencyUtilsTest
    }
 
    @Test
-   public void getEffectiveScope_EraseTrue() throws Exception
-   {
-      try
-      {
+   public void getEffectiveScope_EraseTrue() throws Exception {
+      try {
          DependencyUtils.getEffectiveScope(null, "compile");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "provided");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "runtime");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "test");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope(null, "system");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
-      try
-      {
+      try {
          DependencyUtils.getEffectiveScope("system", "compile");
          fail();
       }
-      catch (IllegalArgumentException e)
-      {
+      catch (IllegalArgumentException e) {
       }
 
       assertEquals("compile", DependencyUtils.getEffectiveScope("compile", "compile"));
